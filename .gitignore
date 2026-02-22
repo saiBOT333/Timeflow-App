@@ -1,0 +1,19 @@
+# Temporäre Arbeits-Artefakte
+line_dump*.txt
+test_script.py
+replacements_script.py
+
+# Claude Code Projektdaten
+.claude/
+
+# Alte Monolith-Datei (ersetzt durch index.html + app.js + style.css)
+TimeFlo_6.0.html
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
+*~
