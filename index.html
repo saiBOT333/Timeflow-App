@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TimeFlow</title>
+    <meta name="description" content="Zeiterfassung – modernes Dark-Mode Zeittracking-Tool">
+
+    <!-- PWA: Manifest & Theme -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#111318">
+
+    <!-- PWA: iOS / Safari -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TimeFlow">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <!-- Google Fonts & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settingsModal" class="modal-overlay">
+        <div class="modal-card" style="max-width:560px;">
+            <div class="modal-title" style="margin-bottom:0;">Einstellungen</div>
+
+            <!-- Tab Navigation -->
+            <div class="settings-tabs">
+                <button class="settings-tab active" data-tab="tab-general" onclick="switchSettingsTab('tab-general', this)">
+                    <span class="material-symbols-rounded" style="font-size:18px;">tune</span> Allgemein
+                </button>
+                <button class="settings-tab" data-tab="tab-progress" onclick="switchSettingsTab('tab-progress', this)">
+                    <span class="material-symbols-rounded" style="font-size:18px;">trending_up</span> Fortschritt
+                </button>
+                <button class="settings-tab" data-tab="tab-links" onclick="switchSettingsTab('tab-links', this)">
+                    <span class="material-symbols-rounded" style="font-size:18px;">link</span> Links
+                </button>
+                <button class="settings-tab" data-tab="tab-reminders" onclick="switchSettingsTab('tab-reminders', this)">
+                    <span class="material-symbols-rounded" style="font-size:18px;">notifications</span> Erinnerungen
+                </button>
+            </div>
+
+            <!-- TAB: Allgemein -->
+            <div class="settings-tab-panel active" id="tab-general">
+                <div class="setting-group">
+                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Export-Dateiname (Prefix)</label>
+                    <div class="input-container">
+                        <input type="text" class="input-field" id="settingsPrefix" placeholder="z.B. TimeFlow_Export" oninput="pendingSettings.filePrefix = this.value.trim()">
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Zeiten runden (CSV)</label>
+                    <div class="input-container">
+                        <select class="input-field" id="settingsRounding" onchange="pendingSettings.rounding = this.value">
+                            <option value="0">Exakt (Sekundengenau)</option>
+                            <option value="1">Auf volle Minuten runden</option>
+                            <option value="5">Auf 5 Minuten runden</option>
+                            <option value="15">Auf 15 Minuten runden</option>
+                            <option value="30">Auf 30 Minuten runden</option>
+                        </select>
+                    </div>
+                    <div class="modal-hint">Rundet die Gesamtdauer pro Projekt im Export auf.</div>
+                </div>
+
+                <div class="setting-group">
+                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Begrüßungstext</label>
+                    <div class="input-container">
+                        <input type="text" class="input-field" id="settingsGreeting" placeholder="z.B. Guten Morgen! Bereit für einen produktiven Tag? 🚀" oninput="pendingSettings.greeting = this.value.trim()">
+                    </div>
+                    <div class="modal-hint">Wird beim Start der App animiert im Aktivitätsbereich angezeigt. Leer lassen zum Deaktivieren.</div>
+                </div>
+
+            </div>
+
+            <!-- TAB: Tagesfortschritt -->
+            <div class="settings-tab-panel" id="tab-progress">
+                <div class="setting-group">
+                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Fortschrittsanzeige aktivieren</label>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <input type="checkbox" id="settingsProgressEnabled" style="width:20px; height:20px; cursor:pointer;" onchange="pendingSettings.progressEnabled = this.checked; updateProgressPreview()">
+                        <span style="font-size:13px; color:var(--md-sys-color-on-surface-variant);">Zeigt Uhr + Fortschrittsbalken im Aktivitätsbereich</span>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Arbeitstag-Dauer (Stunden)</label>
+                    <div class="input-container" style="width:120px;">
+                        <input type="number" class="input-field" id="settingsWorkdayHours" min="1" max="24" step="0.5" placeholder="10" oninput="pendingSettings.workdayHours = parseFloat(this.value) || 10">
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Farbschwellen (%)</label>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="width:12px; height:12px; border-radius:50%; background:#FFCA28; display:inline-block;"></span>
+                            <span style="font-size:13px;">Gelb ab</span>
+                            <div class="input-container" style="width:70px; height:40px;">
+                                <input type="number" class="input-field" id="settingsYellowPct" min="1" max="99" placeholder="60" style="font-size:14px;" oninput="pendingSettings.yellowPct = parseInt(this.value) || 60; updateProgressPreview()">
+                            </div>
+                            <span style="font-size:13px;">%</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="width:12px; height:12px; border-radius:50%; background:#EF5350; display:inline-block;"></span>
+                            <span style="font-size:13px;">Rot ab</span>
+                            <div class="input-container" style="width:70px; height:40px;">
+                                <input type="number" class="input-field" id="settingsRedPct" min="1" max="100" placeholder="85" style="font-size:14px;" oninput="pendingSettings.redPct = parseInt(this.value) || 85; updateProgressPreview()">
+                            </div>
+                            <span style="font-size:13px;">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Preview -->
+                <div class="setting-group">
+                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:10px;">Vorschau</label>
+                    <div id="progressPreview" class="progress-preview">
+                        <div class="progress-preview-bar">
+                            <div class="progress-preview-zone green" id="previewZoneGreen"></div>
+                            <div class="progress-preview-zone yellow" id="previewZoneYellow"></div>
+                            <div class="progress-preview-zone red" id="previewZoneRed"></div>
+                        </div>
+                        <div class="progress-preview-labels">
+                            <span style="color:#66BB6A;">Grün</span>
+                            <span id="previewYellowLabel" style="color:#FFCA28;">60%</span>
+                            <span id="previewRedLabel" style="color:#EF5350;">85%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Externe Links -->
+            <div class="settings-tab-panel" id="tab-links">
+                <div class="setting-group">
+                    <div id="externalLinksSettings" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px;"></div>
+                    <button class="md-btn md-btn-tonal" onclick="addExternalLinkSetting()" style="width:100%;">
+                        <span class="material-symbols-rounded" style="font-size:18px;">add_link</span>
+                        Link hinzufügen
+                    </button>
+                    <div class="modal-hint">Konfiguriere Buttons für externe Webanwendungen. Wähle ein Icon und hinterlege eine URL.</div>
+                </div>
+            </div>
+
+            <!-- TAB: Erinnerungen -->
+            <div class="settings-tab-panel" id="tab-reminders">
+                <div class="setting-group">
+                    <div id="reminderListSettings" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <div class="input-container" style="width:90px; height:40px;">
+                            <input type="time" class="input-field" id="newReminderTime" style="font-size:14px;">
+                        </div>
+                        <div class="input-container" style="flex:1; height:40px; min-width:120px;">
+                            <input type="text" class="input-field" id="newReminderText" placeholder="Erinnerungstext..." style="font-size:14px;" onkeydown="if(event.key==='Enter') addReminderFromSettings()">
+                        </div>
+                        <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--md-sys-color-on-surface-variant); cursor:pointer; white-space:nowrap;">
+                            <input type="checkbox" id="newReminderRecurring" style="width:16px; height:16px; cursor:pointer;">
+                            <span>Täglich</span>
+                        </label>
+                        <button class="icon-btn" onclick="addReminderFromSettings()" style="background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); width:36px; height:36px;">
+                            <span class="material-symbols-rounded" style="font-size:20px">add</span>
+                        </button>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
+                        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--md-sys-color-on-surface-variant); white-space:nowrap;">
+                            <span class="material-symbols-rounded" style="font-size:16px;">timer</span>
+                            Alle
+                        </label>
+                        <div class="input-container" style="width:60px; height:36px;">
+                            <input type="number" class="input-field" id="newReminderInterval" min="1" max="480" placeholder="–" style="font-size:14px; text-align:center;">
+                        </div>
+                        <span style="font-size:12px; color:var(--md-sys-color-on-surface-variant);">Min. wiederholen</span>
+                        <span style="font-size:11px; color:var(--md-sys-color-on-surface-variant); opacity:0.6;">(leer = keine Wiederholung)</span>
+                    </div>
+                    <div class="modal-hint">Erinnerungen erscheinen im Aktivitätsbereich. Wiederkehrende werden täglich angezeigt. Mit Intervall (z.B. alle 30 Min.) wird ab der Startzeit regelmäßig wiederholt.</div>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+                <button class="md-btn md-btn-tonal" onclick="closeModal('settingsModal')">Abbrechen</button>
+                <button class="md-btn md-btn-primary" onclick="saveSettings()">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROJECT EDIT MODAL -->
+    <div id="projectEditModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-title">Projekt bearbeiten</div>
+            <div class="setting-group">
+                <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Projektnummer</label>
+                <div class="input-container">
+                    <input type="text" class="input-field" id="editProjectNum" placeholder="Nr.">
+                </div>
+            </div>
+            <div class="setting-group">
+                <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Projektname</label>
+                <div class="input-container">
+                    <input type="text" class="input-field" id="editProjectName" placeholder="Name">
+                </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+                <button class="md-btn md-btn-tonal" onclick="closeModal('projectEditModal')">Abbrechen</button>
+                <button class="md-btn md-btn-primary" onclick="saveProjectEdit()">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TIME EDIT MODAL -->
+    <div id="timeEditModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-title">Zeiten bearbeiten</div>
+            <div style="font-size:14px; color:var(--md-sys-color-primary); margin-bottom:12px;" id="timeEditProjectTitle"></div>
+            <div id="timeEditLogList" style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto;"></div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+                <button class="md-btn md-btn-primary" onclick="closeModal('timeEditModal')">Fertig</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAG MANAGEMENT MODAL -->
+    <div id="tagModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-title">Tags verwalten</div>
+            <div class="input-row" style="margin-bottom:16px;">
+                <div class="input-container" style="flex:1;">
+                    <input type="text" class="input-field" id="newTagName" placeholder="Neuer Tag" onkeydown="if(event.key==='Enter') addTag()">
+                </div>
+                <input type="color" id="newTagColor" value="#A8C7FA" style="width:40px; height:40px; border:none; border-radius:8px; cursor:pointer; background:transparent;">
+                <button class="icon-btn" onclick="addTag()" style="background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary);">
+                    <span class="material-symbols-rounded">add</span>
+                </button>
+            </div>
+            <div id="tagListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+                <button class="md-btn md-btn-primary" onclick="closeModal('tagModal')">Fertig</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAG ASSIGN MODAL -->
+    <div id="tagAssignModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-title">Tags zuordnen</div>
+            <div style="font-size:14px; color:var(--md-sys-color-primary); margin-bottom:12px;" id="tagAssignProjectTitle"></div>
+            <div id="tagAssignList" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+                <button class="md-btn md-btn-primary" onclick="closeModal('tagAssignModal')">Fertig</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUB-PROJECT MODAL -->
+    <div id="subProjectModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-title">Unterprojekt anlegen</div>
+            <div style="font-size:14px; color:var(--md-sys-color-primary); margin-bottom:12px;" id="subProjectParentTitle"></div>
+            <div class="setting-group">
+                <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Name des Unterprojekts</label>
+                <div class="input-container">
+                    <input type="text" class="input-field" id="subProjectName" placeholder="z.B. Besprechung allgemein" onkeydown="if(event.key==='Enter') saveSubProject()">
+                </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+                <button class="md-btn md-btn-tonal" onclick="closeModal('subProjectModal')">Abbrechen</button>
+                <button class="md-btn md-btn-primary" onclick="saveSubProject()">Anlegen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM MODAL (replaces native confirm/alert) -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-card" style="max-width:400px;">
+            <div style="display:flex; align-items:flex-start; gap:16px;">
+                <span class="material-symbols-rounded" id="confirmModalIcon" style="font-size:28px; color:var(--md-sys-color-primary); flex-shrink:0; margin-top:2px;">help_outline</span>
+                <div>
+                    <div class="modal-title" id="confirmModalTitle" style="font-size:18px; margin-bottom:8px;">Bestätigung</div>
+                    <div id="confirmModalMessage" style="font-size:14px; color:var(--md-sys-color-on-surface-variant); line-height:1.5;"></div>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+                <button class="md-btn md-btn-tonal" id="confirmModalCancel" onclick="resolveConfirmModal(false)">Abbrechen</button>
+                <button class="md-btn md-btn-primary" id="confirmModalOk" onclick="resolveConfirmModal(true)">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ONBOARDING OVERLAY -->
+    <div id="onboardingOverlay" class="onboarding-overlay hidden">
+        <div class="onboarding-card">
+            <div class="onboarding-icon">
+                <span class="material-symbols-rounded" id="onboardingIcon" style="font-size:48px; color:var(--md-sys-color-primary);">waving_hand</span>
+            </div>
+            <div class="onboarding-title" id="onboardingTitle">Willkommen bei TimeFlow!</div>
+            <div class="onboarding-text" id="onboardingText">TimeFlow erfasst deine Arbeitszeit automatisch. Das Projekt &laquo;Allgemein&raquo; läuft bereits.</div>
+            <div class="onboarding-dots">
+                <div class="onboarding-dot active" id="onbDot0"></div>
+                <div class="onboarding-dot" id="onbDot1"></div>
+                <div class="onboarding-dot" id="onbDot2"></div>
+            </div>
+            <button class="md-btn md-btn-primary" id="onboardingBtn" onclick="advanceOnboarding()" style="width:100%;">Weiter</button>
+        </div>
+    </div>
+
+    <!-- HILFE MODAL -->
+    <div id="helpModal" class="modal-overlay">
+        <div class="modal-card" style="width:90vw; max-width:900px; height:85vh; max-height:85vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px 12px; border-bottom:1px solid var(--md-sys-color-outline-variant);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary); font-size:24px;">help</span>
+                    <span style="font-size:18px; font-weight:600; color:var(--md-sys-color-on-surface);">TimeFlow Anleitung</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button class="icon-btn" onclick="window.open('TimeFlow_Anleitung.html','_blank')" title="In neuem Tab öffnen" style="width:32px; height:32px;">
+                        <span class="material-symbols-rounded" style="font-size:20px">open_in_new</span>
+                    </button>
+                    <button class="icon-btn" onclick="closeModal('helpModal')" title="Schließen" style="width:32px; height:32px;">
+                        <span class="material-symbols-rounded" style="font-size:20px">close</span>
+                    </button>
+                </div>
+            </div>
+            <iframe id="helpIframe" style="flex:1; border:none; width:100%; background:var(--md-sys-color-surface); border-radius:0 0 28px 28px;"></iframe>
+        </div>
+    </div>
+
+    <div class="app-layout" id="appContainer">
+
+        <!-- HEADER -->
+        <header>
+            <div>
+                <h1 class="headline"><span class="logo-time">Time</span><span class="logo-flow">Flow</span></h1>
+                <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateDate(-1)" data-tooltip="Vorheriger Tag">
+                        <span class="material-symbols-rounded" style="font-size:20px">chevron_left</span>
+                    </button>
+                    <div class="subhead" id="dateDisplay" onclick="goToToday()" style="cursor:pointer;" data-tooltip="Zurück zu heute">Laden...</div>
+                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateDate(1)" data-tooltip="Nächster Tag">
+                        <span class="material-symbols-rounded" style="font-size:20px">chevron_right</span>
+                    </button>
+                </div>
+            </div>
+            <div style="display:flex; gap:4px;">
+                <button class="icon-btn" onclick="openModal('tagModal'); renderTagList();" data-tooltip="Tags verwalten">
+                    <span class="material-symbols-rounded">label</span>
+                </button>
+                <button class="icon-btn" onclick="toggleTheme()" data-tooltip="Theme wechseln" id="themeToggleBtn">
+                    <span class="material-symbols-rounded">light_mode</span>
+                </button>
+                <button class="icon-btn" onclick="toggleCardVisibilityMenu()" data-tooltip="Sichtbare Karten" id="cardVisBtn">
+                    <span class="material-symbols-rounded">dashboard_customize</span>
+                </button>
+                <button class="icon-btn" onclick="openModal('settingsModal')" data-tooltip="Einstellungen">
+                    <span class="material-symbols-rounded">settings</span>
+                </button>
+                <button class="icon-btn" onclick="openHelpModal()" data-tooltip="Hilfe / Anleitung">
+                    <span class="material-symbols-rounded">help</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- CARD VISIBILITY MENU -->
+        <div id="cardVisMenu" class="card-vis-menu hidden"></div>
+
+        <!-- UNDO TOAST -->
+        <div id="undoToast" class="undo-toast hidden">
+            <span id="undoToastText"></span>
+            <button class="md-btn md-btn-tonal" onclick="undo()" style="height:32px; padding:0 16px; font-size:12px;">Rückgängig</button>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="quick-actions">
+            <button class="action-btn" onclick="onGoodMorning()">
+                <span class="material-symbols-rounded" style="color:#FFB900;">wb_sunny</span>
+                Start
+            </button>
+            <button class="action-btn" onclick="onFeierabend()">
+                <span class="material-symbols-rounded" style="color:#A8C7FA;">bedtime</span>
+                Feierabend
+            </button>
+            <button class="action-btn" id="homeOfficeBtn" onclick="toggleHomeOffice()">
+                <span class="material-symbols-rounded" style="color:#81C784;">home</span>
+                <span id="homeOfficeBtnLabel">Home Office</span>
+            </button>
+        </div>
+
+        <!-- DAY PROGRESS (fixed position under quick actions) -->
+        <div id="dayProgressContainer" class="day-progress-inline"></div>
+
+        <!-- TAG FILTER BAR -->
+        <div id="tagFilterBar" style="display:flex; gap:6px; flex-wrap:wrap; padding:0 4px; align-items:center;"></div>
+
+        <!-- PAUSE STATUS (rendered inside Aktivitätsbereich) -->
+
+        <!-- CARD GRID -->
+        <div class="card-grid" id="cardGrid">
+
+        <!-- NEW PROJECT -->
+        <div class="md-card" draggable="true" id="card-new">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-symbols-rounded drag-handle">drag_indicator</span>
+                    <span class="editable-title" contenteditable="true" onblur="saveTitle(this, 'title_new')">Neues Projekt</span>
+                    <span class="material-symbols-rounded edit-hint-icon">edit</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:2px;">
+                    <button class="card-help-btn" onclick="openCardHelp('projekte')" data-tooltip="Hilfe: Neues Projekt">
+                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                    </button>
+                    <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
+                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                    </button>
+                    <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
+                        <span class="material-symbols-rounded expand-icon">expand_more</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="input-row">
+                    <div class="input-container" style="flex: 0 0 100px;">
+                        <input type="text" class="input-field" id="newProjectNum" placeholder="Nr." onkeydown="handleNewProject(event)">
+                    </div>
+                    <div class="input-container" style="flex: 1;">
+                        <input type="text" class="input-field" id="newProjectName" placeholder="Projektname" onkeydown="handleNewProject(event)">
+                    </div>
+                    <button class="icon-btn" onclick="addProject()" style="background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary);">
+                        <span class="material-symbols-rounded">add</span>
+                    </button>
+                </div>
+                <div style="font-size:12px; color:var(--md-sys-color-error); margin-top:8px; display:none;" id="inputErrorMsg">
+                    Bitte Nummer und Name eingeben.
+                </div>
+            </div>
+        </div>
+
+        <!-- CURRENT ACTIVE PROJECT -->
+        <div class="md-card" draggable="true" id="card-active">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-symbols-rounded drag-handle">drag_indicator</span>
+                    <span class="editable-title" contenteditable="true" onblur="saveTitle(this, 'title_active')" style="color:var(--md-sys-color-primary)">Aktivitätsbereich</span>
+                    <span class="material-symbols-rounded edit-hint-icon">edit</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:2px;">
+                    <button class="card-help-btn" onclick="openCardHelp('zeiterfassung')" data-tooltip="Hilfe: Aktivität">
+                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                    </button>
+                    <button class="icon-btn" onclick="openRemindersSettings()" title="Erinnerungen" style="width:32px; height:32px; opacity:0.5;">
+                        <span class="material-symbols-rounded" style="font-size:18px">notifications</span>
+                    </button>
+                    <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
+                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-content" id="activeProjectDisplay" style="position:relative; min-height:120px;">
+                <!-- JS will render active card -->
+            </div>
+        </div>
+
+        <!-- FAVORITES -->
+        <div class="md-card" draggable="true" id="card-favorites">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-symbols-rounded drag-handle">drag_indicator</span>
+                    <span class="editable-title" contenteditable="true" onblur="saveTitle(this, 'title_favorites')">Favoriten</span>
+                    <span class="material-symbols-rounded edit-hint-icon">edit</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:2px;">
+                    <button class="card-help-btn" onclick="openCardHelp('projekte')" data-tooltip="Hilfe: Favoriten">
+                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                    </button>
+                    <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
+                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                    </button>
+                    <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
+                        <span class="material-symbols-rounded expand-icon">expand_more</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-content">
+                <ul class="list-container" id="favoriteProjectsList"></ul>
+                <div id="noFavsMsg" class="empty-state" style="display:none;">
+                    <span class="material-symbols-rounded empty-state-icon">star</span>
+                    <div class="empty-state-text">Noch keine Favoriten</div>
+                    <div class="empty-state-hint">Neue Projekte erscheinen hier automatisch. Du kannst Projekte auch über das &#8942;-Menü als Favorit markieren.</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- OTHER PROJECTS -->
+        <div class="md-card collapsed" draggable="true" id="card-others">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-symbols-rounded drag-handle">drag_indicator</span>
+                    <span class="editable-title" contenteditable="true" onblur="saveTitle(this, 'title_others')">Andere Kostenstellen</span>
+                    <span class="material-symbols-rounded edit-hint-icon">edit</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:2px;">
+                    <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
+                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                    </button>
+                    <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
+                        <span class="material-symbols-rounded expand-icon">expand_more</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-content">
+                <ul class="list-container" id="otherProjectsList"></ul>
+                <div id="noOthersMsg" class="empty-state" style="display:none;">
+                    <span class="material-symbols-rounded empty-state-icon">folder_open</span>
+                    <div class="empty-state-text">Keine weiteren Projekte</div>
+                    <div class="empty-state-hint">Projekte ohne Favorit-Status erscheinen hier.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAUSE MANAGER -->
+        <div class="md-card collapsed" draggable="true" id="card-pauses">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-symbols-rounded drag-handle">drag_indicator</span>
+                    <span class="editable-title" contenteditable="true" onblur="saveTitle(this, 'title_pauses')">Pausen</span>
+                    <span class="material-symbols-rounded edit-hint-icon">edit</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:2px;">
+                    <button class="md-btn md-btn-tonal" id="manualPauseBtn" onclick="toggleManualPause()" style="height:32px; padding:0 16px;">
+                        <span class="material-symbols-rounded" style="font-size:18px">coffee</span>
+                    </button>
+                    <button class="card-help-btn" onclick="openCardHelp('pausen')" data-tooltip="Hilfe: Pausen">
+                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                    </button>
+                    <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
+                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                    </button>
+                    <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
+                        <span class="material-symbols-rounded expand-icon">expand_more</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-content">
+                <div id="pauseList" style="display:flex; flex-direction:column; gap:8px;"></div>
+                <div id="autoPausesToggleWrap" style="margin-top:8px;">
+                    <button class="auto-pause-toggle-btn" onclick="toggleAutoPausesPanel()">
+                        <span class="material-symbols-rounded" style="font-size:16px;">smart_toy</span>
+                        <span id="autoPausesToggleLabel">Auto-Pausen konfigurieren</span>
+                        <span class="material-symbols-rounded auto-pause-toggle-chevron" id="autoPausesChevron" style="font-size:16px; margin-left:auto;">expand_more</span>
+                    </button>
+                    <div id="autoPausesDisplay" class="auto-pauses-panel" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- WEEKLY OVERVIEW -->
+        <div class="md-card collapsed grid-wide" draggable="true" id="card-weekly">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-symbols-rounded drag-handle">drag_indicator</span>
+                    <span class="editable-title" contenteditable="true" onblur="saveTitle(this, 'title_weekly')">Wochenübersicht</span>
+                    <span class="material-symbols-rounded edit-hint-icon">edit</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:2px;">
+                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateWeek(-1)">
+                        <span class="material-symbols-rounded" style="font-size:18px">chevron_left</span>
+                    </button>
+                    <span id="weekLabel" style="font-size:13px; color:var(--md-sys-color-on-surface-variant); min-width:50px; text-align:center;">KW --</span>
+                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateWeek(1)">
+                        <span class="material-symbols-rounded" style="font-size:18px">chevron_right</span>
+                    </button>
+                    <button class="icon-btn" id="weekendToggleBtn" onclick="toggleWeekend()" title="Wochenende ein/ausblenden" style="width:28px; height:28px; opacity:0.6;">
+                        <span class="material-symbols-rounded" style="font-size:18px">weekend</span>
+                    </button>
+                    <button class="card-help-btn" onclick="openCardHelp('wochenuebersicht')" data-tooltip="Hilfe: Woche">
+                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                    </button>
+                    <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
+                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                    </button>
+                    <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
+                        <span class="material-symbols-rounded expand-icon">expand_more</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-content">
+                <div id="weeklyTableContainer" style="overflow-x:auto;"></div>
+                <div class="fab-row" style="margin-top:12px;">
+                    <button class="icon-btn" onclick="downloadBackup()" title="Backup"><span class="material-symbols-rounded">save</span></button>
+                    <button class="icon-btn" onclick="document.getElementById('restoreInput').click()" title="Restore"><span class="material-symbols-rounded">upload_file</span></button>
+                    <input type="file" id="restoreInput" class="hidden" accept=".json" onchange="restoreBackup(event)">
+                    <button class="md-btn md-btn-primary" onclick="downloadCSV()">CSV</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- EXTERNE LINKS -->
+        <div class="md-card" draggable="true" id="card-links">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-symbols-rounded drag-handle">drag_indicator</span>
+                    <span class="editable-title" contenteditable="true" onblur="saveTitle(this, 'title_links')">Externe Links</span>
+                    <span class="material-symbols-rounded edit-hint-icon">edit</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:2px;">
+                    <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
+                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                    </button>
+                    <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
+                        <span class="material-symbols-rounded expand-icon">expand_more</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-content">
+                <div id="externalLinksContainer"></div>
+            </div>
+        </div>
+
+        <!-- TIMESHEET -->
+        <div class="md-card collapsed grid-wide" draggable="true" id="card-timesheet">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-symbols-rounded drag-handle">drag_indicator</span>
+                    <span class="editable-title" contenteditable="true" onblur="saveTitle(this, 'title_timesheet')">Timesheet</span>
+                    <span class="material-symbols-rounded edit-hint-icon">edit</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:4px;">
+                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateTimesheetDay(-1)">
+                        <span class="material-symbols-rounded" style="font-size:18px">chevron_left</span>
+                    </button>
+                    <span id="timesheetDateLabel" style="font-size:13px; color:var(--md-sys-color-on-surface-variant); min-width:90px; text-align:center; cursor:pointer;" onclick="goToTimesheetToday()">--</span>
+                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateTimesheetDay(1)">
+                        <span class="material-symbols-rounded" style="font-size:18px">chevron_right</span>
+                    </button>
+                    <button class="icon-btn" style="width:28px; height:28px;" onclick="goToTimesheetToday()" title="Heute">
+                        <span class="material-symbols-rounded" style="font-size:18px">today</span>
+                    </button>
+                    <button class="card-help-btn" onclick="openCardHelp('zeiterfassung')" data-tooltip="Hilfe: Timesheet">
+                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                    </button>
+                    <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
+                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                    </button>
+                    <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
+                        <span class="material-symbols-rounded expand-icon">expand_more</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-content">
+                <div id="timesheetContainer"></div>
+            </div>
+        </div>
+
+        <!-- ARCHIVE -->
+        <div class="md-card collapsed" draggable="true" id="card-archive">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="material-symbols-rounded drag-handle">drag_indicator</span>
+                    <span class="editable-title" contenteditable="true" onblur="saveTitle(this, 'title_archive')">Archiv</span>
+                    <span class="material-symbols-rounded edit-hint-icon">edit</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:2px;">
+                    <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
+                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                    </button>
+                    <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
+                        <span class="material-symbols-rounded expand-icon">expand_more</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-content">
+                <ul class="list-container" id="archiveProjectsList"></ul>
+                <div id="noArchiveMsg" class="empty-state" style="display:none;">
+                    <span class="material-symbols-rounded empty-state-icon">archive</span>
+                    <div class="empty-state-text">Archiv ist leer</div>
+                    <div class="empty-state-hint">Archivierte Projekte erscheinen hier.</div>
+                </div>
+            </div>
+        </div>
+
+        </div><!-- /card-grid -->
+
+    </div>
+
+    <script src="app.js" defer></script>
+</body>
+</html>
