@@ -1453,3 +1453,154 @@ textarea.input-field {
     max-width: 250px;
     line-height: 1.5;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOBILE OVERFLOW FIXES
+   Behebt Overflow-Fehler auf schmalen Bildschirmen (≤ 768 px):
+   1. card-new:       Projektnamefeld + Plus-Button ragen über die Karte hinaus
+   2. card-weekly:    Hilfe-Icon + Einklapp-Pfeil ragen über die Karte hinaus
+   3. card-timesheet: gleiche Ursache wie card-weekly
+   4. Haupt-Header:   5 × icon-btn (je 44 px) + Datumszeile passen nicht in 375 px
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+    /* ── Fix 1: "Neues Projekt" Eingabezeile ───────────────────────────────────
+       Das flex:1-input-container (Projektname) kann nicht kleiner als seine
+       min-content-Breite schrumpfen. Ursache:
+       a) .input-container hat min-width: auto → richtet sich nach Inhalt
+       b) Das <input> darin hat browser-seitig min-width: auto (~170 px)
+       Beide auf 0 setzen erlaubt korrektes Einpassen. */
+    .input-row .input-container { min-width: 0; }
+    .input-row .input-field     { min-width: 0; }
+
+    /* ── Fix 2 & 3: card-weekly + card-timesheet Header ───────────────────────
+       Der Kartenheader hat auf der rechten Seite viele Steuerelemente.
+       Drag-Handle (24 px) und Hover-only-Edit-Hint (16 px) sind auf Touch-
+       Geräten nutzlos und fressen wertvolle Breite im card-title-Flex-Item. */
+    .drag-handle     { display: none !important; }
+    .edit-hint-icon  { display: none !important; }
+
+    /* Kartenüberschrift darf unter ihre natürliche Mindestbreite schrumpfen,
+       damit der Button-Block rechts immer vollständig sichtbar bleibt. */
+    .card-title      { min-width: 0; }
+    .editable-title  {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Die Navigations-Icon-Buttons (chevron_left/right, weekendToggle,
+       navigateTimesheetDay, today) haben inline style="width:28px;height:28px;"
+       und werden durch die allgemeine Regel .icon-btn { min-width:44px } auf
+       44 px aufgeblasen (+16 px je Button = 48 px unerwünschtes Wachstum).
+       Zurücksetzen auf die gewünschten 28 px; Touch-Target bleibt 44×44 px
+       durch ein transparentes ::before-Pseudoelement.
+       Gilt für: card-weekly, card-timesheet UND die Datumszeile im Header. */
+    #card-weekly .card-header    .icon-btn[style*="width:28px"],
+    #card-timesheet .card-header .icon-btn[style*="width:28px"],
+    header .icon-btn[style*="width:28px"] {
+        min-width: 28px !important;
+        min-height: 28px !important;
+        width:     28px !important;
+        height:    28px !important;
+        position: relative;
+    }
+    #card-weekly .card-header    .icon-btn[style*="width:28px"]::before,
+    #card-timesheet .card-header .icon-btn[style*="width:28px"]::before,
+    header .icon-btn[style*="width:28px"]::before {
+        content: '';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 44px; height: 44px; /* erweiterter Touch-Bereich */
+    }
+
+    /* Lücken zwischen den Steuer-Buttons auf 0 reduzieren (spart 10–20 px) */
+    #card-weekly    .card-header > div:last-child,
+    #card-timesheet .card-header > div:last-child {
+        gap: 0;
+    }
+
+    /* Wochen-Label (z. B. "KW 08") auf kompaktere Schrift verkleinern */
+    #weekLabel {
+        font-size: 11px;
+        min-width: 36px;
+    }
+
+    /* Datums-Label (z. B. "Mo, 23.2.2026") war mit min-width:90px inline
+       fixiert; bei 11 px Schrift reichen ~75 px für den kompletten Text. */
+    #timesheetDateLabel {
+        font-size:  11px !important;
+        min-width:  0    !important;
+        max-width:  78px;
+        overflow:   hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* ── Fix 4: Haupt-Header rechte Icon-Buttons ────────────────────────────────
+       Die 5 Icon-Buttons auf der rechten Header-Seite (Tags, Theme, Karten,
+       Einstellungen, Hilfe) haben keine inline-Breite, werden aber alle auf
+       44 px gesetzt (min-width-Regel). Das ergibt 5×44+4×4 = 236 px – zusammen
+       mit der linken Seite (~168 px) ergibt das ~404 px > 375 px Viewport.
+       Auf 36 px verkleinern: 5×36+4×2 = 188 px, Touch-Target via ::before. */
+    header > div:last-child .icon-btn {
+        min-width:  36px !important;
+        min-height: 36px !important;
+        width:      36px !important;
+        height:     36px !important;
+        position: relative;
+    }
+    header > div:last-child .icon-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 44px; height: 44px;
+    }
+    header > div:last-child {
+        gap: 2px;
+    }
+
+    /* ── Fix 5: Quick-Action-Buttons (Start / Feierabend / Home Office) ────────
+       3 × flex:1-Buttons mit padding:8px 20px → min 3×(40+icon+text) ≈ 430 px
+       > 367 px verfügbar. Padding reduzieren und Schrift leicht verkleinern. */
+    .quick-actions { gap: 4px; }
+    .action-btn {
+        padding:   8px 8px;
+        font-size: 13px;
+    }
+
+    /* ── Fix 6: Wochenübersicht-Tabelle ────────────────────────────────────────
+       weekly-table hat 9 Spalten (Projekt + Mo–So + Summe), Mindestbreite ~393 px
+       bei komprimierter Darstellung – noch zu breit für ~311 px Karteninhalt.
+       Lösung: card-content bekommt overflow-x: auto (horizontales Scrollen)
+       und die Tabelle wird zusätzlich komprimiert, damit sie fast passt. */
+    #card-weekly .card-content {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .weekly-table {
+        font-size: 10px;
+        min-width: 300px; /* verhindert zu starkes Zusammenquetschen */
+    }
+    .weekly-table th,
+    .weekly-table td {
+        padding: 4px 2px;
+    }
+    .weekly-table td.project-name-cell {
+        max-width: 56px;
+        font-size:  10px;
+    }
+    /* Zeitangaben in Mono-Font bleiben lesbar auf 10 px */
+    .weekly-table td {
+        font-size: 10px;
+    }
+    /* Zeitpillen minimal verkleinern */
+    .weekly-time-pill {
+        font-size:     9px;
+        padding:       1px 4px;
+        border-radius: 8px;
+    }
+}
