@@ -1,13 +1,16 @@
-# Temporäre Arbeits-Artefakte
+# Temporäre Arbeits-Artefakte (jetzt in _archiv/ verschoben)
 line_dump*.txt
 test_script.py
 replacements_script.py
+TimeFlo_6.0.html
+_archiv/
 
 # Claude Code Projektdaten
 .claude/
 
-# Alte Monolith-Datei (ersetzt durch index.html + app.js + style.css)
-TimeFlo_6.0.html
+# Windows-Gerätedateien
+nul
+NUL
 
 # OS
 .DS_Store
