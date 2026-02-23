@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TimeFlow 3.0 - Benutzerhandbuch</title>
+    <title>TimeFlow – Benutzerhandbuch</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
@@ -33,712 +33,1055 @@
             color: var(--text);
             font-family: 'Roboto', sans-serif;
             line-height: 1.7;
-            padding: 0;
         }
+
+        /* ── HERO ── */
         .hero {
             background: linear-gradient(135deg, #004A77 0%, #1E2227 60%, #4F378B 100%);
-            padding: 60px 24px 48px;
+            padding: 64px 24px 52px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(168,199,250,0.08) 0%, transparent 70%);
         }
         .hero h1 {
-            font-size: 42px;
+            font-size: 48px;
             font-weight: 300;
-            letter-spacing: -0.5px;
+            letter-spacing: -1px;
             margin-bottom: 8px;
+            position: relative;
         }
-        .hero h1 span { color: var(--primary); font-weight: 500; }
-        .hero .subtitle {
-            font-size: 16px;
+        .hero h1 .time { color: #E2E2E6; }
+        .hero h1 .flow { color: var(--primary); font-weight: 600; }
+        .hero .subtitle { font-size: 16px; color: var(--text-sub); margin-bottom: 24px; position: relative; }
+        .hero-badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; position: relative; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
             color: var(--text-sub);
-            margin-bottom: 24px;
-        }
-        .hero .version {
-            display: inline-block;
-            background: var(--primary);
-            color: #001d33;
-            padding: 4px 16px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
+            font-size: 12px;
         }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 32px 24px 80px;
-        }
+        .badge .material-symbols-rounded { font-size: 16px; color: var(--primary); }
+
+        /* ── LAYOUT ── */
+        .container { max-width: 920px; margin: 0 auto; padding: 36px 24px 80px; }
+
+        /* ── TOC ── */
         .toc {
             background: var(--surface);
             border-radius: var(--radius);
             padding: 24px 28px;
-            margin-bottom: 40px;
+            margin-bottom: 48px;
             border: 1px solid var(--outline);
         }
-        .toc h2 {
-            font-size: 18px;
-            font-weight: 500;
-            color: var(--primary);
-            margin-bottom: 16px;
-        }
-        .toc ol {
-            padding-left: 20px;
-        }
-        .toc li {
-            margin-bottom: 6px;
-        }
+        .toc h2 { font-size: 16px; font-weight: 600; color: var(--primary); margin-bottom: 16px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 32px; }
+        @media (max-width: 600px) { .toc-grid { grid-template-columns: 1fr; } }
         .toc a {
-            color: var(--text-sub);
-            text-decoration: none;
-            font-size: 14px;
-            transition: color 0.2s;
+            color: var(--text-sub); text-decoration: none; font-size: 13px;
+            padding: 4px 0; display: flex; align-items: center; gap: 6px;
+            border-bottom: 1px solid transparent; transition: color 0.2s;
         }
         .toc a:hover { color: var(--primary); }
+        .toc a .num { color: var(--text-faded); font-size: 11px; min-width: 20px; }
 
+        /* ── HEADINGS ── */
         h2 {
-            font-size: 26px;
-            font-weight: 400;
-            color: var(--primary);
-            margin: 48px 0 20px;
-            padding-bottom: 8px;
+            font-size: 26px; font-weight: 400; color: var(--primary);
+            margin: 56px 0 20px; padding-bottom: 10px;
             border-bottom: 1px solid var(--outline);
+            display: flex; align-items: center; gap: 12px;
         }
-        h3 {
-            font-size: 18px;
-            font-weight: 500;
-            color: var(--text);
-            margin: 28px 0 12px;
-        }
-        h4 {
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--tertiary);
-            margin: 20px 0 8px;
-        }
-        p {
-            color: var(--text-sub);
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
+        h2 .material-symbols-rounded { font-size: 28px; opacity: 0.8; }
+        h3 { font-size: 17px; font-weight: 500; color: var(--text); margin: 28px 0 10px; }
+        h4 { font-size: 14px; font-weight: 500; color: var(--tertiary); margin: 18px 0 8px; }
+        p { color: var(--text-sub); font-size: 14px; margin-bottom: 12px; }
+
+        /* ── CARD ── */
         .card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 20px 24px;
-            margin-bottom: 16px;
-            border: 1px solid var(--outline);
+            background: var(--surface); border-radius: var(--radius);
+            padding: 20px 24px; margin-bottom: 16px; border: 1px solid var(--outline);
         }
         .card-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-            font-weight: 500;
-            font-size: 15px;
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 10px; font-weight: 500; font-size: 15px;
         }
-        .card-title .material-symbols-rounded {
-            font-size: 22px;
-            color: var(--primary);
-        }
+        .card-title .material-symbols-rounded { font-size: 22px; color: var(--primary); }
+
+        /* ── CALLOUTS ── */
         .tip {
-            background: rgba(168, 199, 250, 0.08);
-            border-left: 3px solid var(--primary);
-            padding: 12px 16px;
-            border-radius: 0 8px 8px 0;
-            margin: 12px 0;
-            font-size: 13px;
-            color: var(--text-sub);
+            background: rgba(168,199,250,0.07); border-left: 3px solid var(--primary);
+            padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0;
+            font-size: 13px; color: var(--text-sub);
         }
         .tip strong { color: var(--primary); }
         .warning {
-            background: rgba(255, 202, 40, 0.08);
-            border-left: 3px solid var(--yellow);
-            padding: 12px 16px;
-            border-radius: 0 8px 8px 0;
-            margin: 12px 0;
-            font-size: 13px;
-            color: var(--text-sub);
+            background: rgba(255,202,40,0.07); border-left: 3px solid var(--yellow);
+            padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0;
+            font-size: 13px; color: var(--text-sub);
         }
         .warning strong { color: var(--yellow); }
+        .new-badge {
+            display: inline-block; background: #1A3A1A; color: #66BB6A;
+            font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+            letter-spacing: 0.5px; text-transform: uppercase; vertical-align: middle; margin-left: 6px;
+        }
+
+        /* ── KEY ── */
         .key {
-            display: inline-block;
-            background: var(--surface-high);
-            color: var(--text);
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 12px;
+            display: inline-block; background: var(--surface-high); color: var(--text);
+            padding: 2px 8px; border-radius: 6px;
+            font-family: 'Roboto Mono', monospace; font-size: 12px;
             border: 1px solid var(--outline);
         }
-        .icon-inline {
-            font-size: 18px;
-            vertical-align: middle;
-            color: var(--primary);
-        }
-        .feature-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin: 16px 0;
-        }
+
+        /* ── INLINE ICON ── */
+        .icon-inline { font-size: 18px; vertical-align: middle; color: var(--primary); }
+
+        /* ── FEATURE GRID ── */
+        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
         @media (max-width: 600px) { .feature-grid { grid-template-columns: 1fr; } }
         .feature-item {
-            background: var(--surface-high);
-            padding: 14px 16px;
-            border-radius: 12px;
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
+            background: var(--surface-high); padding: 14px 16px; border-radius: 12px;
+            display: flex; align-items: flex-start; gap: 10px;
         }
-        .feature-item .material-symbols-rounded {
-            font-size: 20px;
-            color: var(--tertiary);
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
+        .feature-item .material-symbols-rounded { font-size: 20px; color: var(--tertiary); flex-shrink: 0; margin-top: 2px; }
         .feature-item span { font-size: 13px; color: var(--text-sub); }
         .feature-item strong { color: var(--text); font-weight: 500; }
-        .color-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 8px 0;
-        }
-        .color-swatch {
-            width: 16px; height: 16px;
-            border-radius: 4px;
-            display: inline-block;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 12px 0;
-            font-size: 13px;
-        }
-        th {
-            text-align: left;
-            padding: 10px 12px;
-            color: var(--text-faded);
-            font-weight: 500;
-            border-bottom: 1px solid var(--outline);
-        }
-        td {
-            padding: 10px 12px;
-            border-bottom: 1px solid rgba(68, 71, 79, 0.4);
-            color: var(--text-sub);
-        }
+
+        /* ── TABLE ── */
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+        th { text-align: left; padding: 10px 12px; color: var(--text-faded); font-weight: 500; border-bottom: 1px solid var(--outline); }
+        td { padding: 10px 12px; border-bottom: 1px solid rgba(68,71,79,0.4); color: var(--text-sub); }
+        .shortcut-table td:first-child { font-family: 'Roboto Mono', monospace; color: var(--primary); white-space: nowrap; }
+
+        /* ── STEPS ── */
         .steps { counter-reset: step; padding-left: 0; list-style: none; }
         .steps li {
-            counter-increment: step;
-            position: relative;
-            padding-left: 40px;
-            margin-bottom: 16px;
-            font-size: 14px;
-            color: var(--text-sub);
+            counter-increment: step; position: relative; padding-left: 42px;
+            margin-bottom: 14px; font-size: 14px; color: var(--text-sub);
         }
         .steps li::before {
-            content: counter(step);
-            position: absolute;
-            left: 0;
-            width: 28px; height: 28px;
-            background: var(--primary-container);
-            color: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 500;
+            content: counter(step); position: absolute; left: 0;
+            width: 28px; height: 28px; background: var(--primary-container); color: var(--primary);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 500;
         }
+
+        /* ── COLOR BAR ── */
+        .color-bar { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+        .color-swatch { width: 16px; height: 16px; border-radius: 4px; display: inline-block; }
+
+        /* ── ILLUSTRATIONS ── */
+        .illustration {
+            background: var(--surface); border-radius: var(--radius);
+            border: 1px solid var(--outline); overflow: hidden;
+            margin: 20px 0; font-size: 13px;
+        }
+        .illustration-caption {
+            text-align: center; font-size: 11px; color: var(--text-faded);
+            padding: 6px 12px 10px; border-top: 1px solid var(--outline);
+            letter-spacing: 0.3px;
+        }
+
+        /* ── MISC ── */
         .material-symbols-rounded {
             font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            font-size: 24px;
-            user-select: none;
+            font-size: 24px; user-select: none;
         }
-        .shortcut-table td:first-child {
-            font-family: 'Roboto Mono', monospace;
-            color: var(--primary);
-            white-space: nowrap;
-        }
+        ul { padding-left: 20px; margin-bottom: 12px; }
+        ul li { font-size: 14px; color: var(--text-sub); margin-bottom: 4px; }
         footer {
-            text-align: center;
-            padding: 40px 24px;
-            color: var(--text-faded);
-            font-size: 12px;
-            border-top: 1px solid var(--outline);
+            text-align: center; padding: 40px 24px; color: var(--text-faded);
+            font-size: 12px; border-top: 1px solid var(--outline);
         }
+
+        /* ── TABS ILLUSTRATION ── */
+        .tabs-demo { display: flex; gap: 4px; padding: 12px 12px 0; border-bottom: 1px solid var(--outline); }
+        .tab-demo {
+            padding: 8px 14px; border-radius: 8px 8px 0 0; font-size: 12px;
+            cursor: default; display: flex; align-items: center; gap: 5px;
+        }
+        .tab-demo.active { background: var(--primary-container); color: var(--primary); }
+        .tab-demo:not(.active) { color: var(--text-faded); }
     </style>
 </head>
 <body>
 
+<!-- ████  HERO  ████ -->
 <div class="hero">
-    <h1>Time<span>Flow</span> 3.0</h1>
-    <div class="subtitle">Benutzerhandbuch &mdash; Zeiterfassung leicht gemacht</div>
-    <div class="version">Version 3.0</div>
+    <h1><span class="time">Time</span><span class="flow">Flow</span></h1>
+    <div class="subtitle">Benutzerhandbuch &mdash; Zeiterfassung f&uuml;r den Arbeitsalltag</div>
+    <div class="hero-badges">
+        <span class="badge"><span class="material-symbols-rounded">public_off</span>Komplett offline</span>
+        <span class="badge"><span class="material-symbols-rounded">storage</span>Daten bleiben lokal</span>
+        <span class="badge"><span class="material-symbols-rounded">install_desktop</span>Als PWA installierbar</span>
+        <span class="badge"><span class="material-symbols-rounded">palette</span>Dark &amp; Light Mode</span>
+    </div>
 </div>
 
 <div class="container">
 
-    <!-- TABLE OF CONTENTS -->
-    <div class="toc">
-        <h2>Inhaltsverzeichnis</h2>
-        <ol>
-            <li><a href="#start">Erste Schritte</a></li>
-            <li><a href="#oberflaeche">Die Oberfl&auml;che im &Uuml;berblick</a></li>
-            <li><a href="#projekte">Projekte verwalten</a></li>
-            <li><a href="#unterprojekte">Unterprojekte</a></li>
-            <li><a href="#zeiterfassung">Zeiterfassung</a></li>
-            <li><a href="#pausen">Pausen</a></li>
-            <li><a href="#homeoffice">Home Office Modus</a></li>
-            <li><a href="#fortschritt">Tagesfortschritt</a></li>
-            <li><a href="#erinnerungen">Erinnerungen</a></li>
-            <li><a href="#wochenuebersicht">Wochen&uuml;bersicht</a></li>
-            <li><a href="#statistiken">Statistiken</a></li>
-            <li><a href="#export">Export &amp; Backup</a></li>
-            <li><a href="#tags">Tags</a></li>
-            <li><a href="#einstellungen">Einstellungen</a></li>
-            <li><a href="#layout">Layout &amp; Anpassung</a></li>
-            <li><a href="#design">Themes &amp; Design</a></li>
-            <li><a href="#pwa">PWA &amp; Installation</a></li>
-            <li><a href="#tastatur">Tastaturk&uuml;rzel</a></li>
-            <li><a href="#tipps">Tipps &amp; Tricks</a></li>
-        </ol>
+<!-- ████  INHALTSVERZEICHNIS  ████ -->
+<div class="toc">
+    <h2>Inhaltsverzeichnis</h2>
+    <div class="toc-grid">
+        <a href="#start"><span class="num">1</span>Erste Schritte</a>
+        <a href="#oberflaeche"><span class="num">2</span>Die Oberfl&auml;che</a>
+        <a href="#projekte"><span class="num">3</span>Projekte verwalten</a>
+        <a href="#unterprojekte"><span class="num">4</span>Unterprojekte</a>
+        <a href="#zeiterfassung"><span class="num">5</span>Zeiterfassung &amp; Korrekturen</a>
+        <a href="#timesheet"><span class="num">6</span>Timesheet</a>
+        <a href="#pausen"><span class="num">7</span>Pausen</a>
+        <a href="#homeoffice"><span class="num">8</span>Home Office Modus</a>
+        <a href="#fortschritt"><span class="num">9</span>Tagesfortschritt</a>
+        <a href="#erinnerungen"><span class="num">10</span>Erinnerungen</a>
+        <a href="#wochenuebersicht"><span class="num">11</span>Wochen&uuml;bersicht</a>
+        <a href="#export"><span class="num">12</span>Export &amp; Backup</a>
+        <a href="#links"><span class="num">13</span>Externe Links</a>
+        <a href="#tags"><span class="num">14</span>Tags</a>
+        <a href="#einstellungen"><span class="num">15</span>Einstellungen</a>
+        <a href="#layout"><span class="num">16</span>Layout &amp; Anpassung</a>
+        <a href="#design"><span class="num">17</span>Themes &amp; Design</a>
+        <a href="#pwa"><span class="num">18</span>PWA &amp; Installation</a>
+        <a href="#undo"><span class="num">19</span>R&uuml;ckg&auml;ngig (Undo)</a>
+        <a href="#tastatur"><span class="num">20</span>Tastaturk&uuml;rzel</a>
+        <a href="#tipps"><span class="num">21</span>Tipps &amp; Tricks</a>
     </div>
-
-    <!-- 1. ERSTE SCHRITTE -->
-    <h2 id="start">1. Erste Schritte</h2>
-
-    <p>TimeFlow ist eine Zeiterfassungs-App, die komplett im Browser l&auml;uft &ndash; ohne Installation, ohne Server, ohne Account. Alle Daten werden lokal in deinem Browser gespeichert.</p>
-
-    <h3>App starten</h3>
-    <p>&Ouml;ffne die Datei <span class="key">TimeFlo_3.0.html</span> in deinem Browser (Chrome oder Edge empfohlen). Beim ersten Start siehst du eine animierte Begr&uuml;&szlig;ung im Aktivit&auml;tsbereich.</p>
-
-    <h3>Dein erster Arbeitstag</h3>
-    <ol class="steps">
-        <li>Klicke auf <strong>Start</strong> (Sonnen-Button) &ndash; der Timer f&uuml;r das Allgemein-Projekt startet automatisch.</li>
-        <li>Erstelle ein neues Projekt im Bereich &bdquo;Neues Projekt&ldquo; mit Projektnummer und Name.</li>
-        <li>Klicke auf dein neues Projekt in der Favoritenliste &ndash; der Timer wechselt dorthin.</li>
-        <li>Am Ende des Tages klicke auf <strong>Feierabend</strong> &ndash; alle Timer stoppen und ein Backup wird heruntergeladen.</li>
-    </ol>
-
-    <!-- 2. OBERFL&Auml;CHE -->
-    <h2 id="oberflaeche">2. Die Oberfl&auml;che im &Uuml;berblick</h2>
-
-    <h3>Kopfzeile</h3>
-    <p>Die Kopfzeile enth&auml;lt den App-Titel, die Datumsnavigation und drei Icon-Buttons:</p>
-    <table>
-        <tr><th>Icon</th><th>Funktion</th></tr>
-        <tr><td><span class="material-symbols-rounded icon-inline">label</span></td><td><strong>Tags verwalten</strong> &ndash; &ouml;ffnet die Tag-Verwaltung</td></tr>
-        <tr><td><span class="material-symbols-rounded icon-inline">light_mode</span></td><td><strong>Theme wechseln</strong> &ndash; zwischen Hell und Dunkel umschalten</td></tr>
-        <tr><td><span class="material-symbols-rounded icon-inline">settings</span></td><td><strong>Einstellungen</strong> &ndash; alle App-Einstellungen</td></tr>
-    </table>
-
-    <h3>Schnellaktionen</h3>
-    <div class="feature-grid">
-        <div class="feature-item">
-            <span class="material-symbols-rounded">wb_sunny</span>
-            <span><strong>Start</strong><br>Startet den Arbeitstag. Das Allgemein-Projekt l&auml;uft automatisch los.</span>
-        </div>
-        <div class="feature-item">
-            <span class="material-symbols-rounded">bedtime</span>
-            <span><strong>Feierabend</strong><br>Stoppt alle Timer und erstellt automatisch ein Backup.</span>
-        </div>
-        <div class="feature-item">
-            <span class="material-symbols-rounded">home</span>
-            <span><strong>Home Office</strong><br>Schaltet automatische Pausen ab (siehe Abschnitt 7).</span>
-        </div>
-    </div>
-
-    <h3>Karten&uuml;bersicht</h3>
-    <p>Die App besteht aus 8 Karten, die du frei anordnen kannst:</p>
-    <table>
-        <tr><th>Karte</th><th>Beschreibung</th></tr>
-        <tr><td><strong>Neues Projekt</strong></td><td>Hier legst du neue Projekte an</td></tr>
-        <tr><td><strong>Aktivit&auml;tsbereich</strong></td><td>Zeigt das aktive Projekt, Fortschrittsbalken, Pausen und Erinnerungen</td></tr>
-        <tr><td><strong>Favoriten</strong></td><td>Deine bevorzugten Projekte mit farbigem Rahmen</td></tr>
-        <tr><td><strong>Andere Kostenstellen</strong></td><td>Projekte die nicht als Favorit markiert sind</td></tr>
-        <tr><td><strong>Pausen</strong></td><td>Manuelle und automatische Pausen verwalten</td></tr>
-        <tr><td><strong>Wochen&uuml;bersicht</strong></td><td>Tabellarische Wochen&uuml;bersicht mit Notizen</td></tr>
-        <tr><td><strong>Statistiken</strong></td><td>Balkendiagramm f&uuml;r Tag/Woche/Monat</td></tr>
-        <tr><td><strong>Archiv</strong></td><td>Archivierte (inaktive) Projekte</td></tr>
-    </table>
-
-    <!-- 3. PROJEKTE -->
-    <h2 id="projekte">3. Projekte verwalten</h2>
-
-    <h3>Projekt anlegen</h3>
-    <ol class="steps">
-        <li>Gehe zur Karte &bdquo;Neues Projekt&ldquo;.</li>
-        <li>Gib eine <strong>Projektnummer</strong> und einen <strong>Projektnamen</strong> ein.</li>
-        <li>Klicke auf den <span class="material-symbols-rounded icon-inline">add</span> Button oder dr&uuml;cke <span class="key">Enter</span>.</li>
-        <li>Das Projekt erscheint sofort in der Favoritenliste mit einer zuf&auml;lligen Farbe.</li>
-    </ol>
-
-    <h3>Projekt starten / stoppen</h3>
-    <p>Klicke einfach auf ein Projekt in der Liste &ndash; es wird gestartet und alle anderen Timer werden gestoppt. Klickst du auf ein bereits laufendes Projekt, wird es gestoppt und &bdquo;Allgemein&ldquo; l&auml;uft weiter.</p>
-
-    <div class="tip"><strong>Tipp:</strong> Es l&auml;uft immer genau ein Projekt. Stoppst du eines, springt der Timer auf &bdquo;Allgemein&ldquo; zur&uuml;ck.</div>
-
-    <h3>Projekt-Aktionen</h3>
-    <p>Jedes Projekt in der Liste hat mehrere Aktions-Buttons (von links nach rechts):</p>
-    <table>
-        <tr><th>Icon</th><th>Aktion</th><th>Beschreibung</th></tr>
-        <tr><td><span class="material-symbols-rounded icon-inline">star</span></td><td>Favorit</td><td>Verschiebt das Projekt zwischen Favoriten und Andere Kostenstellen</td></tr>
-        <tr><td><span class="material-symbols-rounded icon-inline">account_tree</span></td><td>Unterprojekt</td><td>Legt ein Unterprojekt an (siehe Abschnitt 4)</td></tr>
-        <tr><td><span class="material-symbols-rounded icon-inline">edit</span></td><td>Bearbeiten</td><td>&Auml;ndert Projektnummer und Name</td></tr>
-        <tr><td><span class="material-symbols-rounded icon-inline">schedule</span></td><td>Zeiten</td><td>&Ouml;ffnet die Zeitbearbeitung f&uuml;r den gew&auml;hlten Tag</td></tr>
-        <tr><td><span class="material-symbols-rounded icon-inline">label</span></td><td>Tags</td><td>Ordnet Tags zu (nur sichtbar wenn Tags existieren)</td></tr>
-        <tr><td><span class="material-symbols-rounded icon-inline">archive</span></td><td>Archivieren</td><td>Verschiebt das Projekt ins Archiv</td></tr>
-        <tr><td><span class="material-symbols-rounded icon-inline">delete</span></td><td>L&ouml;schen</td><td>L&ouml;scht das Projekt unwiderruflich</td></tr>
-    </table>
-
-    <h3>Zeitanzeige in der Liste</h3>
-    <p>Rechts neben jedem Projekt siehst du zwei Zeitangaben:</p>
-    <ul style="padding-left:20px; margin-bottom:12px; font-size:14px; color:var(--text-sub);">
-        <li><strong>Oben:</strong> Heutige Arbeitszeit (HH:MM)</li>
-        <li><strong>Unten:</strong> Gesamtzeit &uuml;ber alle Tage (&Sigma; HH:MM)</li>
-    </ul>
-    <p>Bei Elternprojekten mit Unterprojekten wird die <strong>aggregierte Zeit</strong> (eigene + alle Unterprojekte) angezeigt.</p>
-
-    <!-- 4. UNTERPROJEKTE -->
-    <h2 id="unterprojekte">4. Unterprojekte</h2>
-
-    <p>Unterprojekte erm&ouml;glichen es, Teilbereiche innerhalb eines Hauptprojekts getrennt zu erfassen &ndash; z.B. Besprechungen, Recherche oder Dokumentation.</p>
-
-    <h3>Unterprojekt anlegen</h3>
-    <ol class="steps">
-        <li>Finde das Hauptprojekt in der Favoriten- oder Projektliste.</li>
-        <li>Klicke auf den <span class="material-symbols-rounded icon-inline">account_tree</span> Button am Hauptprojekt.</li>
-        <li>Gib einen Namen f&uuml;r das Unterprojekt ein (z.B. &bdquo;Besprechung allgemein&ldquo;).</li>
-        <li>Klicke auf &bdquo;Anlegen&ldquo; oder dr&uuml;cke <span class="key">Enter</span>.</li>
-    </ol>
-
-    <h3>Darstellung</h3>
-    <div class="card">
-        <p style="margin:0; font-size:13px;">Unterprojekte erscheinen <strong>einger&uuml;ckt</strong> unter dem Hauptprojekt mit einem <span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle;">subdirectory_arrow_right</span> Pfeil-Icon. Das Hauptprojekt zeigt ein blaues Badge mit der Anzahl der Unterprojekte (z.B. &bdquo;2 UP&ldquo;).</p>
-    </div>
-
-    <h3>Was wird vererbt?</h3>
-    <table>
-        <tr><th>Eigenschaft</th><th>Verhalten</th></tr>
-        <tr><td>Farbe</td><td>Erbt die Farbe des Hauptprojekts</td></tr>
-        <tr><td>Projektnummer</td><td>Erbt die Nummer des Hauptprojekts</td></tr>
-        <tr><td>Favorit-Status</td><td>Folgt dem Hauptprojekt</td></tr>
-        <tr><td>Archivierung</td><td>Wird mit dem Hauptprojekt archiviert</td></tr>
-        <tr><td>L&ouml;schung</td><td>Wird mit dem Hauptprojekt gel&ouml;scht</td></tr>
-    </table>
-
-    <h3>Zeitaggregation</h3>
-    <p>Die Zeiten der Unterprojekte z&auml;hlen <strong>zur Gesamtzeit des Hauptprojekts</strong> dazu. In den Listen, der Wochen&uuml;bersicht und den Statistiken werden sowohl Haupt- als auch Unterprojektzeiten separat angezeigt.</p>
-
-    <h3>Im Aktivit&auml;tsbereich</h3>
-    <p>L&auml;uft ein Unterprojekt, wird &uuml;ber dem Projektnamen zus&auml;tzlich der <strong>Name des Hauptprojekts</strong> angezeigt, damit du immer wei&szlig;t, in welchem Kontext du arbeitest.</p>
-
-    <!-- 5. ZEITERFASSUNG -->
-    <h2 id="zeiterfassung">5. Zeiterfassung</h2>
-
-    <h3>Wie funktioniert die Zeiterfassung?</h3>
-    <p>Jedes Projekt hat eine Liste von Zeiteintr&auml;gen (Logs). Wenn du ein Projekt startest, wird ein neuer Eintrag mit der aktuellen Uhrzeit als Startzeit angelegt. Beim Stoppen wird die Endzeit gesetzt.</p>
-
-    <h3>Zeiten manuell korrigieren</h3>
-    <ol class="steps">
-        <li>Klicke auf den <span class="material-symbols-rounded icon-inline">schedule</span> Button am gew&uuml;nschten Projekt.</li>
-        <li>Du siehst alle Zeiteintr&auml;ge f&uuml;r den ausgew&auml;hlten Tag.</li>
-        <li>Klicke in die Start- oder Endzeit und &auml;ndere sie (Format: HH:MM).</li>
-        <li>Die &Auml;nderung wird sofort gespeichert.</li>
-    </ol>
-
-    <div class="tip"><strong>Automatische Anpassung:</strong> Wenn du z.B. das Ende von Projekt A von 10:00 auf 10:30 &auml;nderst, wird automatisch der Start von Projekt B (das um 10:00 begann) auf 10:30 angepasst. So bleiben keine L&uuml;cken oder &Uuml;berlappungen.</div>
-
-    <h3>Zeiteintr&auml;ge l&ouml;schen</h3>
-    <p>In der Zeitbearbeitung kannst du abgeschlossene Eintr&auml;ge &uuml;ber den roten <span class="material-symbols-rounded icon-inline" style="color:var(--error);">delete</span> Button l&ouml;schen. Aktive (laufende) Eintr&auml;ge k&ouml;nnen nicht gel&ouml;scht werden.</p>
-
-    <!-- 6. PAUSEN -->
-    <h2 id="pausen">6. Pausen</h2>
-
-    <h3>Automatische Pausen</h3>
-    <p>TimeFlow erstellt t&auml;glich automatisch zwei Pauseneintr&auml;ge:</p>
-    <table>
-        <tr><th>Pause</th><th>Zeit</th></tr>
-        <tr><td>Fr&uuml;hst&uuml;ck</td><td>09:00 &ndash; 09:20</td></tr>
-        <tr><td>Mittag</td><td>11:30 &ndash; 12:10</td></tr>
-    </table>
-    <p>Diese Zeiten werden automatisch von der Projektzeit abgezogen. Die Start- und Endzeiten k&ouml;nnen pro Tag manuell angepasst werden.</p>
-
-    <h3>Manuelle Pause</h3>
-    <ol class="steps">
-        <li>&Ouml;ffne die Karte &bdquo;Pausen&ldquo;.</li>
-        <li>Klicke auf den <span class="material-symbols-rounded icon-inline">coffee</span> <strong>Pause</strong> Button.</li>
-        <li>Im Aktivit&auml;tsbereich erscheint ein pulsierendes Banner &bdquo;Manuelle Pause&ldquo;.</li>
-        <li>Klicke erneut auf den Button (jetzt <span class="material-symbols-rounded icon-inline">play_arrow</span>), um die Pause zu beenden.</li>
-    </ol>
-
-    <h3>Pausen-Banner</h3>
-    <p>Wenn eine Pause aktiv ist (automatisch oder manuell), erscheint ein <strong>pulsierendes Banner</strong> direkt im Aktivit&auml;tsbereich mit dem Text &bdquo;Automatische Pause&ldquo; oder &bdquo;Manuelle Pause&ldquo;.</p>
-
-    <!-- 7. HOME OFFICE -->
-    <h2 id="homeoffice">7. Home Office Modus</h2>
-
-    <p>Im Home Office brauchst du vielleicht keine automatischen Pausen (Fr&uuml;hst&uuml;ck/Mittag). Der Home Office Modus deaktiviert diese.</p>
-
-    <h3>Aktivieren / Deaktivieren</h3>
-    <p>Klicke auf den <strong>Home Office</strong> Button in den Schnellaktionen. Wenn aktiv:</p>
-    <ul style="padding-left:20px; margin-bottom:12px; font-size:14px; color:var(--text-sub);">
-        <li>Der Button zeigt ein H&auml;kchen: &bdquo;Home Office &#10003;&ldquo;</li>
-        <li>Automatische Pausen werden <strong>nicht erstellt</strong></li>
-        <li>Manuelle Pausen funktionieren weiterhin normal</li>
-    </ul>
-
-    <div class="tip"><strong>Tipp:</strong> Die Einstellung bleibt gespeichert, bis du sie wieder deaktivierst.</div>
-
-    <!-- 8. FORTSCHRITT -->
-    <h2 id="fortschritt">8. Tagesfortschritt</h2>
-
-    <p>Der Fortschrittsbalken im Aktivit&auml;tsbereich zeigt dir, wie viel deines Arbeitstages du bereits geleistet hast.</p>
-
-    <h3>Was wird gemessen?</h3>
-    <p>Der Balken basiert auf der <strong>tats&auml;chlich geleisteten Arbeitszeit</strong> (Summe aller Projektzeiten heute) &ndash; nicht auf der verstrichenen Uhrzeit. Pausen werden also nicht mitgez&auml;hlt.</p>
-
-    <h3>Farbcodierung</h3>
-    <div class="color-bar"><span class="color-swatch" style="background:var(--green);"></span> <span style="font-size:13px; color:var(--text-sub);"><strong>Gr&uuml;n</strong> &ndash; 0% bis 60% (Standard)</span></div>
-    <div class="color-bar"><span class="color-swatch" style="background:var(--yellow);"></span> <span style="font-size:13px; color:var(--text-sub);"><strong>Gelb</strong> &ndash; 60% bis 85% (Standard)</span></div>
-    <div class="color-bar"><span class="color-swatch" style="background:var(--red);"></span> <span style="font-size:13px; color:var(--text-sub);"><strong>Rot</strong> &ndash; 85% bis 100% (Standard)</span></div>
-    <div class="color-bar"><span class="color-swatch" style="background:var(--purple);"></span> <span style="font-size:13px; color:var(--text-sub);"><strong>Lila</strong> &ndash; &Uuml;ber 100% (=&Uuml;berstunden)</span></div>
-
-    <h3>Anzeige-Informationen</h3>
-    <p>Neben dem Balken siehst du:</p>
-    <ul style="padding-left:20px; margin-bottom:12px; font-size:14px; color:var(--text-sub);">
-        <li><strong>Aktuelle Uhrzeit</strong> (&#128336; HH:MM)</li>
-        <li><strong>Prozent</strong> des Arbeitstages</li>
-        <li><strong>Geleistete Zeit</strong> (HH:MM)</li>
-        <li><strong>Gesch&auml;tzter Feierabend</strong> (~HH:MM) oder &bdquo;&Uuml;berstunden!&ldquo;</li>
-    </ul>
-
-    <h3>Einstellungen</h3>
-    <p>In den Einstellungen kannst du anpassen:</p>
-    <table>
-        <tr><th>Option</th><th>Standard</th><th>Beschreibung</th></tr>
-        <tr><td>Aktiviert</td><td>Ja</td><td>Fortschrittsanzeige ein/ausschalten</td></tr>
-        <tr><td>Arbeitstag-Dauer</td><td>10 Stunden</td><td>Maximale Arbeitszeit pro Tag</td></tr>
-        <tr><td>Gelb ab</td><td>60%</td><td>Ab wann der Balken gelb wird</td></tr>
-        <tr><td>Rot ab</td><td>85%</td><td>Ab wann der Balken rot wird</td></tr>
-    </table>
-
-    <!-- 9. ERINNERUNGEN -->
-    <h2 id="erinnerungen">9. Erinnerungen</h2>
-
-    <p>Erinnerungen erscheinen als Banner im Aktivit&auml;tsbereich zur eingestellten Uhrzeit.</p>
-
-    <h3>Erinnerung anlegen</h3>
-    <ol class="steps">
-        <li>&Ouml;ffne die Einstellungen (oder klicke auf <span class="material-symbols-rounded icon-inline">notifications</span> im Aktivit&auml;tsbereich-Header).</li>
-        <li>Scrolle zum Bereich &bdquo;Erinnerungen&ldquo;.</li>
-        <li>W&auml;hle eine <strong>Uhrzeit</strong> und gib einen <strong>Text</strong> ein.</li>
-        <li>Aktiviere <strong>&bdquo;T&auml;glich&ldquo;</strong> wenn die Erinnerung jeden Tag erscheinen soll.</li>
-        <li>Klicke auf den <span class="material-symbols-rounded icon-inline">add</span> Button.</li>
-    </ol>
-
-    <h3>Einmalig vs. T&auml;glich</h3>
-    <table>
-        <tr><th>Typ</th><th>Icon</th><th>Verhalten</th></tr>
-        <tr><td>Einmalig</td><td><span class="material-symbols-rounded icon-inline">notifications</span></td><td>Erscheint einmal und wird danach automatisch gel&ouml;scht</td></tr>
-        <tr><td>T&auml;glich</td><td><span class="material-symbols-rounded icon-inline">event_repeat</span></td><td>Erscheint jeden Tag zur gleichen Uhrzeit erneut</td></tr>
-    </table>
-
-    <p>Klicke auf das Erinnerungs-Banner im Aktivit&auml;tsbereich, um es zu schlie&szlig;en.</p>
-
-    <!-- 10. WOCHEN&Uuml;BERSICHT -->
-    <h2 id="wochenuebersicht">10. Wochen&uuml;bersicht</h2>
-
-    <p>Die Wochen&uuml;bersicht zeigt eine Tabelle mit allen Projekten, die in der gew&auml;hlten Woche Zeiten haben.</p>
-
-    <h3>Navigation</h3>
-    <p>Nutze die Pfeile neben der Kalenderwochen-Anzeige (z.B. &bdquo;KW 8&ldquo;), um zwischen Wochen zu bl&auml;ttern.</p>
-
-    <h3>Wochenende ein-/ausblenden</h3>
-    <p>Klicke auf den <span class="material-symbols-rounded icon-inline">weekend</span> Button im Karten-Header. Wenn deaktiviert, werden nur Montag bis Freitag angezeigt.</p>
-
-    <h3>Tagesnotizen</h3>
-    <p>Unter jedem Zeiteintrag in der Tabelle befindet sich ein Notizfeld. Dort kannst du t&auml;gliche Notizen pro Projekt hinterlegen (z.B. was du an dem Tag gemacht hast). Die Notiz wird auch als kleiner Vorschautext direkt unter der Zeitanzeige angezeigt.</p>
-
-    <h3>Unterprojekte</h3>
-    <p>Unterprojekte erscheinen in der Tabelle einger&uuml;ckt mit einem &#8627; Symbol unter dem Hauptprojekt.</p>
-
-    <!-- 11. STATISTIKEN -->
-    <h2 id="statistiken">11. Statistiken</h2>
-
-    <p>Die Statistik-Karte zeigt ein farbiges Balkendiagramm deiner Arbeitszeiten.</p>
-
-    <h3>Zeitr&auml;ume</h3>
-    <div class="feature-grid">
-        <div class="feature-item"><span class="material-symbols-rounded">today</span><span><strong>Tag</strong><br>Zeigt den aktuell gew&auml;hlten Tag</span></div>
-        <div class="feature-item"><span class="material-symbols-rounded">date_range</span><span><strong>Woche</strong><br>Zeigt die gesamte Kalenderwoche</span></div>
-        <div class="feature-item"><span class="material-symbols-rounded">calendar_month</span><span><strong>Monat</strong><br>Zeigt den gesamten Kalendermonat</span></div>
-    </div>
-
-    <p>Jedes Projekt wird als farbiger Balken dargestellt. Unterprojekte sind mit &bdquo;&#8627;&ldquo; gekennzeichnet. Projekte mit weniger als 1 Minute werden nicht angezeigt.</p>
-
-    <!-- 12. EXPORT & BACKUP -->
-    <h2 id="export">12. Export &amp; Backup</h2>
-
-    <p>Die Export-Funktionen findest du in der Wochen&uuml;bersicht-Karte (unten).</p>
-
-    <h3>CSV-Export</h3>
-    <p>Klicke auf den <strong>CSV</strong> Button. Die Datei enth&auml;lt folgende Spalten:</p>
-    <table>
-        <tr><th>Spalte</th><th>Inhalt</th></tr>
-        <tr><td>Nummer</td><td>Projektnummer</td></tr>
-        <tr><td>Projekt</td><td>Projektname (bei Unterprojekten: Hauptprojektname)</td></tr>
-        <tr><td>Unterprojekt</td><td>Name des Unterprojekts (leer bei Hauptprojekten)</td></tr>
-        <tr><td>Notiz</td><td>Projektnotiz</td></tr>
-        <tr><td>Dauer (Min)</td><td>Dauer in Minuten</td></tr>
-        <tr><td>Dauer (Std)</td><td>Dauer als HH:MM</td></tr>
-    </table>
-
-    <div class="tip"><strong>Tipp:</strong> In den Einstellungen kannst du die Zeitrundung f&uuml;r den CSV-Export festlegen (exakt, 5 min, 15 min, 30 min).</div>
-
-    <h3>Backup erstellen</h3>
-    <p>Klicke auf den <span class="material-symbols-rounded icon-inline">save</span> Button. Es wird eine JSON-Datei mit allen Daten heruntergeladen.</p>
-
-    <h3>Backup wiederherstellen</h3>
-    <ol class="steps">
-        <li>Klicke auf den <span class="material-symbols-rounded icon-inline">upload_file</span> Button.</li>
-        <li>W&auml;hle eine zuvor erstellte JSON-Backup-Datei aus.</li>
-        <li>Best&auml;tige mit &bdquo;Daten &uuml;berschreiben?&ldquo;.</li>
-    </ol>
-
-    <div class="warning"><strong>Achtung:</strong> Beim Wiederherstellen werden <strong>alle aktuellen Daten &uuml;berschrieben</strong>. Erstelle vorher ein Backup!</div>
-
-    <!-- 13. TAGS -->
-    <h2 id="tags">13. Tags</h2>
-
-    <p>Tags sind farbige Markierungen, die du Projekten zuordnen kannst, um sie zu kategorisieren und zu filtern.</p>
-
-    <h3>Tags erstellen</h3>
-    <ol class="steps">
-        <li>Klicke auf das <span class="material-symbols-rounded icon-inline">label</span> Icon im Header.</li>
-        <li>Gib einen Namen ein und w&auml;hle eine Farbe.</li>
-        <li>Klicke auf <span class="material-symbols-rounded icon-inline">add</span>.</li>
-    </ol>
-
-    <h3>Tags zuordnen</h3>
-    <p>Klicke auf den <span class="material-symbols-rounded icon-inline">label</span> Button an einem Projekt und setze H&auml;kchen bei den gew&uuml;nschten Tags. Mehrere Tags pro Projekt sind m&ouml;glich.</p>
-
-    <h3>Nach Tags filtern</h3>
-    <p>Unterhalb der Schnellaktionen erscheint eine Tag-Filterleiste. Klicke auf einen Tag, um nur Projekte mit diesem Tag anzuzeigen. Erneutes Klicken hebt den Filter auf.</p>
-
-    <!-- 14. EINSTELLUNGEN -->
-    <h2 id="einstellungen">14. Einstellungen</h2>
-
-    <p>&Ouml;ffne die Einstellungen &uuml;ber das <span class="material-symbols-rounded icon-inline">settings</span> Icon im Header.</p>
-
-    <table>
-        <tr><th>Einstellung</th><th>Beschreibung</th></tr>
-        <tr><td><strong>Export-Dateiname</strong></td><td>Prefix f&uuml;r CSV- und Backup-Dateien</td></tr>
-        <tr><td><strong>Zeiten runden</strong></td><td>Rundung f&uuml;r CSV: Exakt, 1 min, 5 min, 15 min, 30 min</td></tr>
-        <tr><td><strong>Begr&uuml;&szlig;ungstext</strong></td><td>Wird beim App-Start animiert angezeigt (leer = deaktiviert)</td></tr>
-        <tr><td><strong>Fortschrittsanzeige</strong></td><td>Aktiviert den Tagesfortschrittsbalken</td></tr>
-        <tr><td><strong>Arbeitstag-Dauer</strong></td><td>Stunden pro Arbeitstag (Standard: 10)</td></tr>
-        <tr><td><strong>Gelb ab / Rot ab</strong></td><td>Farbschwellen f&uuml;r den Fortschrittsbalken</td></tr>
-        <tr><td><strong>Erinnerungen</strong></td><td>Zeit-basierte Erinnerungen anlegen und verwalten</td></tr>
-    </table>
-
-    <!-- 15. LAYOUT -->
-    <h2 id="layout">15. Layout &amp; Anpassung</h2>
-
-    <h3>Karten verschieben</h3>
-    <p>Ziehe eine Karte am <span class="material-symbols-rounded icon-inline">drag_indicator</span> Griff und lasse sie an der gew&uuml;nschten Position fallen. Die Reihenfolge wird gespeichert.</p>
-
-    <h3>Karten-Breite &auml;ndern</h3>
-    <p>Klicke auf den <span class="material-symbols-rounded icon-inline">width_wide</span> Button im Karten-Header. Die Karte wechselt zwischen halber und voller Breite. Auf Mobilger&auml;ten sind alle Karten automatisch vollbreit.</p>
-
-    <h3>Karten ein-/ausklappen</h3>
-    <p>Klicke auf den <span class="material-symbols-rounded icon-inline">expand_more</span> Button, um den Inhalt einer Karte aus- oder einzublenden.</p>
-
-    <h3>Kartentitel &auml;ndern</h3>
-    <p>Klicke auf den Titel einer Karte und tippe einen neuen Namen ein. Dr&uuml;cke <span class="key">Enter</span> oder klicke woanders, um zu speichern.</p>
-
-    <h3>Masonry-Layout</h3>
-    <p>Die Karten werden automatisch in zwei Spalten angeordnet, wobei L&uuml;cken vermieden werden (Masonry-Layout). Karten werden immer in die k&uuml;rzere Spalte platziert.</p>
-
-    <!-- 16. THEMES -->
-    <h2 id="design">16. Themes &amp; Design</h2>
-
-    <p>TimeFlow unterst&uuml;tzt zwei Themes:</p>
-    <div class="feature-grid">
-        <div class="feature-item">
-            <span class="material-symbols-rounded">dark_mode</span>
-            <span><strong>Dark Mode</strong> (Standard)<br>Dunkler Hintergrund, helle Schrift. Schont die Augen.</span>
-        </div>
-        <div class="feature-item">
-            <span class="material-symbols-rounded">light_mode</span>
-            <span><strong>Light Mode</strong><br>Heller Hintergrund, dunkle Schrift. F&uuml;r helle Umgebungen.</span>
-        </div>
-    </div>
-    <p>Wechsle das Theme &uuml;ber den <span class="material-symbols-rounded icon-inline">light_mode</span> / <span class="material-symbols-rounded icon-inline">dark_mode</span> Button im Header.</p>
-
-    <!-- 17. PWA -->
-    <h2 id="pwa">17. PWA &amp; Installation</h2>
-
-    <p>TimeFlow kann als Progressive Web App (PWA) installiert werden und verh&auml;lt sich dann wie eine native App.</p>
-
-    <h3>Installation &uuml;ber HTTP(S)</h3>
-    <p>Wenn du TimeFlow &uuml;ber einen Webserver aufrufst, erscheint in der Adresszeile ein Installations-Icon. Klicke darauf, um die App zu installieren.</p>
-
-    <h3>Lokale Nutzung (file://)</h3>
-    <p>Wenn du die HTML-Datei lokal &ouml;ffnest, ist die PWA-Installation nicht m&ouml;glich. Stattdessen:</p>
-    <ol class="steps">
-        <li>&Ouml;ffne die Datei in Chrome oder Edge.</li>
-        <li>Klicke auf das Men&uuml; (&vellip;) oben rechts.</li>
-        <li>W&auml;hle <strong>&bdquo;Verkn&uuml;pfung erstellen...&ldquo;</strong> (Chrome) oder <strong>&bdquo;Apps &gt; Diese Seite als App installieren&ldquo;</strong> (Edge).</li>
-        <li>Aktiviere <strong>&bdquo;Als Fenster &ouml;ffnen&ldquo;</strong>.</li>
-    </ol>
-
-    <!-- 18. TASTATUR -->
-    <h2 id="tastatur">18. Tastaturk&uuml;rzel</h2>
-
-    <table class="shortcut-table">
-        <tr><th>Taste</th><th>Wo</th><th>Aktion</th></tr>
-        <tr><td>Enter</td><td>Neues Projekt</td><td>Projekt anlegen</td></tr>
-        <tr><td>Enter</td><td>Unterprojekt-Dialog</td><td>Unterprojekt anlegen</td></tr>
-        <tr><td>Enter</td><td>Erinnerung-Textfeld</td><td>Erinnerung hinzuf&uuml;gen</td></tr>
-        <tr><td>Enter</td><td>Neuer Tag</td><td>Tag erstellen</td></tr>
-    </table>
-
-    <!-- 19. TIPPS -->
-    <h2 id="tipps">19. Tipps &amp; Tricks</h2>
-
-    <div class="card">
-        <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Allgemein-Projekt</div>
-        <p style="margin:0;">Das Allgemein-Projekt (SYS) l&auml;uft immer als Fallback. Wenn du kein spezifisches Projekt gestartet hast, wird die Zeit dort erfasst. Es kann nicht gel&ouml;scht werden.</p>
-    </div>
-
-    <div class="card">
-        <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Datensicherheit</div>
-        <p style="margin:0;">Alle Daten liegen ausschlie&szlig;lich in deinem Browser (localStorage). Erstelle regelm&auml;&szlig;ig Backups! Der Feierabend-Button erstellt automatisch eins.</p>
-    </div>
-
-    <div class="card">
-        <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Mehrere Bildschirme</div>
-        <p style="margin:0;">Nutze die Karten-Breite und Drag &amp; Drop, um das Layout f&uuml;r deinen Monitor zu optimieren. Auf gro&szlig;en Bildschirmen passen zwei schmale Karten nebeneinander.</p>
-    </div>
-
-    <div class="card">
-        <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Zeitkorrektur</div>
-        <p style="margin:0;">Hast du vergessen, ein Projekt zu wechseln? Nutze die Zeitbearbeitung (<span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle;">schedule</span>), um Start- und Endzeiten manuell zu korrigieren. Benachbarte Projekte werden automatisch mit angepasst.</p>
-    </div>
-
-    <div class="card">
-        <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Unterprojekte f&uuml;r Besprechungen</div>
-        <p style="margin:0;">Erstelle f&uuml;r ein Hauptprojekt Unterprojekte wie &bdquo;Besprechung allgemein&ldquo;, &bdquo;Besprechung Fachbereich&ldquo;, &bdquo;Dokumentation&ldquo; etc. So siehst du genau, wie viel Zeit in welchen Bereich flie&szlig;t.</p>
-    </div>
-
-    <div class="card">
-        <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Datumsnavigation</div>
-        <p style="margin:0;">Mit den Pfeilen in der Kopfzeile kannst du zu fr&uuml;heren Tagen navigieren, um Zeiten und Statistiken f&uuml;r vergangene Tage einzusehen. Klicke auf das Datum, um zum heutigen Tag zur&uuml;ckzukehren.</p>
-    </div>
-
 </div>
 
+
+<!-- ████  1. ERSTE SCHRITTE  ████ -->
+<h2 id="start"><span class="material-symbols-rounded">rocket_launch</span>1. Erste Schritte</h2>
+
+<p>TimeFlow ist eine Zeiterfassungs-App, die komplett im Browser l&auml;uft &ndash; ohne Installation, ohne Server, ohne Account. Alle Daten werden ausschlie&szlig;lich lokal in deinem Browser (localStorage) gespeichert.</p>
+
+<h3>App starten</h3>
+<p>&Ouml;ffne <span class="key">index.html</span> in Chrome oder Edge (empfohlen). Beim allerersten Start erscheint kurz ein <strong>Onboarding-Dialog</strong>, der dich in 3 kurzen Schritten durch die Grundfunktionen f&uuml;hrt.</p>
+
+<h3>Dein erster Arbeitstag &ndash; Schritt f&uuml;r Schritt</h3>
+<ol class="steps">
+    <li>Klicke auf <strong>Start</strong> <span class="material-symbols-rounded icon-inline">wb_sunny</span> &ndash; der Arbeitstag beginnt, das Allgemein-Projekt l&auml;uft automatisch.</li>
+    <li>Gib in der Karte &bdquo;Neues Projekt&ldquo; eine <strong>Projektnummer</strong> und einen <strong>Namen</strong> ein und dr&uuml;cke <span class="key">Enter</span>.</li>
+    <li>Klicke auf dein neues Projekt in der <strong>Favoritenliste</strong> &ndash; der Timer wechselt sofort dorthin.</li>
+    <li>Wechsle jederzeit das aktive Projekt durch einfachen Klick &ndash; immer l&auml;uft genau eines.</li>
+    <li>Am Feierabend klicke auf <strong>Feierabend</strong> <span class="material-symbols-rounded icon-inline">bedtime</span> &ndash; alle Timer stoppen und ein Backup wird automatisch heruntergeladen.</li>
+</ol>
+
+
+<!-- ████  2. OBERFLÄCHE  ████ -->
+<h2 id="oberflaeche"><span class="material-symbols-rounded">dashboard</span>2. Die Oberfl&auml;che</h2>
+
+<!-- SVG: App-Übersicht -->
+<div class="illustration">
+<svg viewBox="0 0 800 220" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#111318;">
+  <!-- Header Background -->
+  <rect x="0" y="0" width="800" height="60" fill="#1E2227"/>
+  <line x1="0" y1="60" x2="800" y2="60" stroke="#44474F" stroke-width="1"/>
+
+  <!-- Logo -->
+  <text x="20" y="38" font-family="Roboto,sans-serif" font-weight="300" font-size="22" fill="#E2E2E6">Time</text>
+  <text x="72" y="38" font-family="Roboto,sans-serif" font-weight="700" font-size="22" fill="#A8C7FA">Flow</text>
+
+  <!-- Date Navigation -->
+  <rect x="18" y="45" width="14" height="14" rx="3" fill="#282A2F" stroke="#44474F" stroke-width="0.5"/>
+  <text x="22" y="56" font-family="sans-serif" font-size="10" fill="#8E9199">‹</text>
+  <text x="37" y="55" font-family="Roboto,sans-serif" font-size="11" fill="#C4C7C5">Mo, 10.02.2025</text>
+  <rect x="121" y="45" width="14" height="14" rx="3" fill="#282A2F" stroke="#44474F" stroke-width="0.5"/>
+  <text x="125" y="56" font-family="sans-serif" font-size="10" fill="#8E9199">›</text>
+
+  <!-- Header Buttons (right side) -->
+  <!-- label icon button -->
+  <rect x="632" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
+  <text x="641" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xe892;</text>
+  <!-- theme button -->
+  <rect x="674" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
+  <text x="683" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xe518;</text>
+  <!-- dashboard_customize button -->
+  <rect x="716" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
+  <text x="723" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xf006;</text>
+  <!-- settings button -->
+  <rect x="716" y="12" width="36" height="36" rx="8" fill="transparent"/>
+  <rect x="758" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
+  <text x="766" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xe8b8;</text>
+
+  <!-- Button Labels -->
+  <text x="638" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Tags</text>
+  <text x="692" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Theme</text>
+  <text x="734" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Karten</text>
+  <text x="776" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Einst.</text>
+
+  <!-- Quick Actions -->
+  <rect x="0" y="70" width="800" height="56" fill="#1A1D22"/>
+  <!-- Start Button -->
+  <rect x="20" y="80" width="120" height="36" rx="18" fill="#282A2F" stroke="#44474F" stroke-width="1"/>
+  <circle cx="45" cy="98" r="6" fill="#FFB900" opacity="0.9"/>
+  <text x="57" y="103" font-family="Roboto,sans-serif" font-size="13" fill="#E2E2E6">Start</text>
+  <!-- Feierabend Button -->
+  <rect x="152" y="80" width="140" height="36" rx="18" fill="#282A2F" stroke="#44474F" stroke-width="1"/>
+  <circle cx="175" cy="98" r="6" fill="#A8C7FA" opacity="0.9"/>
+  <text x="188" y="103" font-family="Roboto,sans-serif" font-size="13" fill="#E2E2E6">Feierabend</text>
+  <!-- Home Office Button -->
+  <rect x="304" y="80" width="140" height="36" rx="18" fill="#282A2F" stroke="#44474F" stroke-width="1"/>
+  <circle cx="327" cy="98" r="6" fill="#81C784" opacity="0.9"/>
+  <text x="340" y="103" font-family="Roboto,sans-serif" font-size="13" fill="#E2E2E6">Home Office</text>
+
+  <!-- Labels under quick actions -->
+  <text x="80" y="126" font-family="Roboto,sans-serif" font-size="10" fill="#8E9199" text-anchor="middle">Startet den Arbeitstag</text>
+  <text x="222" y="126" font-family="Roboto,sans-serif" font-size="10" fill="#8E9199" text-anchor="middle">Stoppt alle Timer + Backup</text>
+  <text x="374" y="126" font-family="Roboto,sans-serif" font-size="10" fill="#8E9199" text-anchor="middle">Deaktiviert Auto-Pausen</text>
+
+  <!-- Progress Bar -->
+  <rect x="0" y="136" width="800" height="44" fill="#111318"/>
+  <rect x="20" y="146" width="540" height="12" rx="6" fill="#282A2F"/>
+  <rect x="20" y="146" width="340" height="12" rx="6" fill="#66BB6A"/>
+  <text x="580" y="156" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">63% &bull; 06:18 &bull; ~17:42</text>
+
+  <!-- Card Grid Hint -->
+  <rect x="0" y="190" width="800" height="30" fill="#0D1014"/>
+  <text x="400" y="210" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199" text-anchor="middle">↕ Kartengitter – frei anordnebar per Drag &amp; Drop</text>
+</svg>
+<div class="illustration-caption">App-Aufbau: Header &rarr; Schnellaktionen &rarr; Fortschrittsbalken &rarr; Karten</div>
+</div>
+
+<h3>Die Kopfzeile</h3>
+<table>
+    <tr><th>Icon</th><th>Funktion</th></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">chevron_left</span> Datum <span class="material-symbols-rounded icon-inline">chevron_right</span></td><td>Navigation zwischen den Tagen. Klick auf das Datum springt zu &bdquo;Heute&ldquo;</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">label</span></td><td><strong>Tags verwalten</strong></td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">light_mode</span></td><td><strong>Theme wechseln</strong> zwischen Hell und Dunkel</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">dashboard_customize</span></td><td><strong>Karten ein-/ausblenden</strong> &ndash; w&auml;hle, welche Karten sichtbar sind</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">settings</span></td><td><strong>Einstellungen</strong> &ouml;ffnen</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">help</span></td><td><strong>Hilfe / Anleitung</strong> &ouml;ffnen</td></tr>
+</table>
+
+<h3>Schnellaktionen</h3>
+<div class="feature-grid">
+    <div class="feature-item">
+        <span class="material-symbols-rounded">wb_sunny</span>
+        <span><strong>Start</strong><br>Startet den Arbeitstag. Das Allgemein-Projekt l&auml;uft automatisch los.</span>
+    </div>
+    <div class="feature-item">
+        <span class="material-symbols-rounded">bedtime</span>
+        <span><strong>Feierabend</strong><br>Stoppt alle Timer und l&auml;dt automatisch ein Backup herunter.</span>
+    </div>
+    <div class="feature-item">
+        <span class="material-symbols-rounded">home</span>
+        <span><strong>Home Office</strong><br>Deaktiviert automatische Pausen (Abschnitt 8).</span>
+    </div>
+</div>
+
+<h3>Kartengitter &ndash; &Uuml;bersicht</h3>
+<p>Die App zeigt Inhalt in <strong>Karten</strong>, die im 2-Spalten-Masonry-Layout angeordnet sind. Standardm&auml;&szlig;ig aktive Karten:</p>
+<table>
+    <tr><th>Karte</th><th>Beschreibung</th></tr>
+    <tr><td><strong>Neues Projekt</strong></td><td>Projekte anlegen</td></tr>
+    <tr><td><strong>Aktivit&auml;tsbereich</strong></td><td>Aktives Projekt, Timer, Fortschritt, Pausen-Banner, Erinnerungen</td></tr>
+    <tr><td><strong>Favoriten</strong></td><td>Bevorzugte Projekte mit farbigem Rahmen</td></tr>
+    <tr><td><strong>Andere Kostenstellen</strong></td><td>Nicht-Favorit-Projekte</td></tr>
+    <tr><td><strong>Pausen</strong></td><td>Manuelle &amp; automatische Pausen</td></tr>
+    <tr><td><strong>Wochen&uuml;bersicht</strong></td><td>Tabellarische Wochenansicht mit Notizen</td></tr>
+    <tr><td><strong>Externe Links</strong></td><td>Konfigurierbare Buttons f&uuml;r externe Webseiten</td></tr>
+    <tr><td><strong>Timesheet</strong></td><td>Chronologische Tagesansicht aller Zeiteintr&auml;ge</td></tr>
+    <tr><td><strong>Archiv</strong></td><td>Archivierte (inaktive) Projekte</td></tr>
+</table>
+
+
+<!-- ████  3. PROJEKTE  ████ -->
+<h2 id="projekte"><span class="material-symbols-rounded">folder</span>3. Projekte verwalten</h2>
+
+<h3>Projekt anlegen</h3>
+<ol class="steps">
+    <li>Gehe zur Karte &bdquo;Neues Projekt&ldquo;.</li>
+    <li>Gib eine <strong>Projektnummer</strong> (z.B. &bdquo;4711&ldquo;) und einen <strong>Projektnamen</strong> ein.</li>
+    <li>Dr&uuml;cke <span class="key">Enter</span> oder klicke den <span class="material-symbols-rounded icon-inline">add</span> Button.</li>
+    <li>Das Projekt erscheint sofort in der Favoritenliste mit einer zuf&auml;lligen Farbe.</li>
+</ol>
+
+<!-- SVG: Projekt-Listeneintrag mit Aktions-Buttons -->
+<div class="illustration">
+<svg viewBox="0 0 760 72" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#1E2227;">
+  <!-- Project Row -->
+  <rect x="8" y="8" width="744" height="56" rx="12" fill="#282A2F" stroke="#66BB6A" stroke-width="2"/>
+
+  <!-- Color indicator -->
+  <rect x="16" y="16" width="4" height="40" rx="2" fill="#66BB6A"/>
+
+  <!-- Project Text -->
+  <text x="30" y="35" font-family="Roboto,sans-serif" font-weight="500" font-size="14" fill="#E2E2E6">4711 – Mein Projekt</text>
+  <text x="30" y="52" font-family="Roboto,sans-serif" font-size="12" fill="#8E9199">01:23 heute  |  Σ 04:17</text>
+
+  <!-- Action Buttons (right side, labeled) -->
+  <!-- star -->
+  <rect x="420" y="18" width="32" height="32" rx="8" fill="#33353A"/>
+  <text x="427" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#FFCA28">&#xe838;</text>
+
+  <!-- account_tree (subproject) -->
+  <rect x="458" y="18" width="32" height="32" rx="8" fill="#33353A"/>
+  <text x="465" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#C4C7C5">&#xe97a;</text>
+
+  <!-- edit -->
+  <rect x="496" y="18" width="32" height="32" rx="8" fill="#33353A"/>
+  <text x="503" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#C4C7C5">&#xe3c9;</text>
+
+  <!-- schedule -->
+  <rect x="534" y="18" width="32" height="32" rx="8" fill="#33353A"/>
+  <text x="541" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#C4C7C5">&#xe8b5;</text>
+
+  <!-- label -->
+  <rect x="572" y="18" width="32" height="32" rx="8" fill="#33353A"/>
+  <text x="579" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#C4C7C5">&#xe892;</text>
+
+  <!-- archive -->
+  <rect x="610" y="18" width="32" height="32" rx="8" fill="#33353A"/>
+  <text x="617" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#C4C7C5">&#xe149;</text>
+
+  <!-- delete -->
+  <rect x="648" y="18" width="32" height="32" rx="8" fill="#33353A"/>
+  <text x="655" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#FFB4AB">&#xe872;</text>
+
+  <!-- Labels under buttons -->
+  <text x="436" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Favorit</text>
+  <text x="474" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Unter-P.</text>
+  <text x="512" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Bearb.</text>
+  <text x="550" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Zeiten</text>
+  <text x="588" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Tags</text>
+  <text x="626" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Archiv</text>
+  <text x="664" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#FFB4AB" text-anchor="middle">Löschen</text>
+</svg>
+<div class="illustration-caption">Projektzeile: Links Zeitanzeige, rechts Aktions-Buttons</div>
+</div>
+
+<h3>Projekt starten / stoppen</h3>
+<p>Klicke einfach auf ein Projekt in der Favoritenliste &ndash; es wird sofort aktiv und alle anderen Timer stoppen. Klickst du ein laufendes Projekt erneut, stoppt es und &bdquo;Allgemein&ldquo; l&auml;uft weiter.</p>
+<div class="tip"><strong>Tipp:</strong> Es l&auml;uft immer genau ein Projekt. Stoppst du eines, springt der Timer automatisch auf &bdquo;Allgemein (SYS)&ldquo; zur&uuml;ck.</div>
+
+<h3>Aktions-Buttons erkl&auml;rt</h3>
+<table>
+    <tr><th>Icon</th><th>Aktion</th><th>Beschreibung</th></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline" style="color:var(--yellow);">star</span></td><td>Favorit</td><td>Verschiebt das Projekt zwischen Favoriten und &bdquo;Andere Kostenstellen&ldquo;</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">account_tree</span></td><td>Unterprojekt</td><td>Legt ein Unterprojekt an (Abschnitt 4)</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">edit</span></td><td>Bearbeiten</td><td>&Auml;ndert Projektnummer und Name</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">schedule</span></td><td>Zeiten</td><td>&Ouml;ffnet die Zeitbearbeitung f&uuml;r diesen Tag</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">label</span></td><td>Tags</td><td>Ordnet dem Projekt Tags zu (erscheint nur wenn Tags existieren)</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">archive</span></td><td>Archivieren</td><td>Verschiebt in den Archiv-Bereich (jederzeit r&uuml;ckholbar)</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline" style="color:var(--error);">delete</span></td><td>L&ouml;schen</td><td>L&ouml;scht das Projekt und alle seine Zeiten unwiderruflich</td></tr>
+</table>
+
+<h3>Zeitanzeige pro Projekt</h3>
+<p>Rechts neben jedem Projekt siehst du zwei Zeitangaben: <strong>oben</strong> die heutige Arbeitszeit (HH:MM) und <strong>unten</strong> die kumulierte Gesamtzeit &uuml;ber alle Tage (&Sigma; HH:MM). Bei Elternprojekten wird die aggregierte Zeit (eigene + alle Unterprojekte) angezeigt.</p>
+
+
+<!-- ████  4. UNTERPROJEKTE  ████ -->
+<h2 id="unterprojekte"><span class="material-symbols-rounded">account_tree</span>4. Unterprojekte</h2>
+
+<p>Unterprojekte erm&ouml;glichen es, Teilbereiche eines Hauptprojekts getrennt zu erfassen &ndash; z.B. Besprechungen, Recherche oder Dokumentation.</p>
+
+<h3>Unterprojekt anlegen</h3>
+<ol class="steps">
+    <li>Klicke auf den <span class="material-symbols-rounded icon-inline">account_tree</span> Button am gew&uuml;nschten Hauptprojekt.</li>
+    <li>Gib einen Namen ein (z.B. &bdquo;Besprechung allgemein&ldquo;).</li>
+    <li>Klicke auf &bdquo;Anlegen&ldquo; oder dr&uuml;cke <span class="key">Enter</span>.</li>
+</ol>
+
+<h3>Darstellung in der Liste</h3>
+<div class="card">
+    <p style="margin:0; font-size:13px;">Unterprojekte erscheinen <strong>einger&uuml;ckt</strong> mit einem <span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle;">subdirectory_arrow_right</span>-Pfeil unter dem Hauptprojekt. Das Hauptprojekt zeigt ein blaues Badge mit der Anzahl der Unterprojekte (z.B. &bdquo;2 UP&ldquo;). L&auml;uft ein Unterprojekt, wird zus&auml;tzlich der Hauptprojektname im Aktivit&auml;tsbereich angezeigt.</p>
+</div>
+
+<h3>Vererbte Eigenschaften</h3>
+<table>
+    <tr><th>Eigenschaft</th><th>Verhalten</th></tr>
+    <tr><td>Farbe</td><td>Erbt die Farbe des Hauptprojekts</td></tr>
+    <tr><td>Projektnummer</td><td>Erbt die Nummer des Hauptprojekts</td></tr>
+    <tr><td>Favorit-Status</td><td>Folgt dem Hauptprojekt</td></tr>
+    <tr><td>Archivierung &amp; L&ouml;schung</td><td>Wird mit dem Hauptprojekt durchgef&uuml;hrt</td></tr>
+</table>
+
+<div class="tip"><strong>Zeitaggregation:</strong> Die Zeiten der Unterprojekte werden zur Gesamtzeit des Hauptprojekts addiert. Alle Ansichten (Liste, Wochen&uuml;bersicht, Timesheet) zeigen Haupt- und Unterprojektzeiten separat.</div>
+
+
+<!-- ████  5. ZEITERFASSUNG  ████ -->
+<h2 id="zeiterfassung"><span class="material-symbols-rounded">schedule</span>5. Zeiterfassung &amp; Korrekturen</h2>
+
+<h3>Wie funktioniert die Zeiterfassung?</h3>
+<p>Jedes Projekt hat eine Liste von Zeiteintr&auml;gen (Logs). Wenn du ein Projekt startest, wird ein neuer Eintrag mit der aktuellen Uhrzeit als Startzeit angelegt. Beim Stoppen wird die Endzeit gesetzt. Pausen werden automatisch von der Nettoproduktivzeit abgezogen.</p>
+
+<h3>Zeiten manuell korrigieren</h3>
+<ol class="steps">
+    <li>Klicke auf den <span class="material-symbols-rounded icon-inline">schedule</span> Button am gew&uuml;nschten Projekt.</li>
+    <li>Ein Dialog zeigt alle Zeiteintr&auml;ge f&uuml;r den ausgew&auml;hlten Tag.</li>
+    <li>Klicke in eine Start- oder Endzeit und &auml;ndere sie (Format: HH:MM).</li>
+    <li>Die &Auml;nderung wird sofort gespeichert &ndash; ohne Klick auf &bdquo;Speichern&ldquo;.</li>
+</ol>
+
+<div class="tip"><strong>Automatische Kettenanpassung:</strong> &Auml;nderst du das Ende von Projekt A auf 10:30 und Projekt B hat exakt um 10:00 begonnen, wird der Start von B automatisch auf 10:30 korrigiert. So entstehen keine L&uuml;cken oder &Uuml;berlappungen im Tagesprotokoll.</div>
+
+<h3>Zeiteintr&auml;ge l&ouml;schen</h3>
+<p>Im Zeitbearbeitungs-Dialog kannst du abgeschlossene Eintr&auml;ge &uuml;ber den roten <span class="material-symbols-rounded icon-inline" style="color:var(--error);">delete</span> Button l&ouml;schen. Aktive (noch laufende) Eintr&auml;ge k&ouml;nnen nicht gel&ouml;scht werden.</p>
+
+
+<!-- ████  6. TIMESHEET  ████ -->
+<h2 id="timesheet"><span class="material-symbols-rounded">receipt_long</span>6. Timesheet <span class="new-badge">Neu</span></h2>
+
+<p>Das Timesheet zeigt alle Zeiteintr&auml;ge eines Tages <strong>chronologisch als Timeline</strong> &ndash; &auml;hnlich einem Tageskalender. So hast du jederzeit einen vollst&auml;ndigen &Uuml;berblick &uuml;ber den Verlauf deines Arbeitstages.</p>
+
+<!-- SVG: Timesheet Illustration -->
+<div class="illustration">
+<svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#1E2227;">
+  <!-- Header summary -->
+  <rect x="0" y="0" width="700" height="48" fill="#282A2F"/>
+  <rect x="20" y="14" width="20" height="20" rx="4" fill="#004A77"/>
+  <text x="25" y="29" font-family="Material Symbols Rounded" font-size="16" fill="#A8C7FA">&#xe8b5;</text>
+  <text x="50" y="28" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5">Heute gearbeitet</text>
+  <text x="560" y="24" font-family="Roboto,sans-serif" font-weight="500" font-size="18" fill="#E2E2E6">06:42</text>
+  <text x="620" y="24" font-family="Roboto,sans-serif" font-size="12" fill="#8E9199">8 Einträge</text>
+  <line x1="0" y1="48" x2="700" y2="48" stroke="#44474F" stroke-width="1"/>
+
+  <!-- Timeline entries -->
+  <!-- Entry 1 -->
+  <rect x="10" y="56" width="4" height="36" rx="2" fill="#A8C7FA"/>
+  <text x="24" y="71" font-family="Roboto,sans-serif" font-size="12" fill="#A8C7FA">08:00 – 09:00</text>
+  <text x="24" y="85" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">SYS – Allgemein</text>
+  <text x="620" y="78" font-family="Roboto,sans-serif" font-weight="500" font-size="13" fill="#E2E2E6">01:00</text>
+
+  <!-- Entry 2 -->
+  <rect x="10" y="98" width="4" height="36" rx="2" fill="#66BB6A"/>
+  <text x="24" y="113" font-family="Roboto,sans-serif" font-size="12" fill="#A8C7FA">09:20 – 11:30</text>
+  <text x="24" y="127" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">4711 – Mein Projekt → Entwicklung</text>
+  <text x="620" y="120" font-family="Roboto,sans-serif" font-weight="500" font-size="13" fill="#E2E2E6">02:10</text>
+
+  <!-- Entry 3 (active) -->
+  <rect x="10" y="140" width="4" height="36" rx="2" fill="#D4BBFC"/>
+  <text x="24" y="155" font-family="Roboto,sans-serif" font-size="12" fill="#A8C7FA">12:10 – läuft...</text>
+  <text x="24" y="169" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">4712 – Anderes Projekt</text>
+  <!-- Pulsing indicator -->
+  <circle cx="640" cy="155" r="5" fill="#66BB6A" opacity="0.8"/>
+  <text x="655" y="159" font-family="Roboto,sans-serif" font-size="12" fill="#66BB6A">aktiv</text>
+
+  <!-- Day navigation buttons -->
+  <text x="10" y="195" font-family="Roboto,sans-serif" font-size="10" fill="#8E9199">← Vorheriger Tag  |  Nächster Tag →  |  Heute</text>
+</svg>
+<div class="illustration-caption">Timesheet: Chronologische Timeline aller Zeiteintr&auml;ge des Tages</div>
+</div>
+
+<h3>Navigation</h3>
+<p>Nutze die Pfeile neben dem Datumslabel im Karten-Header, um zwischen Tagen zu bl&auml;ttern. Der <span class="material-symbols-rounded icon-inline">today</span> Button springt immer zum heutigen Tag.</p>
+
+<h3>Was wird angezeigt?</h3>
+<ul>
+    <li><strong>Tageszusammenfassung:</strong> Gesamtarbeitszeit und Anzahl der Eintr&auml;ge oben im Karten-Header</li>
+    <li><strong>Chronologische Eintr&auml;ge:</strong> Jeder Eintrag zeigt Startzeit, Endzeit (oder &bdquo;l&auml;uft...&ldquo;), Projektname und Dauer</li>
+    <li><strong>Unterprojekte:</strong> Als &bdquo;Hauptprojekt &rarr; Unterprojekt&ldquo; dargestellt</li>
+    <li><strong>Aktiver Eintrag:</strong> Mit gr&uuml;nem Indikator hervorgehoben</li>
+</ul>
+
+<div class="tip"><strong>Unterschied zur Wochen&uuml;bersicht:</strong> Das Timesheet zeigt <em>einzelne Zeitabschnitte</em> in zeitlicher Reihenfolge. Die Wochen&uuml;bersicht zeigt <em>aggregierte Tageszeiten</em> pro Projekt. Beide Ansichten erg&auml;nzen sich.</div>
+
+
+<!-- ████  7. PAUSEN  ████ -->
+<h2 id="pausen"><span class="material-symbols-rounded">coffee</span>7. Pausen</h2>
+
+<h3>Automatische Pausen</h3>
+<p>TimeFlow erstellt t&auml;glich automatisch zwei Pauseneintr&auml;ge (im Home Office Modus deaktiviert):</p>
+<table>
+    <tr><th>Pause</th><th>Standard-Uhrzeit</th></tr>
+    <tr><td>Fr&uuml;hst&uuml;ck</td><td>09:00 &ndash; 09:20</td></tr>
+    <tr><td>Mittag</td><td>11:30 &ndash; 12:10</td></tr>
+</table>
+<p>Die Zeiten werden automatisch von der Projektzeit abgezogen. Start- und Endzeiten k&ouml;nnen pro Tag manuell angepasst werden.</p>
+
+<h3>Auto-Pausen konfigurieren</h3>
+<p>In der Pausen-Karte gibt es den Bereich <strong>&bdquo;Auto-Pausen konfigurieren&ldquo;</strong> mit einem aufklappbaren Panel:</p>
+<ul>
+    <li>Zeiten f&uuml;r Fr&uuml;hst&uuml;ck und Mittag &auml;ndern</li>
+    <li>Zus&auml;tzliche automatische Pausen hinzuf&uuml;gen</li>
+    <li>Bestehende Auto-Pausen l&ouml;schen</li>
+</ul>
+
+<h3>Manuelle Pause</h3>
+<ol class="steps">
+    <li>&Ouml;ffne die Pausen-Karte (ggf. aufklappen).</li>
+    <li>Klicke auf den <span class="material-symbols-rounded icon-inline">coffee</span> Button im Karten-Header.</li>
+    <li>Im Aktivit&auml;tsbereich erscheint ein pulsierendes Banner &bdquo;Manuelle Pause&ldquo;.</li>
+    <li>Klicke den Button erneut (jetzt <span class="material-symbols-rounded icon-inline">play_arrow</span>), um die Pause zu beenden.</li>
+</ol>
+
+<div class="tip"><strong>Pausen-Banner:</strong> Sobald eine Pause aktiv ist, erscheint im Aktivit&auml;tsbereich ein animiertes Banner &bdquo;Automatische Pause&ldquo; oder &bdquo;Manuelle Pause&ldquo;. Es ist gut sichtbar und kann nicht &uuml;bersehen werden.</div>
+
+
+<!-- ████  8. HOME OFFICE  ████ -->
+<h2 id="homeoffice"><span class="material-symbols-rounded">home</span>8. Home Office Modus</h2>
+
+<p>Im Home Office m&ouml;chtest du vielleicht keine automatischen Pausen. Der Home Office Modus deaktiviert sie vollst&auml;ndig f&uuml;r den aktuellen Tag.</p>
+
+<h3>Aktivieren / Deaktivieren</h3>
+<p>Klicke auf den <strong>Home Office</strong> Button in den Schnellaktionen:</p>
+<ul>
+    <li>Wenn <strong>aktiv</strong>: Button zeigt ein H&auml;kchen &bdquo;Home Office &#10003;&ldquo;</li>
+    <li>Automatische Pausen werden <strong>nicht erstellt</strong></li>
+    <li>Manuelle Pausen funktionieren weiterhin normal</li>
+    <li>Die Einstellung bleibt gespeichert bis zur n&auml;chsten &Auml;nderung</li>
+</ul>
+
+
+<!-- ████  9. TAGESFORTSCHRITT  ████ -->
+<h2 id="fortschritt"><span class="material-symbols-rounded">trending_up</span>9. Tagesfortschritt</h2>
+
+<p>Der Fortschrittsbalken unterhalb der Schnellaktionen zeigt in Echtzeit, wie weit du deinen Arbeitstag bereits absolviert hast.</p>
+
+<!-- SVG: Fortschrittsbalken mit Farbzonen -->
+<div class="illustration">
+<svg viewBox="0 0 700 130" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#111318; padding:0 0 8px;">
+  <!-- Progress bar track -->
+  <rect x="20" y="20" width="660" height="18" rx="9" fill="#282A2F"/>
+  <!-- Green zone (0-60%) -->
+  <rect x="20" y="20" width="396" height="18" rx="9" fill="#66BB6A"/>
+  <!-- Yellow zone (60-85%) starts at x=416 -->
+  <rect x="416" y="20" width="165" height="18" fill="#FFCA28"/>
+  <!-- Red zone (85-100%) starts at x=581 -->
+  <rect x="581" y="20" width="79" height="18" rx="0" fill="#EF5350"/>
+  <!-- Rounded right end (fake, only for last zone) -->
+  <rect x="589" y="20" width="71" height="18" fill="#EF5350"/>
+  <rect x="671" y="20" width="9" height="18" rx="9" fill="#EF5350"/>
+
+  <!-- Current position indicator -->
+  <line x1="416" y1="14" x2="416" y2="44" stroke="#E2E2E6" stroke-width="2" stroke-dasharray="3,2"/>
+  <circle cx="416" cy="29" r="10" fill="#1E2227" stroke="#FFCA28" stroke-width="2"/>
+  <text x="411" y="34" font-family="Roboto,sans-serif" font-weight="500" font-size="10" fill="#FFCA28">63%</text>
+
+  <!-- Zone labels -->
+  <text x="150" y="58" font-family="Roboto,sans-serif" font-size="12" fill="#66BB6A" text-anchor="middle">Grün: 0 – 60%</text>
+  <text x="150" y="73" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199" text-anchor="middle">Alles läuft gut</text>
+  <text x="490" y="58" font-family="Roboto,sans-serif" font-size="12" fill="#FFCA28" text-anchor="middle">Gelb: 60 – 85%</text>
+  <text x="490" y="73" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199" text-anchor="middle">Bald fertig</text>
+  <text x="640" y="58" font-family="Roboto,sans-serif" font-size="12" fill="#EF5350" text-anchor="middle">Rot: 85 – 100%</text>
+  <text x="640" y="73" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199" text-anchor="middle">Fast voll</text>
+
+  <!-- Purple overhours hint -->
+  <rect x="20" y="85" width="24" height="14" rx="4" fill="#CE93D8"/>
+  <text x="52" y="97" font-family="Roboto,sans-serif" font-size="12" fill="#CE93D8">Lila: &gt; 100% = Überstunden</text>
+
+  <!-- Info row -->
+  <text x="20" y="120" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">⏰ 14:30  |  63%  |  06:18 gearbeitet  |  ~17:42 Feierabend</text>
+</svg>
+<div class="illustration-caption">Fortschrittsbalken mit Farbzonen (anpassbar in Einstellungen &rarr; Fortschritt)</div>
+</div>
+
+<h3>Angezeigte Informationen</h3>
+<ul>
+    <li><strong>Aktuelle Uhrzeit</strong> (&#9200; HH:MM)</li>
+    <li><strong>Prozent</strong> des Arbeitstages</li>
+    <li><strong>Geleistete Nettozeit</strong> (HH:MM ohne Pausen)</li>
+    <li><strong>Gesch&auml;tzter Feierabend</strong> (~HH:MM) oder &bdquo;&Uuml;berstunden!&ldquo; bei &Uuml;ber 100%</li>
+</ul>
+
+<h3>Farbzonen (Standardwerte)</h3>
+<div class="color-bar"><span class="color-swatch" style="background:var(--green);"></span><span style="font-size:13px; color:var(--text-sub);"><strong style="color:var(--green);">Gr&uuml;n</strong> &ndash; 0 bis 60%</span></div>
+<div class="color-bar"><span class="color-swatch" style="background:var(--yellow);"></span><span style="font-size:13px; color:var(--text-sub);"><strong style="color:var(--yellow);">Gelb</strong> &ndash; 60 bis 85%</span></div>
+<div class="color-bar"><span class="color-swatch" style="background:var(--red);"></span><span style="font-size:13px; color:var(--text-sub);"><strong style="color:var(--red);">Rot</strong> &ndash; 85 bis 100%</span></div>
+<div class="color-bar"><span class="color-swatch" style="background:var(--purple);"></span><span style="font-size:13px; color:var(--text-sub);"><strong style="color:var(--purple);">Lila</strong> &ndash; &Uuml;ber 100% = &Uuml;berstunden</span></div>
+
+<h3>Einstellungen (Einstellungen → Fortschritt-Tab)</h3>
+<table>
+    <tr><th>Option</th><th>Standard</th><th>Beschreibung</th></tr>
+    <tr><td>Aktiviert</td><td>Ja</td><td>Fortschrittsanzeige ein/ausschalten</td></tr>
+    <tr><td>Arbeitstag-Dauer</td><td>10 Stunden</td><td>Maximale Arbeitszeit f&uuml;r 100%</td></tr>
+    <tr><td>Gelb ab</td><td>60%</td><td>Ab wann der Balken gelb wird</td></tr>
+    <tr><td>Rot ab</td><td>85%</td><td>Ab wann der Balken rot wird</td></tr>
+</table>
+
+
+<!-- ████  10. ERINNERUNGEN  ████ -->
+<h2 id="erinnerungen"><span class="material-symbols-rounded">notifications</span>10. Erinnerungen</h2>
+
+<p>Erinnerungen erscheinen zur eingestellten Uhrzeit als Banner im Aktivit&auml;tsbereich. Klicke auf das Banner, um es zu schlie&szlig;en.</p>
+
+<h3>Erinnerung anlegen</h3>
+<ol class="steps">
+    <li>&Ouml;ffne die <strong>Einstellungen</strong> (<span class="material-symbols-rounded icon-inline">settings</span>) und wechsle zum Tab <strong>Erinnerungen</strong>.</li>
+    <li>W&auml;hle eine <strong>Uhrzeit</strong> und gib einen <strong>Text</strong> ein.</li>
+    <li>Optional: Aktiviere <strong>&bdquo;T&auml;glich&ldquo;</strong> f&uuml;r t&auml;glich wiederkehrende Erinnerungen.</li>
+    <li>Optional: Gib ein <strong>Intervall in Minuten</strong> ein, um ab der Startzeit regelm&auml;&szlig;ig zu erinnern (z.B. alle 30 Min.).</li>
+    <li>Klicke auf den <span class="material-symbols-rounded icon-inline">add</span> Button oder dr&uuml;cke <span class="key">Enter</span>.</li>
+</ol>
+
+<h3>Typen im &Uuml;berblick</h3>
+<table>
+    <tr><th>Typ</th><th>Icon</th><th>Verhalten</th></tr>
+    <tr><td>Einmalig</td><td><span class="material-symbols-rounded icon-inline">notifications</span></td><td>Erscheint einmal, wird danach automatisch gel&ouml;scht</td></tr>
+    <tr><td>T&auml;glich</td><td><span class="material-symbols-rounded icon-inline">event_repeat</span></td><td>Erscheint jeden Tag zur gleichen Uhrzeit erneut</td></tr>
+    <tr><td>Mit Intervall</td><td><span class="material-symbols-rounded icon-inline">timer</span></td><td>Wird ab der Startzeit alle X Minuten wiederholt (z.B. f&uuml;r Trinkerinnerungen)</td></tr>
+</table>
+
+<div class="tip"><strong>Schnellzugriff:</strong> Du kannst Erinnerungen auch direkt &uuml;ber den <span class="material-symbols-rounded icon-inline">notifications</span> Button im Aktivit&auml;tsbereich-Header &ouml;ffnen.</div>
+
+
+<!-- ████  11. WOCHENÜBERSICHT  ████ -->
+<h2 id="wochenuebersicht"><span class="material-symbols-rounded">date_range</span>11. Wochen&uuml;bersicht</h2>
+
+<p>Die Wochen&uuml;bersicht zeigt alle Projekte mit Zeiten in der ausgew&auml;hlten Woche als Tabelle. Jede Spalte ist ein Tag, jede Zeile ein Projekt.</p>
+
+<!-- SVG: Wochenübersicht Tabelle -->
+<div class="illustration">
+<svg viewBox="0 0 700 170" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#1E2227;">
+  <!-- Table header -->
+  <rect x="0" y="0" width="700" height="32" fill="#282A2F"/>
+  <text x="10" y="21" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">Projekt</text>
+  <text x="152" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Mo 10.02</text>
+  <text x="252" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Di 11.02</text>
+  <text x="352" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Mi 12.02</text>
+  <text x="452" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#C4C7C5" text-anchor="middle">Do 13.02</text>
+  <text x="552" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#C4C7C5" text-anchor="middle">Fr 14.02</text>
+  <text x="650" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#8E9199" text-anchor="middle">Gesamt</text>
+  <line x1="0" y1="32" x2="700" y2="32" stroke="#44474F" stroke-width="1"/>
+
+  <!-- Row 1 -->
+  <rect x="100" y="32" width="100" height="40" fill="rgba(168,199,250,0.05)"/>
+  <text x="10" y="54" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">4711 · Projekt A</text>
+  <text x="152" y="48" font-family="Roboto,sans-serif" font-weight="500" font-size="13" fill="#E2E2E6" text-anchor="middle">03:20</text>
+  <text x="152" y="63" font-family="Roboto,sans-serif" font-size="10" fill="#8E9199" text-anchor="middle" font-style="italic">Meeting...</text>
+  <text x="252" y="54" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">01:45</text>
+  <text x="352" y="54" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">02:10</text>
+  <text x="452" y="54" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">–</text>
+  <text x="552" y="54" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">–</text>
+  <text x="650" y="54" font-family="Roboto,sans-serif" font-weight="500" font-size="13" fill="#A8C7FA" text-anchor="middle">07:15</text>
+  <line x1="0" y1="72" x2="700" y2="72" stroke="rgba(68,71,79,0.5)" stroke-width="1"/>
+
+  <!-- Row 2 (subproject) -->
+  <text x="20" y="94" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">↳ Besprechung</text>
+  <text x="152" y="94" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">01:00</text>
+  <text x="252" y="94" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">–</text>
+  <text x="352" y="94" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">–</text>
+  <line x1="0" y1="112" x2="700" y2="112" stroke="rgba(68,71,79,0.5)" stroke-width="1"/>
+
+  <!-- Row 3 -->
+  <text x="10" y="134" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">SYS · Allgemein</text>
+  <text x="152" y="134" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">00:30</text>
+  <text x="252" y="134" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">01:10</text>
+  <line x1="0" y1="152" x2="700" y2="152" stroke="#44474F" stroke-width="1"/>
+
+  <!-- Total row -->
+  <text x="10" y="168" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA">Gesamt</text>
+  <text x="152" y="168" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">04:50</text>
+  <text x="252" y="168" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">02:55</text>
+</svg>
+<div class="illustration-caption">Wochen&uuml;bersicht: Projekte als Zeilen, Tage als Spalten &mdash; mit Notizfeldern und Gesamtzeiten</div>
+</div>
+
+<h3>Navigation &amp; Optionen</h3>
+<ul>
+    <li><strong>KW-Navigation:</strong> Pfeile im Karten-Header bl&auml;ttern durch Kalenderwochen</li>
+    <li><strong>Wochenende:</strong> <span class="material-symbols-rounded icon-inline">weekend</span> Button zeigt/versteckt Samstag &amp; Sonntag</li>
+    <li><strong>Tagesnotizen:</strong> Unter jeder Zeitangabe befindet sich ein Notizfeld f&uuml;r projektbezogene Tagesnotizen</li>
+    <li><strong>Unterprojekte:</strong> Erscheinen einger&uuml;ckt mit &#8627; Symbol unter dem Hauptprojekt</li>
+</ul>
+
+
+<!-- ████  12. EXPORT & BACKUP  ████ -->
+<h2 id="export"><span class="material-symbols-rounded">save</span>12. Export &amp; Backup</h2>
+
+<p>Die Export-Funktionen befinden sich unten in der Wochen&uuml;bersicht-Karte.</p>
+
+<h3>CSV-Export</h3>
+<p>Klicke auf den <strong>CSV</strong> Button. Die Datei enth&auml;lt f&uuml;r jedes Projekt der aktuellen Woche eine Zeile:</p>
+<table>
+    <tr><th>Spalte</th><th>Inhalt</th></tr>
+    <tr><td>Nummer</td><td>Projektnummer</td></tr>
+    <tr><td>Projekt</td><td>Projektname (bei Unterprojekten: Hauptprojektname)</td></tr>
+    <tr><td>Unterprojekt</td><td>Name des Unterprojekts (leer bei Hauptprojekten)</td></tr>
+    <tr><td>Notiz</td><td>Tagesnotiz aus der Wochen&uuml;bersicht</td></tr>
+    <tr><td>Dauer (Min)</td><td>Dauer in Minuten</td></tr>
+    <tr><td>Dauer (Std)</td><td>Dauer als HH:MM</td></tr>
+</table>
+<div class="tip"><strong>Tipp:</strong> In den Einstellungen (Tab &bdquo;Allgemein&ldquo;) kannst du die <strong>Zeitrundung</strong> f&uuml;r den CSV-Export festlegen: Exakt, 1 Min, 5 Min, 15 Min oder 30 Min.</div>
+
+<h3>Backup erstellen</h3>
+<p>Klicke auf den <span class="material-symbols-rounded icon-inline">save</span> Button. Eine JSON-Datei mit <strong>allen</strong> Projekten, Zeiten, Einstellungen und Pausen wird heruntergeladen.</p>
+
+<h3>Backup wiederherstellen</h3>
+<ol class="steps">
+    <li>Klicke auf den <span class="material-symbols-rounded icon-inline">upload_file</span> Button.</li>
+    <li>W&auml;hle eine zuvor erstellte <span class="key">.json</span> Backup-Datei aus.</li>
+    <li>Best&auml;tige die R&uuml;ckfrage &bdquo;Daten &uuml;berschreiben?&ldquo;.</li>
+</ol>
+<div class="warning"><strong>Achtung:</strong> Beim Wiederherstellen werden <strong>alle aktuellen Daten &uuml;berschrieben</strong>. Erstelle immer zuerst ein Sicherungs-Backup!</div>
+
+
+<!-- ████  13. EXTERNE LINKS  ████ -->
+<h2 id="links"><span class="material-symbols-rounded">link</span>13. Externe Links <span class="new-badge">Neu</span></h2>
+
+<p>Die Karte &bdquo;Externe Links&ldquo; erm&ouml;glicht es, Buttons f&uuml;r h&auml;ufig verwendete Webanwendungen direkt in TimeFlow einzubinden &ndash; z.B. das Firmen-Intranet, ein Ticketsystem oder einen Kalender.</p>
+
+<h3>Link hinzuf&uuml;gen</h3>
+<ol class="steps">
+    <li>&Ouml;ffne die <strong>Einstellungen</strong> (<span class="material-symbols-rounded icon-inline">settings</span>) und wechsle zum Tab <strong>Links</strong>.</li>
+    <li>Klicke auf <strong>&bdquo;Link hinzuf&uuml;gen&ldquo;</strong>.</li>
+    <li>Gib einen <strong>Namen</strong> (z.B. &bdquo;Jira&ldquo;) und die <strong>URL</strong> ein.</li>
+    <li>W&auml;hle optional ein passendes <strong>Icon</strong> aus der Material-Icons-Auswahl.</li>
+    <li>Klicke auf <strong>Speichern</strong>.</li>
+</ol>
+<p>Die konfigurierten Links erscheinen als Icon-Buttons in der Karte &bdquo;Externe Links&ldquo;. Ein Klick &ouml;ffnet die Webseite in einem neuen Tab.</p>
+
+
+<!-- ████  14. TAGS  ████ -->
+<h2 id="tags"><span class="material-symbols-rounded">label</span>14. Tags</h2>
+
+<p>Tags sind farbige Markierungen, mit denen du Projekte kategorisieren und filtern kannst.</p>
+
+<h3>Tags erstellen</h3>
+<ol class="steps">
+    <li>Klicke auf das <span class="material-symbols-rounded icon-inline">label</span> Icon im Header.</li>
+    <li>Gib einen Namen ein und w&auml;hle eine Farbe.</li>
+    <li>Klicke auf <span class="material-symbols-rounded icon-inline">add</span> oder dr&uuml;cke <span class="key">Enter</span>.</li>
+</ol>
+
+<h3>Tags einem Projekt zuordnen</h3>
+<p>Klicke auf den <span class="material-symbols-rounded icon-inline">label</span> Button an einem Projekt und setze H&auml;kchen bei den gew&uuml;nschten Tags. Mehrere Tags pro Projekt sind m&ouml;glich.</p>
+
+<h3>Nach Tags filtern</h3>
+<p>Unterhalb der Schnellaktionen erscheint eine <strong>Tag-Filterleiste</strong>. Klicke auf einen Tag, um nur Projekte mit diesem Tag anzuzeigen. Erneutes Klicken hebt den Filter wieder auf.</p>
+
+
+<!-- ████  15. EINSTELLUNGEN  ████ -->
+<h2 id="einstellungen"><span class="material-symbols-rounded">settings</span>15. Einstellungen</h2>
+
+<p>&Ouml;ffne die Einstellungen &uuml;ber das <span class="material-symbols-rounded icon-inline">settings</span> Icon im Header. Die Einstellungen sind in <strong>4 Tabs</strong> gegliedert:</p>
+
+<!-- SVG: Settings Tabs -->
+<div class="illustration">
+<div class="tabs-demo">
+    <div class="tab-demo active"><span class="material-symbols-rounded" style="font-size:16px;">tune</span> Allgemein</div>
+    <div class="tab-demo"><span class="material-symbols-rounded" style="font-size:16px;">trending_up</span> Fortschritt</div>
+    <div class="tab-demo"><span class="material-symbols-rounded" style="font-size:16px;">link</span> Links</div>
+    <div class="tab-demo"><span class="material-symbols-rounded" style="font-size:16px;">notifications</span> Erinnerungen</div>
+</div>
+<div style="padding:12px 16px;">
+    <p style="margin:0; font-size:13px; color:var(--text-faded);">Klicke auf einen Tab, um zwischen den Einstellungsbereichen zu wechseln.</p>
+</div>
+<div class="illustration-caption">Einstellungs-Dialog mit 4 Tabs</div>
+</div>
+
+<h4>Tab: Allgemein</h4>
+<table>
+    <tr><th>Einstellung</th><th>Beschreibung</th></tr>
+    <tr><td><strong>Export-Dateiname (Prefix)</strong></td><td>Pr&auml;fix f&uuml;r CSV- und Backup-Dateien (z.B. &bdquo;TimeFlow_Export&ldquo;)</td></tr>
+    <tr><td><strong>Zeiten runden (CSV)</strong></td><td>Rundung der Export-Zeiten: Exakt / 1 Min / 5 Min / 15 Min / 30 Min</td></tr>
+    <tr><td><strong>Begr&uuml;&szlig;ungstext</strong></td><td>Animierter Text beim App-Start im Aktivit&auml;tsbereich (leer = deaktiviert)</td></tr>
+</table>
+
+<h4>Tab: Fortschritt</h4>
+<table>
+    <tr><th>Einstellung</th><th>Standard</th></tr>
+    <tr><td>Fortschrittsanzeige aktivieren</td><td>Ja</td></tr>
+    <tr><td>Arbeitstag-Dauer (Stunden)</td><td>10</td></tr>
+    <tr><td>Gelb ab (%)</td><td>60</td></tr>
+    <tr><td>Rot ab (%)</td><td>85</td></tr>
+</table>
+<p>Eine <strong>Live-Vorschau</strong> zeigt direkt die konfigurierten Farbzonen des Fortschrittsbalkens.</p>
+
+<h4>Tab: Links</h4>
+<p>Externe Links verwalten (siehe Abschnitt 13).</p>
+
+<h4>Tab: Erinnerungen</h4>
+<p>Zeit-basierte Erinnerungen anlegen und verwalten (siehe Abschnitt 10).</p>
+
+
+<!-- ████  16. LAYOUT  ████ -->
+<h2 id="layout"><span class="material-symbols-rounded">grid_view</span>16. Layout &amp; Anpassung</h2>
+
+<h3>Karten per Drag &amp; Drop verschieben</h3>
+<p>Fasse eine Karte am <span class="material-symbols-rounded icon-inline">drag_indicator</span> Griff-Symbol und ziehe sie an die gew&uuml;nschte Position. Die Reihenfolge wird dauerhaft gespeichert.</p>
+
+<h3>Kartenbreite &auml;ndern</h3>
+<p>Klicke auf den <span class="material-symbols-rounded icon-inline">width_wide</span> Button im Karten-Header. Die Karte wechselt zwischen halber und voller Breite. Auf Mobilger&auml;ten sind alle Karten automatisch vollbreit.</p>
+
+<h3>Karten ein-/ausklappen</h3>
+<p>Klicke auf den <span class="material-symbols-rounded icon-inline">expand_more</span> Button, um den Inhalt einer Karte zu verbergen. Ein Klick darauf klappt sie wieder auf.</p>
+
+<h3>Kartentitel umbenennen</h3>
+<p>Klicke direkt auf den <strong>Titel</strong> einer Karte, um ihn zu bearbeiten. Dr&uuml;cke <span class="key">Enter</span> oder klicke woanders, um zu speichern.</p>
+
+<h3>Karten sichtbar schalten</h3>
+<p>Klicke auf den <span class="material-symbols-rounded icon-inline">dashboard_customize</span> Button im Header. Ein Dropdown-Men&uuml; zeigt alle Karten mit Checkboxen. Setze oder entferne H&auml;kchen, um Karten ein- oder auszublenden.</p>
+
+<!-- SVG: Karten-Sichtbarkeits-Menü -->
+<div class="illustration">
+<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" style="width:100%; max-width:320px; display:block; background:#1E2227;">
+  <rect x="0" y="0" width="300" height="220" rx="12" fill="#282A2F" stroke="#44474F" stroke-width="1"/>
+  <text x="16" y="24" font-family="Roboto,sans-serif" font-weight="500" font-size="13" fill="#A8C7FA">Karten anzeigen</text>
+  <line x1="0" y1="36" x2="300" y2="36" stroke="#44474F" stroke-width="1"/>
+
+  <!-- Items -->
+  <rect x="12" y="44" width="14" height="14" rx="3" fill="#004A77" stroke="#A8C7FA" stroke-width="1.5"/>
+  <text x="22" y="53" font-family="sans-serif" font-size="10" fill="#A8C7FA">✓</text>
+  <text x="34" y="56" font-family="Roboto,sans-serif" font-size="13" fill="#E2E2E6">Aktivitätsbereich</text>
+
+  <rect x="12" y="68" width="14" height="14" rx="3" fill="#004A77" stroke="#A8C7FA" stroke-width="1.5"/>
+  <text x="22" y="77" font-family="sans-serif" font-size="10" fill="#A8C7FA">✓</text>
+  <text x="34" y="80" font-family="Roboto,sans-serif" font-size="13" fill="#E2E2E6">Favoriten</text>
+
+  <rect x="12" y="92" width="14" height="14" rx="3" fill="#282A2F" stroke="#44474F" stroke-width="1.5"/>
+  <text x="34" y="104" font-family="Roboto,sans-serif" font-size="13" fill="#8E9199">Andere Kostenstellen</text>
+
+  <rect x="12" y="116" width="14" height="14" rx="3" fill="#004A77" stroke="#A8C7FA" stroke-width="1.5"/>
+  <text x="22" y="125" font-family="sans-serif" font-size="10" fill="#A8C7FA">✓</text>
+  <text x="34" y="128" font-family="Roboto,sans-serif" font-size="13" fill="#E2E2E6">Timesheet</text>
+
+  <rect x="12" y="140" width="14" height="14" rx="3" fill="#282A2F" stroke="#44474F" stroke-width="1.5"/>
+  <text x="34" y="152" font-family="Roboto,sans-serif" font-size="13" fill="#8E9199">Archiv</text>
+
+  <line x1="0" y1="168" x2="300" y2="168" stroke="#44474F" stroke-width="1"/>
+  <text x="16" y="186" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">Schnellwahl:</text>
+  <rect x="16" y="196" width="60" height="18" rx="6" fill="#33353A"/>
+  <text x="26" y="209" font-family="Roboto,sans-serif" font-size="11" fill="#C4C7C5">Minimal</text>
+  <rect x="84" y="196" width="60" height="18" rx="6" fill="#33353A"/>
+  <text x="94" y="209" font-family="Roboto,sans-serif" font-size="11" fill="#C4C7C5">Standard</text>
+  <rect x="152" y="196" width="50" height="18" rx="6" fill="#33353A"/>
+  <text x="162" y="209" font-family="Roboto,sans-serif" font-size="11" fill="#C4C7C5">Alle</text>
+</svg>
+<div class="illustration-caption">Karten-Sichtbarkeitsmenü &ndash; &ouml;ffnen mit <span style="color:var(--primary);">dashboard_customize</span> im Header</div>
+</div>
+
+<h3>Masonry-Layout</h3>
+<p>Karten werden automatisch in zwei Spalten angeordnet, wobei die k&uuml;rzere Spalte bevorzugt wird (Masonry-Algorithmus). L&uuml;cken werden minimiert.</p>
+
+
+<!-- ████  17. THEMES  ████ -->
+<h2 id="design"><span class="material-symbols-rounded">palette</span>17. Themes &amp; Design</h2>
+
+<div class="feature-grid">
+    <div class="feature-item">
+        <span class="material-symbols-rounded">dark_mode</span>
+        <span><strong>Dark Mode</strong> (Standard)<br>Dunkler Hintergrund, helle Schrift &ndash; schont die Augen bei l&auml;ngerer Nutzung.</span>
+    </div>
+    <div class="feature-item">
+        <span class="material-symbols-rounded">light_mode</span>
+        <span><strong>Light Mode</strong><br>Heller Hintergrund mit dunkler Schrift &ndash; f&uuml;r helle Umgebungen und Displays.</span>
+    </div>
+</div>
+<p>Theme wechseln: <span class="material-symbols-rounded icon-inline">light_mode</span> / <span class="material-symbols-rounded icon-inline">dark_mode</span> Button im Header.</p>
+
+<h3>Kompakt-Modus</h3>
+<p>Im Karten-Sichtbarkeitsmenü (<span class="material-symbols-rounded icon-inline">dashboard_customize</span>) findest du eine Option f&uuml;r den <strong>Kompakt-Modus</strong>, der etwas weniger Padding und kleinere Abst&auml;nde verwendet &ndash; n&uuml;tzlich auf kleineren Bildschirmen.</p>
+
+
+<!-- ████  18. PWA  ████ -->
+<h2 id="pwa"><span class="material-symbols-rounded">install_desktop</span>18. PWA &amp; Installation</h2>
+
+<p>TimeFlow kann als <strong>Progressive Web App (PWA)</strong> installiert werden und verh&auml;lt sich dann wie eine native Desktop-App &ndash; mit eigenem Fenster und App-Icon.</p>
+
+<h3>Installation &uuml;ber HTTP(S) (empfohlen)</h3>
+<ol class="steps">
+    <li>Rufe TimeFlow &uuml;ber einen Webserver auf (HTTP oder HTTPS).</li>
+    <li>In der Adresszeile erscheint ein <strong>Installations-Icon</strong> (Bildschirm mit Plus-Zeichen).</li>
+    <li>Klicke darauf und best&auml;tige &bdquo;Installieren&ldquo;.</li>
+    <li>TimeFlow &ouml;ffnet sich fortan als eigenes App-Fenster.</li>
+</ol>
+
+<h3>Lokale Nutzung (file://)</h3>
+<p>Wenn du die HTML-Datei direkt &ouml;ffnest, ist die PWA-Installation nicht m&ouml;glich. Du kannst aber eine Desktop-Verkn&uuml;pfung erstellen:</p>
+<ol class="steps">
+    <li>&Ouml;ffne die Datei in <strong>Chrome</strong> oder <strong>Edge</strong>.</li>
+    <li>Klicke auf das <strong>Men&uuml;</strong> (&vellip;) oben rechts.</li>
+    <li><strong>Chrome:</strong> W&auml;hle &bdquo;Speichern und Freigeben &rarr; Verkn&uuml;pfung erstellen...&ldquo; und aktiviere &bdquo;Als Fenster &ouml;ffnen&ldquo;.</li>
+    <li><strong>Edge:</strong> W&auml;hle &bdquo;Apps &rarr; Diese Seite als App installieren&ldquo;.</li>
+</ol>
+<div class="tip"><strong>Offline-Betrieb:</strong> Der enthaltene Service Worker (sw.js) sorgt daf&uuml;r, dass TimeFlow auch ohne Internetverbindung funktioniert &ndash; nach der ersten Installation.</div>
+
+
+<!-- ████  19. UNDO  ████ -->
+<h2 id="undo"><span class="material-symbols-rounded">undo</span>19. R&uuml;ckg&auml;ngig (Undo) <span class="new-badge">Neu</span></h2>
+
+<p>TimeFlow unterst&uuml;tzt einen <strong>Undo-Mechanismus</strong> f&uuml;r kritische Aktionen. Nach dem L&ouml;schen eines Projekts oder dem Klicken auf &bdquo;Feierabend&ldquo; erscheint f&uuml;r einige Sekunden ein Toast-Banner am unteren Bildschirmrand.</p>
+
+<!-- SVG: Undo Toast -->
+<div class="illustration">
+<svg viewBox="0 0 600 60" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#111318;">
+  <rect x="50" y="10" width="500" height="40" rx="12" fill="#282A2F" stroke="#44474F" stroke-width="1"/>
+  <text x="80" y="35" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5">Projekt "Mein Projekt" gelöscht</text>
+  <rect x="440" y="18" width="98" height="28" rx="14" fill="#33353A" stroke="#44474F" stroke-width="1"/>
+  <text x="489" y="36" font-family="Roboto,sans-serif" font-size="12" fill="#A8C7FA" text-anchor="middle">Rückgängig</text>
+</svg>
+<div class="illustration-caption">Undo-Toast: Erscheint kurz nach kritischen Aktionen unten im Fenster</div>
+</div>
+
+<h3>Unterst&uuml;tzte Undo-Aktionen</h3>
+<ul>
+    <li><strong>Projekt l&ouml;schen</strong> &ndash; Stellt das Projekt und alle seine Zeiten wieder her</li>
+    <li><strong>Feierabend</strong> &ndash; Macht das Stoppen aller Timer r&uuml;ckg&auml;ngig</li>
+</ul>
+<div class="tip"><strong>Hinweis:</strong> Der Undo-Stack speichert maximal 5 Eintr&auml;ge. &Auml;ltere Aktionen k&ouml;nnen nicht mehr r&uuml;ckg&auml;ngig gemacht werden. Klicke schnell auf &bdquo;R&uuml;ckg&auml;ngig&ldquo;, bevor das Toast-Banner verschwindet.</div>
+
+
+<!-- ████  20. TASTATURKÜRZEL  ████ -->
+<h2 id="tastatur"><span class="material-symbols-rounded">keyboard</span>20. Tastaturk&uuml;rzel</h2>
+
+<table class="shortcut-table">
+    <tr><th>Taste</th><th>Kontext</th><th>Aktion</th></tr>
+    <tr><td>Enter</td><td>Neues Projekt (Nummern- oder Namensfeld)</td><td>Projekt anlegen</td></tr>
+    <tr><td>Enter</td><td>Unterprojekt-Dialog</td><td>Unterprojekt anlegen</td></tr>
+    <tr><td>Enter</td><td>Erinnerung-Textfeld</td><td>Erinnerung hinzuf&uuml;gen</td></tr>
+    <tr><td>Enter</td><td>Neuer Tag-Name</td><td>Tag erstellen</td></tr>
+    <tr><td>Enter</td><td>Kartentitel (beim Bearbeiten)</td><td>Titel speichern</td></tr>
+</table>
+
+
+<!-- ████  21. TIPPS & TRICKS  ████ -->
+<h2 id="tipps"><span class="material-symbols-rounded">lightbulb</span>21. Tipps &amp; Tricks</h2>
+
+<div class="card">
+    <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Das Allgemein-Projekt</div>
+    <p style="margin:0;">Das Projekt &bdquo;Allgemein (SYS)&ldquo; l&auml;uft immer als Fallback und kann nicht gel&ouml;scht werden. Wenn du kein spezifisches Projekt aktiv hast, wird die Zeit dort gesammelt.</p>
+</div>
+
+<div class="card">
+    <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Datensicherheit &amp; Backups</div>
+    <p style="margin:0;">Alle Daten liegen ausschlie&szlig;lich in deinem Browser (localStorage). Erstelle regelm&auml;&szlig;ig Backups &ndash; besonders nach langen Arbeitstagen! Der Feierabend-Button erstellt <strong>automatisch</strong> ein Backup beim Abmelden.</p>
+</div>
+
+<div class="card">
+    <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Unterprojekte f&uuml;r Besprechungsarten</div>
+    <p style="margin:0;">Erstelle f&uuml;r ein Hauptprojekt Unterprojekte wie &bdquo;Besprechung allgemein&ldquo;, &bdquo;Besprechung Fachbereich&ldquo;, &bdquo;Dokumentation&ldquo; usw. So siehst du exakt, wie die Zeit innerhalb eines Projekts aufgeteilt ist.</p>
+</div>
+
+<div class="card">
+    <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Vergessenen Projektwechsel korrigieren</div>
+    <p style="margin:0;">Hast du vergessen, auf ein Projekt zu wechseln? Nutze die Zeitbearbeitung (<span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle;">schedule</span>), um Start- und Endzeiten manuell zu korrigieren. Benachbarte Projekte werden automatisch kettenartig mit angepasst.</p>
+</div>
+
+<div class="card">
+    <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Timesheet als T&auml;gliches Protokoll</div>
+    <p style="margin:0;">Das Timesheet ist ideal, um am Ende des Tages zu pr&uuml;fen, ob alle Zeiten korrekt erfasst wurden. Die chronologische Ansicht macht L&uuml;cken und &Uuml;berlappungen sofort sichtbar.</p>
+</div>
+
+<div class="card">
+    <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Externe Links f&uuml;r den Workflow</div>
+    <p style="margin:0;">Hinterlege in &bdquo;Externe Links&ldquo; die URLs deiner wichtigsten Tools (Jira, Confluence, Teams, SAP...). So kannst du direkt aus TimeFlow heraus deine Arbeitsumgebung navigieren, ohne den Browser-Verlauf zu durchsuchen.</p>
+</div>
+
+<div class="card">
+    <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Layout f&uuml;r deinen Bildschirm optimieren</div>
+    <p style="margin:0;">Auf gro&szlig;en Monitoren: Stelle wichtige Karten auf halbe Breite, damit zwei nebeneinander passen. Blende seltene Karten (z.B. Archiv) &uuml;ber <span class="material-symbols-rounded" style="font-size:16px; vertical-align:middle;">dashboard_customize</span> aus, um die Ansicht &uuml;bersichtlicher zu gestalten.</p>
+</div>
+
+<div class="card">
+    <div class="card-title"><span class="material-symbols-rounded">lightbulb</span> Datumsnavigation nutzen</div>
+    <p style="margin:0;">Mit den Pfeilen in der Kopfzeile kannst du vergangene Tage betrachten und Zeiten nachtr&auml;glich eintragen oder korrigieren. Ein Klick auf das Datum springt immer zum heutigen Tag zur&uuml;ck.</p>
+</div>
+
+</div><!-- /container -->
+
 <footer>
-    TimeFlow 3.0 &mdash; Benutzerhandbuch &mdash; Alle Daten werden lokal in deinem Browser gespeichert.
+    TimeFlow &mdash; Benutzerhandbuch &mdash; Alle Daten werden lokal in deinem Browser gespeichert.
 </footer>
 
 </body>
