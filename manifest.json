@@ -1,5 +1,6 @@
 {
     "name": "TimeFlow",
+    "version": "3.0.0",
     "short_name": "TimeFlow",
     "description": "Zeiterfassung – modernes Dark-Mode Zeittracking-Tool",
     "lang": "de",

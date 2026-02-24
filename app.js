@@ -1,3 +1,6 @@
+        // --- VERSION ---
+        const APP_VERSION = '3.0.0';
+
         // --- CONFIG ---
         const DEFAULT_AUTO_PAUSES = [
             { start: "09:00", end: "09:20", label: "Frühstück" },
@@ -10,7 +13,24 @@
             '#FFDB90', '#FFCCBC'
         ];
         
-        const ARCHIVE_COLOR = '#757575'; 
+        const ARCHIVE_COLOR = '#757575';
+
+        // --- CHANGELOG ---
+        // Für jede neue Version hier einen Eintrag ergänzen.
+        // Das Popup erscheint automatisch beim nächsten Start, wenn APP_VERSION
+        // noch nicht als gesehen gespeichert ist.
+        const CHANGELOG = {
+            '3.0.0': {
+                title: 'Version 3.0.0',
+                subtitle: 'Erste offizielle Version mit Versionierung',
+                changes: [
+                    { icon: 'install_mobile',  text: 'PWA: App kann jetzt als eigenständige App auf dem Gerät installiert werden' },
+                    { icon: 'smartphone',      text: 'Mobile-Optimierungen: Layout auf kleinen Bildschirmen deutlich verbessert' },
+                    { icon: 'menu_book',       text: 'Benutzerhandbuch mit neuen SVG-Illustrationen vollständig überarbeitet' },
+                    { icon: 'new_releases',    text: 'Versionierung eingeführt – du siehst beim nächsten Update, was neu ist' }
+                ]
+            }
+        };
 
         // --- STATE ---
         const state = {
@@ -400,9 +420,13 @@
             // Re-layout masonry on window resize
             window.addEventListener('resize', () => layoutMasonry());
 
-            // Onboarding for first-time users
+            // Onboarding for first-time users; Changelog for returning users
             if (isFirstVisit) {
                 showOnboarding();
+                // Neue Nutzer sehen das Onboarding – Changelog-Popup sofort als gesehen markieren.
+                localStorage.setItem('tf_version_seen', APP_VERSION);
+            } else {
+                checkAndShowChangelog();
             }
 
             // Escape key: close modals and menus
@@ -451,6 +475,37 @@
                 return;
             }
             updateOnboardingUI();
+        }
+
+        // --- CHANGELOG POPUP ---
+        function checkAndShowChangelog() {
+            const lastSeen = localStorage.getItem('tf_version_seen');
+            if (lastSeen === APP_VERSION) return;
+            const entry = CHANGELOG[APP_VERSION];
+            if (!entry) {
+                // Kein Eintrag für diese Version → trotzdem als gesehen markieren
+                localStorage.setItem('tf_version_seen', APP_VERSION);
+                return;
+            }
+            showChangelogModal(entry);
+        }
+
+        function showChangelogModal(entry) {
+            document.getElementById('changelogTitle').textContent = entry.title;
+            document.getElementById('changelogSubtitle').textContent = entry.subtitle || '';
+            const list = document.getElementById('changelogList');
+            list.innerHTML = entry.changes.map(c =>
+                `<div style="display:flex; align-items:flex-start; gap:12px;">
+                    <span class="material-symbols-rounded" style="font-size:20px; color:var(--md-sys-color-primary); flex-shrink:0; margin-top:1px;">${c.icon}</span>
+                    <span style="font-size:14px; color:var(--md-sys-color-on-surface-variant); line-height:1.5;">${c.text}</span>
+                </div>`
+            ).join('');
+            openModal('changelogModal');
+        }
+
+        function dismissChangelog() {
+            localStorage.setItem('tf_version_seen', APP_VERSION);
+            closeModal('changelogModal');
         }
 
         // --- PAKET 11: ARIA Labels ---
