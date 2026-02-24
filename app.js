@@ -2694,6 +2694,22 @@
                     }
                 });
             });
+            // Pausen für diesen Tag einsammeln und in die Timeline integrieren
+            state.pauses.forEach(pause => {
+                const pauseEnd = pause.active ? now : pause.endTs;
+                if (!pauseEnd || pauseEnd <= dayStart || pause.startTs >= dayEnd) return;
+                const clampedStart = Math.max(pause.startTs, dayStart);
+                const clampedEnd   = Math.min(pauseEnd, dayEnd);
+                entries.push({
+                    isPause:     true,
+                    pause,
+                    clampedStart,
+                    clampedEnd,
+                    durationMs:  clampedEnd - clampedStart,
+                    isActive:    !!pause.active
+                });
+            });
+
             entries.sort((a, b) => a.clampedStart - b.clampedStart);
 
             // Calculate day total
@@ -2704,6 +2720,10 @@
             let html = '';
 
             // Day summary header
+            const projectEntryCount = entries.filter(e => !e.isPause).length;
+            const pauseEntryCount   = entries.filter(e => e.isPause).length;
+            const entrySummary = projectEntryCount + ' Eintr' + (projectEntryCount === 1 ? 'ag' : 'äge')
+                + (pauseEntryCount > 0 ? ' · ' + pauseEntryCount + ' Pause' + (pauseEntryCount > 1 ? 'n' : '') : '');
             html += `<div class="ts-day-summary">
                 <div class="ts-day-summary-left">
                     <span class="material-symbols-rounded" style="font-size:20px; color:var(--md-sys-color-primary);">schedule</span>
@@ -2711,7 +2731,7 @@
                 </div>
                 <div class="ts-day-summary-right">
                     <span class="ts-day-summary-time">${formatMs(dayTotalR, false)}</span>
-                    <span class="ts-day-summary-entries">${entries.length} Eintr${entries.length === 1 ? 'ag' : 'äge'}</span>
+                    <span class="ts-day-summary-entries">${entrySummary}</span>
                 </div>
             </div>`;
 
@@ -2724,6 +2744,41 @@
             // Timeline entries
             html += '<div class="ts-timeline">';
             entries.forEach((entry, i) => {
+                const hasLineAfter = i < entries.length - 1;
+                const lineHtml = hasLineAfter ? '<div class="ts-entry-timeline-line"></div>' : '';
+
+                // --- Pause-Eintrag ---
+                if (entry.isPause) {
+                    const startTime = new Date(entry.clampedStart).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+                    const endTime   = entry.isActive
+                        ? null
+                        : new Date(entry.clampedEnd).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+                    const durationStr = formatMs(entry.durationMs, false);
+                    const typeIcon = entry.pause.type === 'auto' ? 'smart_toy' : 'coffee';
+                    const typeLabel = entry.pause.label || 'Pause';
+                    html += `<div class="ts-entry ${entry.isActive ? 'active' : ''}">
+                        <div class="ts-entry-timeline-dot" style="background:var(--md-sys-color-outline);"></div>
+                        ${lineHtml}
+                        <div class="ts-entry-content" style="opacity:0.75; border-left: 2px solid var(--md-sys-color-outline-variant);">
+                            <div class="ts-entry-header">
+                                <span class="material-symbols-rounded" style="font-size:15px; color:var(--md-sys-color-on-surface-variant); flex-shrink:0;">${typeIcon}</span>
+                                <span class="ts-entry-project" style="color:var(--md-sys-color-on-surface-variant);">${escapeHtml(typeLabel)}</span>
+                                <span class="ts-entry-duration" style="color:var(--md-sys-color-on-surface-variant);">${durationStr}</span>
+                            </div>
+                            <div class="ts-entry-times">
+                                <span style="font-size:12px; font-family:'Roboto Mono',monospace; color:var(--md-sys-color-on-surface-variant);">${startTime}</span>
+                                <span class="ts-entry-arrow">→</span>
+                                ${entry.isActive
+                                    ? '<span class="ts-entry-running">läuft...</span>'
+                                    : `<span style="font-size:12px; font-family:'Roboto Mono',monospace; color:var(--md-sys-color-on-surface-variant);">${endTime}</span>`
+                                }
+                            </div>
+                        </div>
+                    </div>`;
+                    return;
+                }
+
+                // --- Projekt-Eintrag ---
                 const p = entry.project;
                 const startTime = new Date(entry.clampedStart).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
                 const endTime = entry.isActive ? 'läuft...' : new Date(entry.clampedEnd).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
@@ -2737,7 +2792,7 @@
 
                 html += `<div class="ts-entry ${entry.isActive ? 'active' : ''}">
                     <div class="ts-entry-timeline-dot" style="background:${pColor};"></div>
-                    ${i < entries.length - 1 ? '<div class="ts-entry-timeline-line"></div>' : ''}
+                    ${lineHtml}
                     <div class="ts-entry-content">
                         <div class="ts-entry-header">
                             <span class="ts-entry-project" style="color:${pColor};">${escapeHtml(projectLabel)}</span>
