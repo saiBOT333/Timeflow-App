@@ -1,5 +1,5 @@
         // --- VERSION ---
-        const APP_VERSION = '3.0.0';
+        const APP_VERSION = '3.1.0';
 
         // --- CONFIG ---
         const DEFAULT_AUTO_PAUSES = [
@@ -20,6 +20,17 @@
         // Das Popup erscheint automatisch beim nächsten Start, wenn APP_VERSION
         // noch nicht als gesehen gespeichert ist.
         const CHANGELOG = {
+            '3.1.0': {
+                title: 'Version 3.1.0',
+                subtitle: 'Verbesserungen & Bugfixes',
+                changes: [
+                    { icon: 'coffee',          text: 'Pausen werden im Stundenzettel in der Timeline angezeigt' },
+                    { icon: 'tag',             text: 'Projektnummer im Stundenzettel sichtbar' },
+                    { icon: 'percent',         text: 'Wochenübersicht zeigt Zeiten jetzt auch im Dezimalformat' },
+                    { icon: 'text_fields',     text: 'Bugfix: Lange Projektnamen laufen nicht mehr über die Karte hinaus – abgeschnittene Namen per Hover sichtbar' },
+                    { icon: 'info',            text: 'Versionsnummer jetzt in den Einstellungen sichtbar' }
+                ]
+            },
             '3.0.0': {
                 title: 'Version 3.0.0',
                 subtitle: 'Erste offizielle Version mit Versionierung',
@@ -570,6 +581,8 @@
                 document.getElementById('settingsRedPct').value = pendingSettings.redPct;
                 renderReminderListSettings();
                 renderExternalLinksSettings();
+                const versionLabel = document.getElementById('settingsVersionLabel');
+                if (versionLabel) versionLabel.textContent = 'v' + APP_VERSION;
                 // Switch to requested tab or default to general
                 const tab = (options && options.tab) || 'tab-general';
                 const tabBtn = document.querySelector(`.settings-tab[data-tab="${tab}"]`);
@@ -2374,7 +2387,8 @@
 
                 // Single row per project
                 html += '<tr>';
-                html += '<td class="project-name-cell">' + nameCell + '</td>';
+                const fullLabel = (isSub && p.parentId ? (activeProjects.find(x => x.id === p.parentId) || {}).name + ' → ' + p.name : p.name) + (p.number && p.number !== '-' ? ' (' + p.number + ')' : '');
+                html += '<td class="project-name-cell" title="' + escapeHtml(fullLabel) + '">' + nameCell + '</td>';
                 let rowTotal = 0;
                 dates.forEach((dateStr, i) => {
                     const ms = calculateNetDurationForDate(p, dateStr);
@@ -2795,7 +2809,7 @@
                     ${lineHtml}
                     <div class="ts-entry-content">
                         <div class="ts-entry-header">
-                            <span class="ts-entry-project" style="color:${pColor};">${escapeHtml(projectLabel)}</span>
+                            <span class="ts-entry-project" style="color:${pColor};" title="${escapeHtml(projectLabel)}">${escapeHtml(projectLabel)}</span>
                             ${projectNum ? `<span class="ts-entry-num">${projectNum}</span>` : ''}
                             <span class="ts-entry-duration">${durationStr}</span>
                         </div>

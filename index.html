@@ -184,9 +184,12 @@
                 </div>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
-                <button class="md-btn md-btn-tonal" onclick="closeModal('settingsModal')">Abbrechen</button>
-                <button class="md-btn md-btn-primary" onclick="saveSettings()">Speichern</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:24px;">
+                <span id="settingsVersionLabel" style="font-size:11px; color:var(--md-sys-color-on-surface-variant); opacity:0.6; font-family:'Roboto Mono',monospace;"></span>
+                <div style="display:flex; gap:8px;">
+                    <button class="md-btn md-btn-tonal" onclick="closeModal('settingsModal')">Abbrechen</button>
+                    <button class="md-btn md-btn-primary" onclick="saveSettings()">Speichern</button>
+                </div>
             </div>
         </div>
     </div>

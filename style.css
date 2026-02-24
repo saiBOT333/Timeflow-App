@@ -606,7 +606,7 @@ textarea.input-field {
 }
 
 /* --- WEEKLY TABLE --- */
-.weekly-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.weekly-table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
 .weekly-table th {
     padding: 10px 6px; text-align: center; font-weight: 500;
     color: var(--md-sys-color-on-surface-variant); font-size: 11px;
@@ -619,7 +619,7 @@ textarea.input-field {
 }
 .weekly-table td.project-name-cell {
     text-align: left; font-family: var(--font-stack);
-    max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     font-size: 13px;
 }
 .weekly-table tr.total-row td {
@@ -994,6 +994,7 @@ textarea.input-field {
     font-weight: 600;
     font-size: 13px;
     flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
