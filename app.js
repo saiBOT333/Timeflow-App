@@ -136,6 +136,9 @@
             // Collapsed-State von Elternprojekten in der Wochenübersicht
             collapsedWeeklyParents: new Set(),
 
+            // Dezimaldarstellung in der Wochenübersicht (true = h.hh, false = hh:mm)
+            weeklyDecimal:       false,
+
             // Offenes Projekt-Kontextmenü (project-id|null)
             openMenuProjectId:   null
         };
@@ -1565,11 +1568,21 @@
                         <span class="active-project-total" data-pid="${displayProject.id}" style="font-size:14px; font-family:'Roboto Mono', monospace; color:inherit;">${formatMs(totalAllTime, false)}</span>
                         <span style="font-size:11px; color:inherit;">Gesamt</span>
                     </div>
-                    ${displayProject.id !== 'general' ?
-                        `<button class="md-btn" onclick="stopProjectById('${displayProject.id}')" style="background:${stopBtnBg}; color:inherit; margin-top:8px;">
-                            <span class="material-symbols-rounded">stop</span> Stoppen
-                        </button>`
-                    : ''}
+                    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                        ${state.manualPauseActive
+                            ? `<button class="md-btn" onclick="toggleManualPause()" style="background:${stopBtnBg}; color:inherit;">
+                                   <span class="material-symbols-rounded">play_arrow</span> Weiter
+                               </button>`
+                            : `<button class="md-btn" onclick="toggleManualPause()" style="background:${stopBtnBg}; color:inherit;">
+                                   <span class="material-symbols-rounded">coffee</span> Pause
+                               </button>`
+                        }
+                        ${displayProject.id !== 'general' ?
+                            `<button class="md-btn" onclick="stopProjectById('${displayProject.id}')" style="background:${stopBtnBg}; color:inherit;">
+                                <span class="material-symbols-rounded">stop</span> Stoppen
+                            </button>`
+                        : ''}
+                    </div>
                 </div>
             `;
         }
@@ -2262,6 +2275,18 @@
         function renderWeeklyOverview() {
             const container = document.getElementById('weeklyTableContainer');
             if (!container) return;
+
+            // Lokale Format-Hilfsfunktion: je nach Modus HH:MM oder Dezimal
+            const fmtW = (ms) => uiState.weeklyDecimal ? formatMsDecimal(ms) : formatMs(ms, false);
+
+            // Dezimal-Button visuell aktualisieren
+            const decBtn = document.getElementById('weeklyDecimalBtn');
+            if (decBtn) {
+                decBtn.style.opacity = uiState.weeklyDecimal ? '0.9' : '0.6';
+                decBtn.querySelector('.material-symbols-rounded').style.color = uiState.weeklyDecimal ? 'var(--md-sys-color-primary)' : '';
+                decBtn.title = uiState.weeklyDecimal ? 'Zeitformat: Dezimal (aktiv) – klicken für HH:MM' : 'Zeitformat: HH:MM – klicken für Dezimal';
+            }
+
             const allDates = getWeekDates(uiState.viewWeekStart);
             const todayStr = new Date().toISOString().split('T')[0];
             const weekNum = getISOWeekNumber(allDates[0]);
@@ -2304,8 +2329,8 @@
             const weeklyTargetHours = (state.settings.workdayHours || 10) * 5;
             const weeklyTargetMs = weeklyTargetHours * 3600000;
             const weekPct = weeklyTargetMs > 0 ? (weekTotalMs / weeklyTargetMs) * 100 : 0;
-            const weekTotalStr = formatMs(weekTotalMs, false);
-            const weekTargetStr = formatMs(weeklyTargetMs, false);
+            const weekTotalStr = fmtW(weekTotalMs);
+            const weekTargetStr = fmtW(weeklyTargetMs);
 
             let html = '<div class="week-summary-bar">'
                 + '<div class="week-summary-text">'
@@ -2342,7 +2367,10 @@
                       + '<span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle;">' + (isCollapsed ? 'expand_more' : 'expand_less') + '</span>'
                       + '</span>'
                     : '';
-                const nameCell = collapseBtn + '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:' + (p.color || '#757575') + '; margin-right:6px; vertical-align:middle;"></span>' + indent + '<span style="' + nameStyle + '">' + p.name + '</span>';
+                const numLabel = (p.number && p.number !== '-' && !isSub)
+                    ? '<span style="font-size:10px; color:var(--md-sys-color-on-surface-variant); opacity:0.7; margin-left:2px; font-family:\'Roboto Mono\',monospace;">' + p.number + '</span>'
+                    : '';
+                const nameCell = collapseBtn + '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:' + (p.color || '#757575') + '; margin-right:6px; vertical-align:middle;"></span>' + indent + '<span style="' + nameStyle + '">' + p.name + '</span>' + numLabel;
 
                 // Single row per project
                 html += '<tr>';
@@ -2369,11 +2397,11 @@
                         ? '<span class="weekly-note-marker" onclick="showNotePopup(event, \'' + p.id + '\', \'' + dateStr + '\')" title="' + dayNotes.length + ' Notiz' + (dayNotes.length > 1 ? 'en' : '') + '">\ud83d\udcdd</span>'
                         : '';
                     html += '<td class="weekly-day-col ' + (isToday ? 'today-col' : '') + '">'
-                        + (ms > 0 ? '<span class="weekly-time-pill">' + formatMs(ms, false) + '</span>' + noteMarker : '<span style="opacity:0.2;">\u2014</span>')
+                        + (ms > 0 ? '<span class="weekly-time-pill">' + fmtW(ms) + '</span>' + noteMarker : '<span style="opacity:0.2;">\u2014</span>')
                         + '</td>';
                 });
                 grandTotal += rowTotal;
-                html += '<td>' + formatMs(rowTotal, false) + '</td></tr>';
+                html += '<td>' + fmtW(rowTotal) + '</td></tr>';
             }
 
             orderedProjects.forEach(p => {
@@ -2388,9 +2416,9 @@
             html += '<td class="project-name-cell">Gesamt</td>';
             dates.forEach((dateStr, i) => {
                 const isToday = dateStr === todayStr;
-                html += '<td class="' + (isToday ? 'today-col' : '') + '">' + formatMs(dailyTotals[i], false) + '</td>';
+                html += '<td class="' + (isToday ? 'today-col' : '') + '">' + fmtW(dailyTotals[i]) + '</td>';
             });
-            html += '<td>' + formatMs(grandTotal, false) + '</td></tr>';
+            html += '<td>' + fmtW(grandTotal) + '</td></tr>';
             html += '</tbody></table>';
 
             if (orderedProjects.length === 0) {
@@ -2402,6 +2430,11 @@
 
         function escapeHtml(str) {
             return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function toggleWeeklyDecimal() {
+            uiState.weeklyDecimal = !uiState.weeklyDecimal;
+            renderWeeklyOverview();
         }
 
         function toggleWeeklyCollapse(parentId) {
@@ -2803,6 +2836,13 @@
             const h = Math.floor((ms / (1000 * 60 * 60)));
             const pad = (n) => n.toString().padStart(2, '0');
             return `${pad(h)}:${pad(m)}${includeSeconds ? ':' + pad(s) : ''}`;
+        }
+
+        // Dezimalformat: Millisekunden → "h.hh" (z.B. 5400000 → "1.50")
+        // Wird in der Wochenübersicht verwendet, wenn uiState.weeklyDecimal aktiv ist.
+        function formatMsDecimal(ms) {
+            const hours = ms / 3600000;
+            return hours.toFixed(2).replace('.', ',');
         }
         function formatTimeInput(ts) {
             const d = new Date(ts);
