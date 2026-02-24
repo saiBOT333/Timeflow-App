@@ -1,3 +1,6 @@
+        // --- VERSION ---
+        const APP_VERSION = '3.0.0';
+
         // --- CONFIG ---
         const DEFAULT_AUTO_PAUSES = [
             { start: "09:00", end: "09:20", label: "Frühstück" },
@@ -10,7 +13,24 @@
             '#FFDB90', '#FFCCBC'
         ];
         
-        const ARCHIVE_COLOR = '#757575'; 
+        const ARCHIVE_COLOR = '#757575';
+
+        // --- CHANGELOG ---
+        // Für jede neue Version hier einen Eintrag ergänzen.
+        // Das Popup erscheint automatisch beim nächsten Start, wenn APP_VERSION
+        // noch nicht als gesehen gespeichert ist.
+        const CHANGELOG = {
+            '3.0.0': {
+                title: 'Version 3.0.0',
+                subtitle: 'Erste offizielle Version mit Versionierung',
+                changes: [
+                    { icon: 'install_mobile',  text: 'PWA: App kann jetzt als eigenständige App auf dem Gerät installiert werden' },
+                    { icon: 'smartphone',      text: 'Mobile-Optimierungen: Layout auf kleinen Bildschirmen deutlich verbessert' },
+                    { icon: 'menu_book',       text: 'Benutzerhandbuch mit neuen SVG-Illustrationen vollständig überarbeitet' },
+                    { icon: 'new_releases',    text: 'Versionierung eingeführt – du siehst beim nächsten Update, was neu ist' }
+                ]
+            }
+        };
 
         // --- STATE ---
         const state = {
@@ -115,6 +135,9 @@
 
             // Collapsed-State von Elternprojekten in der Wochenübersicht
             collapsedWeeklyParents: new Set(),
+
+            // Dezimaldarstellung in der Wochenübersicht (true = h.hh, false = hh:mm)
+            weeklyDecimal:       false,
 
             // Offenes Projekt-Kontextmenü (project-id|null)
             openMenuProjectId:   null
@@ -400,9 +423,13 @@
             // Re-layout masonry on window resize
             window.addEventListener('resize', () => layoutMasonry());
 
-            // Onboarding for first-time users
+            // Onboarding for first-time users; Changelog for returning users
             if (isFirstVisit) {
                 showOnboarding();
+                // Neue Nutzer sehen das Onboarding – Changelog-Popup sofort als gesehen markieren.
+                localStorage.setItem('tf_version_seen', APP_VERSION);
+            } else {
+                checkAndShowChangelog();
             }
 
             // Escape key: close modals and menus
@@ -451,6 +478,37 @@
                 return;
             }
             updateOnboardingUI();
+        }
+
+        // --- CHANGELOG POPUP ---
+        function checkAndShowChangelog() {
+            const lastSeen = localStorage.getItem('tf_version_seen');
+            if (lastSeen === APP_VERSION) return;
+            const entry = CHANGELOG[APP_VERSION];
+            if (!entry) {
+                // Kein Eintrag für diese Version → trotzdem als gesehen markieren
+                localStorage.setItem('tf_version_seen', APP_VERSION);
+                return;
+            }
+            showChangelogModal(entry);
+        }
+
+        function showChangelogModal(entry) {
+            document.getElementById('changelogTitle').textContent = entry.title;
+            document.getElementById('changelogSubtitle').textContent = entry.subtitle || '';
+            const list = document.getElementById('changelogList');
+            list.innerHTML = entry.changes.map(c =>
+                `<div style="display:flex; align-items:flex-start; gap:12px;">
+                    <span class="material-symbols-rounded" style="font-size:20px; color:var(--md-sys-color-primary); flex-shrink:0; margin-top:1px;">${c.icon}</span>
+                    <span style="font-size:14px; color:var(--md-sys-color-on-surface-variant); line-height:1.5;">${c.text}</span>
+                </div>`
+            ).join('');
+            openModal('changelogModal');
+        }
+
+        function dismissChangelog() {
+            localStorage.setItem('tf_version_seen', APP_VERSION);
+            closeModal('changelogModal');
         }
 
         // --- PAKET 11: ARIA Labels ---
@@ -1510,11 +1568,21 @@
                         <span class="active-project-total" data-pid="${displayProject.id}" style="font-size:14px; font-family:'Roboto Mono', monospace; color:inherit;">${formatMs(totalAllTime, false)}</span>
                         <span style="font-size:11px; color:inherit;">Gesamt</span>
                     </div>
-                    ${displayProject.id !== 'general' ?
-                        `<button class="md-btn" onclick="stopProjectById('${displayProject.id}')" style="background:${stopBtnBg}; color:inherit; margin-top:8px;">
-                            <span class="material-symbols-rounded">stop</span> Stoppen
-                        </button>`
-                    : ''}
+                    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                        ${state.manualPauseActive
+                            ? `<button class="md-btn" onclick="toggleManualPause()" style="background:${stopBtnBg}; color:inherit;">
+                                   <span class="material-symbols-rounded">play_arrow</span> Weiter
+                               </button>`
+                            : `<button class="md-btn" onclick="toggleManualPause()" style="background:${stopBtnBg}; color:inherit;">
+                                   <span class="material-symbols-rounded">coffee</span> Pause
+                               </button>`
+                        }
+                        ${displayProject.id !== 'general' ?
+                            `<button class="md-btn" onclick="stopProjectById('${displayProject.id}')" style="background:${stopBtnBg}; color:inherit;">
+                                <span class="material-symbols-rounded">stop</span> Stoppen
+                            </button>`
+                        : ''}
+                    </div>
                 </div>
             `;
         }
@@ -2207,6 +2275,18 @@
         function renderWeeklyOverview() {
             const container = document.getElementById('weeklyTableContainer');
             if (!container) return;
+
+            // Lokale Format-Hilfsfunktion: je nach Modus HH:MM oder Dezimal
+            const fmtW = (ms) => uiState.weeklyDecimal ? formatMsDecimal(ms) : formatMs(ms, false);
+
+            // Dezimal-Button visuell aktualisieren
+            const decBtn = document.getElementById('weeklyDecimalBtn');
+            if (decBtn) {
+                decBtn.style.opacity = uiState.weeklyDecimal ? '0.9' : '0.6';
+                decBtn.querySelector('.material-symbols-rounded').style.color = uiState.weeklyDecimal ? 'var(--md-sys-color-primary)' : '';
+                decBtn.title = uiState.weeklyDecimal ? 'Zeitformat: Dezimal (aktiv) – klicken für HH:MM' : 'Zeitformat: HH:MM – klicken für Dezimal';
+            }
+
             const allDates = getWeekDates(uiState.viewWeekStart);
             const todayStr = new Date().toISOString().split('T')[0];
             const weekNum = getISOWeekNumber(allDates[0]);
@@ -2249,8 +2329,8 @@
             const weeklyTargetHours = (state.settings.workdayHours || 10) * 5;
             const weeklyTargetMs = weeklyTargetHours * 3600000;
             const weekPct = weeklyTargetMs > 0 ? (weekTotalMs / weeklyTargetMs) * 100 : 0;
-            const weekTotalStr = formatMs(weekTotalMs, false);
-            const weekTargetStr = formatMs(weeklyTargetMs, false);
+            const weekTotalStr = fmtW(weekTotalMs);
+            const weekTargetStr = fmtW(weeklyTargetMs);
 
             let html = '<div class="week-summary-bar">'
                 + '<div class="week-summary-text">'
@@ -2287,7 +2367,10 @@
                       + '<span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle;">' + (isCollapsed ? 'expand_more' : 'expand_less') + '</span>'
                       + '</span>'
                     : '';
-                const nameCell = collapseBtn + '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:' + (p.color || '#757575') + '; margin-right:6px; vertical-align:middle;"></span>' + indent + '<span style="' + nameStyle + '">' + p.name + '</span>';
+                const numLabel = (p.number && p.number !== '-' && !isSub)
+                    ? '<span style="font-size:10px; color:var(--md-sys-color-on-surface-variant); opacity:0.7; margin-left:2px; font-family:\'Roboto Mono\',monospace;">' + p.number + '</span>'
+                    : '';
+                const nameCell = collapseBtn + '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:' + (p.color || '#757575') + '; margin-right:6px; vertical-align:middle;"></span>' + indent + '<span style="' + nameStyle + '">' + p.name + '</span>' + numLabel;
 
                 // Single row per project
                 html += '<tr>';
@@ -2314,11 +2397,11 @@
                         ? '<span class="weekly-note-marker" onclick="showNotePopup(event, \'' + p.id + '\', \'' + dateStr + '\')" title="' + dayNotes.length + ' Notiz' + (dayNotes.length > 1 ? 'en' : '') + '">\ud83d\udcdd</span>'
                         : '';
                     html += '<td class="weekly-day-col ' + (isToday ? 'today-col' : '') + '">'
-                        + (ms > 0 ? '<span class="weekly-time-pill">' + formatMs(ms, false) + '</span>' + noteMarker : '<span style="opacity:0.2;">\u2014</span>')
+                        + (ms > 0 ? '<span class="weekly-time-pill">' + fmtW(ms) + '</span>' + noteMarker : '<span style="opacity:0.2;">\u2014</span>')
                         + '</td>';
                 });
                 grandTotal += rowTotal;
-                html += '<td>' + formatMs(rowTotal, false) + '</td></tr>';
+                html += '<td>' + fmtW(rowTotal) + '</td></tr>';
             }
 
             orderedProjects.forEach(p => {
@@ -2333,9 +2416,9 @@
             html += '<td class="project-name-cell">Gesamt</td>';
             dates.forEach((dateStr, i) => {
                 const isToday = dateStr === todayStr;
-                html += '<td class="' + (isToday ? 'today-col' : '') + '">' + formatMs(dailyTotals[i], false) + '</td>';
+                html += '<td class="' + (isToday ? 'today-col' : '') + '">' + fmtW(dailyTotals[i]) + '</td>';
             });
-            html += '<td>' + formatMs(grandTotal, false) + '</td></tr>';
+            html += '<td>' + fmtW(grandTotal) + '</td></tr>';
             html += '</tbody></table>';
 
             if (orderedProjects.length === 0) {
@@ -2347,6 +2430,11 @@
 
         function escapeHtml(str) {
             return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function toggleWeeklyDecimal() {
+            uiState.weeklyDecimal = !uiState.weeklyDecimal;
+            renderWeeklyOverview();
         }
 
         function toggleWeeklyCollapse(parentId) {
@@ -2606,6 +2694,22 @@
                     }
                 });
             });
+            // Pausen für diesen Tag einsammeln und in die Timeline integrieren
+            state.pauses.forEach(pause => {
+                const pauseEnd = pause.active ? now : pause.endTs;
+                if (!pauseEnd || pauseEnd <= dayStart || pause.startTs >= dayEnd) return;
+                const clampedStart = Math.max(pause.startTs, dayStart);
+                const clampedEnd   = Math.min(pauseEnd, dayEnd);
+                entries.push({
+                    isPause:     true,
+                    pause,
+                    clampedStart,
+                    clampedEnd,
+                    durationMs:  clampedEnd - clampedStart,
+                    isActive:    !!pause.active
+                });
+            });
+
             entries.sort((a, b) => a.clampedStart - b.clampedStart);
 
             // Calculate day total
@@ -2616,6 +2720,10 @@
             let html = '';
 
             // Day summary header
+            const projectEntryCount = entries.filter(e => !e.isPause).length;
+            const pauseEntryCount   = entries.filter(e => e.isPause).length;
+            const entrySummary = projectEntryCount + ' Eintr' + (projectEntryCount === 1 ? 'ag' : 'äge')
+                + (pauseEntryCount > 0 ? ' · ' + pauseEntryCount + ' Pause' + (pauseEntryCount > 1 ? 'n' : '') : '');
             html += `<div class="ts-day-summary">
                 <div class="ts-day-summary-left">
                     <span class="material-symbols-rounded" style="font-size:20px; color:var(--md-sys-color-primary);">schedule</span>
@@ -2623,7 +2731,7 @@
                 </div>
                 <div class="ts-day-summary-right">
                     <span class="ts-day-summary-time">${formatMs(dayTotalR, false)}</span>
-                    <span class="ts-day-summary-entries">${entries.length} Eintr${entries.length === 1 ? 'ag' : 'äge'}</span>
+                    <span class="ts-day-summary-entries">${entrySummary}</span>
                 </div>
             </div>`;
 
@@ -2636,6 +2744,41 @@
             // Timeline entries
             html += '<div class="ts-timeline">';
             entries.forEach((entry, i) => {
+                const hasLineAfter = i < entries.length - 1;
+                const lineHtml = hasLineAfter ? '<div class="ts-entry-timeline-line"></div>' : '';
+
+                // --- Pause-Eintrag ---
+                if (entry.isPause) {
+                    const startTime = new Date(entry.clampedStart).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+                    const endTime   = entry.isActive
+                        ? null
+                        : new Date(entry.clampedEnd).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+                    const durationStr = formatMs(entry.durationMs, false);
+                    const typeIcon = entry.pause.type === 'auto' ? 'smart_toy' : 'coffee';
+                    const typeLabel = entry.pause.label || 'Pause';
+                    html += `<div class="ts-entry ${entry.isActive ? 'active' : ''}">
+                        <div class="ts-entry-timeline-dot" style="background:var(--md-sys-color-outline);"></div>
+                        ${lineHtml}
+                        <div class="ts-entry-content" style="opacity:0.75; border-left: 2px solid var(--md-sys-color-outline-variant);">
+                            <div class="ts-entry-header">
+                                <span class="material-symbols-rounded" style="font-size:15px; color:var(--md-sys-color-on-surface-variant); flex-shrink:0;">${typeIcon}</span>
+                                <span class="ts-entry-project" style="color:var(--md-sys-color-on-surface-variant);">${escapeHtml(typeLabel)}</span>
+                                <span class="ts-entry-duration" style="color:var(--md-sys-color-on-surface-variant);">${durationStr}</span>
+                            </div>
+                            <div class="ts-entry-times">
+                                <span style="font-size:12px; font-family:'Roboto Mono',monospace; color:var(--md-sys-color-on-surface-variant);">${startTime}</span>
+                                <span class="ts-entry-arrow">→</span>
+                                ${entry.isActive
+                                    ? '<span class="ts-entry-running">läuft...</span>'
+                                    : `<span style="font-size:12px; font-family:'Roboto Mono',monospace; color:var(--md-sys-color-on-surface-variant);">${endTime}</span>`
+                                }
+                            </div>
+                        </div>
+                    </div>`;
+                    return;
+                }
+
+                // --- Projekt-Eintrag ---
                 const p = entry.project;
                 const startTime = new Date(entry.clampedStart).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
                 const endTime = entry.isActive ? 'läuft...' : new Date(entry.clampedEnd).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
@@ -2649,7 +2792,7 @@
 
                 html += `<div class="ts-entry ${entry.isActive ? 'active' : ''}">
                     <div class="ts-entry-timeline-dot" style="background:${pColor};"></div>
-                    ${i < entries.length - 1 ? '<div class="ts-entry-timeline-line"></div>' : ''}
+                    ${lineHtml}
                     <div class="ts-entry-content">
                         <div class="ts-entry-header">
                             <span class="ts-entry-project" style="color:${pColor};">${escapeHtml(projectLabel)}</span>
@@ -2748,6 +2891,13 @@
             const h = Math.floor((ms / (1000 * 60 * 60)));
             const pad = (n) => n.toString().padStart(2, '0');
             return `${pad(h)}:${pad(m)}${includeSeconds ? ':' + pad(s) : ''}`;
+        }
+
+        // Dezimalformat: Millisekunden → "h.hh" (z.B. 5400000 → "1.50")
+        // Wird in der Wochenübersicht verwendet, wenn uiState.weeklyDecimal aktiv ist.
+        function formatMsDecimal(ms) {
+            const hours = ms / 3600000;
+            return hours.toFixed(2).replace('.', ',');
         }
         function formatTimeInput(ts) {
             const d = new Date(ts);
