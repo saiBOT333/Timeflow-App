@@ -411,8 +411,11 @@
             </button>
         </div>
 
-        <!-- DAY PROGRESS (fixed position under quick actions) -->
-        <div id="dayProgressContainer" class="day-progress-inline"></div>
+        <!-- STATUS ROW: Fortschrittsanzeige + Externe Links (fest platziert) -->
+        <div id="statusRow" class="status-row">
+            <div id="dayProgressContainer" class="day-progress-inline"></div>
+            <div id="statusLinksContainer" class="status-links-container"></div>
+        </div>
 
         <!-- TAG FILTER BAR -->
         <div id="tagFilterBar" style="display:flex; gap:6px; flex-wrap:wrap; padding:0 4px; align-items:center;"></div>
@@ -623,8 +626,8 @@
         </div>
 
 
-        <!-- EXTERNE LINKS -->
-        <div class="md-card" draggable="true" id="card-links">
+        <!-- EXTERNE LINKS (Anzeige jetzt in #statusLinksContainer, Karte dauerhaft versteckt) -->
+        <div class="md-card card-hidden" draggable="true" id="card-links">
             <div class="card-header">
                 <div class="card-title">
                     <span class="material-symbols-rounded drag-handle">drag_indicator</span>

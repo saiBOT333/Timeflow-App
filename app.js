@@ -1,5 +1,5 @@
         // --- VERSION ---
-        const APP_VERSION = '3.1.0';
+        const APP_VERSION = '3.2.0';
 
         // --- CONFIG ---
         const DEFAULT_AUTO_PAUSES = [
@@ -20,6 +20,17 @@
         // Das Popup erscheint automatisch beim nächsten Start, wenn APP_VERSION
         // noch nicht als gesehen gespeichert ist.
         const CHANGELOG = {
+            '3.2.0': {
+                title: 'Version 3.2.0',
+                subtitle: 'UI-Verbesserungen & neue Features',
+                changes: [
+                    { icon: 'table_rows',          text: 'Stundenzettel: Projektnummer unterhalb des Namens – immer lesbar, auch bei langen Namen mit Unterprojekt' },
+                    { icon: 'tag',                 text: 'Wochenübersicht: Projektnummer in eigener Spalte, klar und immer sichtbar' },
+                    { icon: 'dashboard_customize', text: 'Fortschrittsanzeige & Externe Links jetzt fest in einer Reihe – über "Sichtbare Karten" ein-/ausschaltbar' },
+                    { icon: 'link',                text: 'Externe Links als kompakte Buttons neben der Fortschrittsanzeige (max. 4 Links)' },
+                    { icon: 'new_releases',        text: 'PWA: Automatische Update-Benachrichtigung nach dem Programmstart' }
+                ]
+            },
             '3.1.0': {
                 title: 'Version 3.1.0',
                 subtitle: 'Verbesserungen & Bugfixes',
@@ -81,6 +92,7 @@
                 ]
             },
             customTitles: {
+                'title_progress': 'Fortschrittsanzeige',
                 'title_new': 'Neues Projekt',
                 'title_active': 'Aktivitätsbereich',
                 'title_favorites': 'Favoriten',
@@ -2357,6 +2369,7 @@
                 + '</div>';
 
             html += '<table class="weekly-table"><thead><tr>';
+            html += '<th class="weekly-num-col">#</th>';
             html += '<th style="text-align:left;">Projekt</th>';
             dates.forEach((dateStr, i) => {
                 const d = new Date(dateStr + 'T12:00:00');
@@ -2380,14 +2393,13 @@
                       + '<span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle;">' + (isCollapsed ? 'expand_more' : 'expand_less') + '</span>'
                       + '</span>'
                     : '';
-                const numLabel = (p.number && p.number !== '-' && !isSub)
-                    ? '<span style="font-size:10px; color:var(--md-sys-color-on-surface-variant); opacity:0.7; margin-left:2px; font-family:\'Roboto Mono\',monospace;">' + p.number + '</span>'
-                    : '';
-                const nameCell = collapseBtn + '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:' + (p.color || '#757575') + '; margin-right:6px; vertical-align:middle;"></span>' + indent + '<span style="' + nameStyle + '">' + p.name + '</span>' + numLabel;
+                const nameCell = collapseBtn + '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:' + (p.color || '#757575') + '; margin-right:6px; vertical-align:middle;"></span>' + indent + '<span style="' + nameStyle + '">' + p.name + '</span>';
 
                 // Single row per project
                 html += '<tr>';
+                const numDisplay = (!isSub && p.number && p.number !== '-') ? p.number : '';
                 const fullLabel = (isSub && p.parentId ? (activeProjects.find(x => x.id === p.parentId) || {}).name + ' → ' + p.name : p.name) + (p.number && p.number !== '-' ? ' (' + p.number + ')' : '');
+                html += '<td class="weekly-num-col">' + escapeHtml(numDisplay) + '</td>';
                 html += '<td class="project-name-cell" title="' + escapeHtml(fullLabel) + '">' + nameCell + '</td>';
                 let rowTotal = 0;
                 dates.forEach((dateStr, i) => {
@@ -2427,6 +2439,7 @@
 
             // Total row
             html += '<tr class="total-row">';
+            html += '<td class="weekly-num-col"></td>';
             html += '<td class="project-name-cell">Gesamt</td>';
             dates.forEach((dateStr, i) => {
                 const isToday = dateStr === todayStr;
@@ -2605,6 +2618,7 @@
         function addExternalLinkSetting() {
             // Hinzufügen in pendingSettings — noch kein saveData(), erst bei saveSettings()
             if (!pendingSettings.externalLinks) pendingSettings.externalLinks = [];
+            if (pendingSettings.externalLinks.length >= 4) return; // max. 4 Links
             pendingSettings.externalLinks.push({ label: '', url: '', icon: 'open_in_new' });
             renderExternalLinksSettings();
             // Focus the new label field
@@ -2620,21 +2634,20 @@
         }
 
         function renderExternalLinksCard() {
-            const container = document.getElementById('externalLinksContainer');
+            const container = document.getElementById('statusLinksContainer');
             if (!container) return;
-            const links = state.settings.externalLinks || [];
+            const links = (state.settings.externalLinks || []).slice(0, 4);
             if (links.length === 0) {
-                container.innerHTML = '<div class="empty-state" style="padding:16px;"><span class="material-symbols-rounded empty-state-icon" style="font-size:28px;">link</span><div class="empty-state-text">Keine Links</div><div class="empty-state-hint">In den Einstellungen konfigurieren.</div></div>';
+                container.style.display = 'none';
                 return;
             }
-            container.innerHTML = '<div class="ext-link-icons-row">'
-                + links.map(l => `
-                    <button class="ext-link-icon-btn" onclick="openExternalLink('${escapeHtml(l.url)}')" data-tooltip="${escapeHtml(l.label)}">
-                        <span class="material-symbols-rounded">${escapeHtml(l.icon || 'open_in_new')}</span>
-                        <span class="ext-link-icon-label">${escapeHtml(l.label)}</span>
-                    </button>
-                `).join('')
-                + '</div>';
+            container.style.display = '';
+            container.innerHTML = links.map(l => `
+                <button class="status-link-btn" onclick="openExternalLink('${escapeHtml(l.url)}')" title="${escapeHtml(l.label)}">
+                    <span class="material-symbols-rounded">${escapeHtml(l.icon || 'open_in_new')}</span>
+                    <span class="status-link-label">${escapeHtml(l.label)}</span>
+                </button>
+            `).join('');
         }
 
         function openExternalLink(url) {
@@ -2809,8 +2822,10 @@
                     ${lineHtml}
                     <div class="ts-entry-content">
                         <div class="ts-entry-header">
-                            <span class="ts-entry-project" style="color:${pColor};" title="${escapeHtml(projectLabel)}">${escapeHtml(projectLabel)}</span>
-                            ${projectNum ? `<span class="ts-entry-num">${projectNum}</span>` : ''}
+                            <div class="ts-entry-project-info">
+                                <span class="ts-entry-project" style="color:${pColor};" title="${escapeHtml(projectLabel)}">${escapeHtml(projectLabel)}</span>
+                                ${projectNum ? `<span class="ts-entry-num">${projectNum}</span>` : ''}
+                            </div>
                             <span class="ts-entry-duration">${durationStr}</span>
                         </div>
                         <div class="ts-entry-times">
@@ -3203,6 +3218,7 @@
         // --- PAKET 7: Karten-Sichtbarkeit & Presets ---
 
         const CARD_ID_TITLE_MAP = {
+            'card-progress': 'title_progress',
             'card-new': 'title_new',
             'card-active': 'title_active',
             'card-favorites': 'title_favorites',
@@ -3281,7 +3297,14 @@
         function applyCardVisibility() {
             const hiddenCards = state.settings.hiddenCards || [];
             Object.keys(CARD_ID_TITLE_MAP).forEach(cardId => {
-                const el = document.getElementById(cardId);
+                let el;
+                if (cardId === 'card-progress') {
+                    el = document.getElementById('dayProgressContainer');
+                } else if (cardId === 'card-links') {
+                    el = document.getElementById('statusLinksContainer');
+                } else {
+                    el = document.getElementById(cardId);
+                }
                 if (el) {
                     if (hiddenCards.includes(cardId)) {
                         el.classList.add('card-hidden');
@@ -3308,7 +3331,7 @@
         // 7.3 Presets
         function applyPreset(name) {
             if (name === 'minimal') {
-                state.settings.hiddenCards = Object.keys(CARD_ID_TITLE_MAP).filter(id => id !== 'card-active' && id !== 'card-favorites');
+                state.settings.hiddenCards = Object.keys(CARD_ID_TITLE_MAP).filter(id => id !== 'card-active' && id !== 'card-favorites' && id !== 'card-progress');
             } else if (name === 'standard') {
                 state.settings.hiddenCards = ['card-archive', 'card-others'];
             } else if (name === 'all') {
@@ -3610,6 +3633,21 @@
         // manifest.json und Service Worker (sw.js) liegen als statische Dateien im
         // Stammverzeichnis. Kein Blob-Workaround mehr nötig.
 
+        function showUpdateToast() {
+            if (document.getElementById('update-toast')) return;
+            const toast = document.createElement('div');
+            toast.id = 'update-toast';
+            toast.className = 'update-toast';
+            toast.innerHTML = `
+                <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);font-size:20px;flex-shrink:0;">new_releases</span>
+                <span style="flex:1;">Neue Version verfügbar</span>
+                <button class="text-btn" style="font-weight:600;color:var(--md-sys-color-primary);white-space:nowrap;" onclick="window.location.reload()">Aktualisieren</button>
+                <button class="icon-btn" title="Schließen" onclick="document.getElementById('update-toast').remove()">
+                    <span class="material-symbols-rounded" style="font-size:18px;">close</span>
+                </button>`;
+            document.body.appendChild(toast);
+        }
+
         function setupPWA() {
             // Service Worker registrieren (nur unter HTTP/HTTPS möglich)
             if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
@@ -3617,6 +3655,10 @@
                     console.info('[PWA] Service Worker registriert:', reg.scope);
                 }).catch(err => {
                     console.warn('[PWA] Service Worker Registrierung fehlgeschlagen:', err.message);
+                });
+                // Wenn ein neuer SW die Kontrolle übernimmt → Update-Toast anzeigen
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    showUpdateToast();
                 });
             } else if (location.protocol === 'file:') {
                 console.info('[PWA] file://-Protokoll erkannt. Für vollständige PWA-Unterstützung per HTTP starten:');

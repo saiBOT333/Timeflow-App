@@ -617,6 +617,16 @@ textarea.input-field {
     padding: 8px 6px; text-align: center; font-family: 'Roboto Mono', monospace;
     font-size: 12px;
 }
+.weekly-table th.weekly-num-col,
+.weekly-table td.weekly-num-col {
+    width: 40px;
+    text-align: left;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    color: var(--md-sys-color-on-surface-variant);
+    white-space: nowrap;
+    padding-right: 2px;
+}
 .weekly-table td.project-name-cell {
     text-align: left; font-family: var(--font-stack);
     width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -813,6 +823,57 @@ textarea.input-field {
 }
 
 /* --- DAY PROGRESS BAR (inline under quick actions) --- */
+/* --- STATUS ROW (Fortschrittsanzeige + Externe Links) --- */
+.status-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    margin: 0 4px 8px 4px;
+}
+.status-row .day-progress-inline {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+}
+.status-links-container {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--md-sys-color-surface-container-low);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-corner-medium);
+    padding: 0 6px;
+    flex-shrink: 0;
+}
+.status-link-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    color: var(--md-sys-color-on-surface);
+    padding: 6px 8px;
+    cursor: pointer;
+    font-family: var(--font-stack);
+    transition: background 0.15s;
+    min-width: 44px;
+}
+.status-link-btn:hover {
+    background: var(--md-sys-color-surface-container-high);
+}
+.status-link-btn .material-symbols-rounded {
+    font-size: 22px;
+    color: var(--md-sys-color-primary);
+}
+.status-link-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface-variant);
+    white-space: nowrap;
+}
+
 .day-progress-inline {
     background: var(--md-sys-color-surface-container-low);
     border: 1px solid var(--md-sys-color-outline-variant);
@@ -990,11 +1051,16 @@ textarea.input-field {
     gap: 8px;
     margin-bottom: 4px;
 }
+.ts-entry-project-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
 .ts-entry-project {
     font-weight: 600;
     font-size: 13px;
-    flex: 1;
-    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1009,6 +1075,7 @@ textarea.input-field {
     font-size: 13px;
     font-weight: 700;
     color: var(--md-sys-color-on-surface);
+    flex-shrink: 0;
 }
 .ts-entry-times {
     display: flex;
@@ -1364,6 +1431,27 @@ textarea.input-field {
 }
 .undo-toast.hidden { display: none; }
 
+/* Update-Toast */
+.update-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--md-sys-color-surface-container-highest);
+    border: 1px solid var(--md-sys-color-primary);
+    border-radius: 12px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    z-index: 1500;
+    font-size: 14px;
+    color: var(--md-sys-color-on-surface);
+    animation: fadeIn 0.3s ease;
+    white-space: nowrap;
+}
+
 /* --- PAKET 10: Week Summary Bar --- */
 .week-summary-bar {
     margin-bottom: 12px;
@@ -1593,6 +1681,11 @@ textarea.input-field {
     .weekly-table td.project-name-cell {
         max-width: 56px;
         font-size:  10px;
+    }
+    .weekly-table th.weekly-num-col,
+    .weekly-table td.weekly-num-col {
+        width: 28px;
+        font-size: 9px;
     }
     /* Zeitangaben in Mono-Font bleiben lesbar auf 10 px */
     .weekly-table td {
