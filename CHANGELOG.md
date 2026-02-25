@@ -16,6 +16,11 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 - **Stundenzettel**: Projektnummer wird jetzt unterhalb des Projektnamens angezeigt – bleibt auch bei langen Namen mit Unterprojekt immer lesbar
 - **Wochenübersicht**: Projektnummer hat eine eigene Spalte `#` ganz links – immer sichtbar, unabhängig von der Länge des Projektnamens
 - **Stundenzettel**: Overflow-Fix für lange Projektnamen in Kombination mit Unterprojekten bei kompakter Kartenbreite
+- **CSV-Export**: Gibt jetzt die Wochendaten der Wochenübersicht aus – ein Projekt pro Zeile, Tagesspalten und Gesamtsumme; Dateiname enthält Kalenderwoche
+
+### Behoben
+- **Wochenübersicht**: Abstand zwischen `#`-Spalte und Projektname war zu gering (Überlappung)
+- **Karten**: Einklapp-Buttons mussten beim ersten Start zweimal betätigt werden – initialer Collapsed-Zustand wird jetzt korrekt aus dem DOM gelesen
 
 ---
 

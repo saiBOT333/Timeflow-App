@@ -625,7 +625,7 @@ textarea.input-field {
     font-size: 11px;
     color: var(--md-sys-color-on-surface-variant);
     white-space: nowrap;
-    padding-right: 2px;
+    padding-right: 10px;
 }
 .weekly-table td.project-name-cell {
     text-align: left; font-family: var(--font-stack);

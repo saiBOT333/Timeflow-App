@@ -28,7 +28,10 @@
                     { icon: 'tag',                 text: 'Wochenübersicht: Projektnummer in eigener Spalte, klar und immer sichtbar' },
                     { icon: 'dashboard_customize', text: 'Fortschrittsanzeige & Externe Links jetzt fest in einer Reihe – über "Sichtbare Karten" ein-/ausschaltbar' },
                     { icon: 'link',                text: 'Externe Links als kompakte Buttons neben der Fortschrittsanzeige (max. 4 Links)' },
-                    { icon: 'new_releases',        text: 'PWA: Automatische Update-Benachrichtigung nach dem Programmstart' }
+                    { icon: 'new_releases',        text: 'PWA: Automatische Update-Benachrichtigung nach dem Programmstart' },
+                    { icon: 'download',            text: 'CSV-Export: Gibt jetzt die Wochendaten aus – Projekt pro Zeile mit Tagesspalten und Gesamtsumme' },
+                    { icon: 'bug_report',          text: 'Bugfix: Abstand zwischen #-Spalte und Projektname in der Wochenübersicht korrigiert' },
+                    { icon: 'bug_report',          text: 'Bugfix: Einklapp-Buttons mussten beim ersten Start zweimal betätigt werden' }
                 ]
             },
             '3.1.0': {
@@ -431,6 +434,11 @@
 
             applyTitles();
             applyCompactMode();
+            // Collapsed-Zustand aus dem HTML-Default in uiState synchronisieren,
+            // damit toggleCard() beim ersten Klick sofort reagiert.
+            document.querySelectorAll('#cardGrid .md-card.collapsed').forEach(card => {
+                if (card.id) uiState.collapsedCards.add(card.id);
+            });
             updateDateDisplay();
             updateHomeOfficeBtn();
             updateUI();
@@ -2986,31 +2994,67 @@
 
         function downloadCSV() {
             const rounding = parseInt(state.settings.rounding || 0);
-            const isToday = uiState.viewDate === new Date().toISOString().split('T')[0];
-            let csv = "Nummer;Projekt;Unterprojekt;Notiz;Dauer (Min);Dauer (Std)\n";
-            // Order: parents, then children
-            const parents = state.projects.filter(p => !p.parentId);
-            const ordered = [];
-            parents.forEach(p => {
-                ordered.push(p);
-                getChildProjects(p.id).forEach(c => ordered.push(c));
-            });
-            state.projects.filter(p => p.parentId && !parents.find(pp => pp.id === p.parentId)).forEach(p => ordered.push(p));
+            const allDates = getWeekDates(uiState.viewWeekStart);
+            const showWeekend = state.settings.showWeekend !== false;
+            const dayIndices = showWeekend ? [0,1,2,3,4,5,6] : [0,1,2,3,4];
+            const allDayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+            const dates = dayIndices.map(i => allDates[i]);
+            const dayNames = dayIndices.map(i => allDayNames[i]);
 
-            ordered.forEach(p => {
-                const ms = isToday ? calculateNetDuration(p) : calculateNetDurationForDate(p, uiState.viewDate);
-                const roundedMs = getRoundedMs(ms, rounding);
-                if (roundedMs > 0) {
-                    const noteClean = (p.note || '').replace(/"/g, '""');
-                    const parentName = p.parentId ? (state.projects.find(pp => pp.id === p.parentId) || {}).name || '' : '';
-                    const projName = p.parentId ? p.name : p.name;
-                    csv += `"${p.number || ''}";"${p.parentId ? parentName : p.name}";"${p.parentId ? p.name : ''}";"${noteClean}";${Math.round(roundedMs/60000)};${formatMs(roundedMs, false)}\n`;
-                }
+            // Same active projects + ordering as weekly overview
+            const activeProjects = state.projects.filter(p =>
+                dates.some(dateStr => calculateNetDurationForDate(p, dateStr) > 0)
+            );
+            const parentProjects = activeProjects.filter(p => !p.parentId);
+            const orderedProjects = [];
+            parentProjects.forEach(p => {
+                orderedProjects.push(p);
+                activeProjects.filter(c => c.parentId === p.id).forEach(c => orderedProjects.push(c));
             });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            activeProjects.filter(p => p.parentId && !parentProjects.find(pp => pp.id === p.parentId)).forEach(p => orderedProjects.push(p));
+
+            // Header row: #; Projekt; Mo dd.mm; Di dd.mm; ...; Gesamt
+            const headerDays = dates.map((dateStr, i) => {
+                const d = new Date(dateStr + 'T12:00:00');
+                return dayNames[i] + ' ' + d.getDate() + '.' + (d.getMonth() + 1) + '.';
+            });
+            let csv = '#;Projekt;' + headerDays.join(';') + ';Gesamt\n';
+
+            // Data rows
+            orderedProjects.forEach(p => {
+                const isSub = !!p.parentId;
+                const num = (!isSub && p.number && p.number !== '-') ? p.number : '';
+                const parentName = isSub ? ((activeProjects.find(x => x.id === p.parentId) || {}).name || '') : '';
+                const name = isSub ? parentName + ' \u2192 ' + p.name : p.name;
+                let rowTotal = 0;
+                const dayCells = dates.map(dateStr => {
+                    const rounded = getRoundedMs(calculateNetDurationForDate(p, dateStr), rounding);
+                    rowTotal += rounded;
+                    return rounded > 0 ? formatMs(rounded, false) : '';
+                });
+                csv += '"' + num.replace(/"/g, '""') + '";"' + name.replace(/"/g, '""') + '";'
+                    + dayCells.map(c => '"' + c + '"').join(';')
+                    + ';"' + (rowTotal > 0 ? formatMs(rowTotal, false) : '') + '"\n';
+            });
+
+            // Total row
+            const dailyTotals = dates.map(dateStr =>
+                orderedProjects.reduce((sum, p) => sum + getRoundedMs(calculateNetDurationForDate(p, dateStr), rounding), 0)
+            );
+            const grandTotal = dailyTotals.reduce((a, b) => a + b, 0);
+            csv += '"";Gesamt;' + dailyTotals.map(ms => '"' + (ms > 0 ? formatMs(ms, false) : '') + '"').join(';')
+                + ';"' + (grandTotal > 0 ? formatMs(grandTotal, false) : '') + '"\n';
+
+            // Filename: Prefix_KW8_2026.csv
+            const weekNum = getISOWeekNumber(allDates[0]);
+            const year = allDates[0].substring(0, 4);
+            const prefix = state.settings.filePrefix || 'TimeFlow_Export';
+            const filename = prefix + '_KW' + weekNum + '_' + year + '.csv';
+
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url; link.download = getFileName('csv');
+            const link = document.createElement('a');
+            link.href = url; link.download = filename;
             link.click();
         }
         function downloadBackup() {
