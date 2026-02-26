@@ -573,20 +573,6 @@ textarea.input-field {
     animation: reminderPulse 2s ease-in-out infinite;
 }
 
-/* Pause-Chip in Banner-Modus (linke Sektion) */
-.banner-pause-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    font-weight: 500;
-    opacity: 0.85;
-    background: rgba(0,0,0,0.15);
-    padding: 3px 10px;
-    border-radius: 20px;
-    margin-top: 4px;
-    animation: reminderPulse 2s ease-in-out infinite;
-}
 
 /* --- DATA TABLE --- */
 .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }

@@ -1571,14 +1571,8 @@
 
             const isBanner = document.getElementById('card-active').classList.contains('grid-wide');
 
-            // Build pause banner HTML – im Banner-Modus als Chip in der linken Sektion
-            const pauseChipHtml = (isBanner && activePauseText)
-                ? `<div class="banner-pause-chip">
-                       <span class="material-symbols-rounded" style="font-size:14px;">pause_circle</span>
-                       ${activePauseText}
-                   </div>`
-                : '';
-            const pauseHtml = (!isBanner && activePauseText)
+            // Build pause banner HTML – in beiden Modi als Banner über der Karte
+            const pauseHtml = activePauseText
                 ? `<div class="pause-banner visible">
                        <span class="material-symbols-rounded">pause_circle</span>
                        <span style="font-weight:500;">${activePauseText}</span>
@@ -1639,7 +1633,6 @@
                            <div class="active-project-number" style="background:${numberBgOpacity}">#${displayProject.number || '-'}</div>
                            ${parentHtml}
                            <div class="active-project-name">${displayProject.name}</div>
-                           ${pauseChipHtml}
                        </div>
                        <div class="banner-section-center">
                            <div class="active-project-time" data-pid="${displayProject.id}">00:00:00</div>
