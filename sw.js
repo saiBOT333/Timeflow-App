@@ -7,7 +7,7 @@
  *   - Alles andere:                                  Network-First mit Cache-Fallback
  */
 
-const CACHE_VERSION = 'timeflow-v3.2.0';
+const CACHE_VERSION = 'timeflow-v3.3.0';
 
 // Core-Assets die immer gecacht werden (relativ zur SW-Scope-URL)
 const CORE_ASSETS = [

@@ -1,5 +1,5 @@
         // --- VERSION ---
-        const APP_VERSION = '3.2.0';
+        const APP_VERSION = '3.3.0';
 
         // --- CONFIG ---
         const DEFAULT_AUTO_PAUSES = [
@@ -20,6 +20,17 @@
         // Das Popup erscheint automatisch beim nächsten Start, wenn APP_VERSION
         // noch nicht als gesehen gespeichert ist.
         const CHANGELOG = {
+            '3.3.0': {
+                title: 'Version 3.3.0',
+                subtitle: 'Banner-Layout & Verbesserungen',
+                changes: [
+                    { icon: 'view_day',         text: 'Aktivitätsbereich: Im Breit-Modus jetzt als horizontales Banner – Nummer & Name links, Timer in der Mitte, Gesamt & Buttons rechts' },
+                    { icon: 'notifications',    text: 'Erinnerungen im Breit-Modus horizontal dargestellt – kein gedrungenes Layout mehr' },
+                    { icon: 'coffee',           text: 'Pause-Zustand im Breit-Modus als kompakter Chip in der linken Sektion' },
+                    { icon: 'system_update',    text: 'PWA-Update-Erkennung zuverlässiger: reg.update() bei jedem Start erzwingt sofortige Prüfung' },
+                    { icon: 'bug_report',       text: 'Bugfix: Projektnummer-Spalte (#) in Wochenübersicht auf 72 px verbreitert – lange Nummern immer vollständig lesbar' }
+                ]
+            },
             '3.2.0': {
                 title: 'Version 3.2.0',
                 subtitle: 'UI-Verbesserungen & neue Features',

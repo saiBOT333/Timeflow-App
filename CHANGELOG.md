@@ -4,6 +4,21 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 
 ---
 
+## [3.3.0] – 2026-02-26
+
+### Neu
+- **Aktivitätsbereich Banner-Modus**: Im Breit-Modus wird der Aktivitätsbereich jetzt als horizontales Banner dargestellt – Projektnummer & Name links, großer Live-Timer in der Mitte, Gesamt-Zeit & Buttons rechts
+- **Erinnerungen im Breit-Modus**: Erinnerungsanzeige passt sich dem Banner an – Icon, Text und Schließen-Button horizontal nebeneinander statt vertikal gestapelt
+- **Pause-Chip**: Im Breit-Modus erscheint der aktive Pause-Zustand als kompakter Chip in der linken Sektion des Banners
+
+### Verbessert
+- **PWA-Updates**: `reg.update()` bei jedem App-Start erzwingt sofortige Prüfung auf neue Version – Update-Benachrichtigung erscheint jetzt zuverlässig und nicht erst nach 24 Stunden
+
+### Behoben
+- **Wochenübersicht**: Projektnummer-Spalte (`#`) auf 72 px verbreitert – lange Projektnummern werden jetzt immer vollständig angezeigt, kein Abschneiden mehr
+
+---
+
 ## [3.2.0] – 2026-02-25
 
 ### Neu
