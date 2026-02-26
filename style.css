@@ -363,6 +363,54 @@ textarea.input-field {
 .active-project-name { font-size: 22px; font-weight: 500; }
 .active-project-time { font-size: 32px; font-family: 'Roboto Mono', monospace; font-weight: 500; margin: 8px 0; }
 
+/* --- ACTIVE PROJECT BANNER MODE (grid-wide) --- */
+.active-project-card.active-banner-mode {
+    flex-direction: row;
+    text-align: left;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+    padding: 16px 28px;
+}
+.banner-section-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    min-width: 0;
+}
+.banner-section-center {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 0 40px;
+    border-left: 1px solid rgba(255,255,255,0.15);
+    border-right: 1px solid rgba(255,255,255,0.15);
+}
+.banner-section-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 10px;
+}
+.active-banner-mode .active-project-time {
+    font-size: 44px;
+    margin: 0;
+    letter-spacing: 1px;
+}
+.active-banner-mode .active-project-name {
+    font-size: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
 /* --- LISTS --- */
 .list-container { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
 

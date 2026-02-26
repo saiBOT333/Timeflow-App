@@ -1584,40 +1584,65 @@
                 `;
             }
 
-            container.innerHTML = `
-                ${pauseHtml}
-                ${reminderHtml}
-                <div class="active-project-card" style="background-color: ${bgColor}; color: ${textColor};">
-                    <div class="active-project-number" style="background:${numberBgOpacity}">#${displayProject.number || '-'}</div>
-                    ${displayProject.parentId ? `<div style="font-size:12px; opacity:0.6; color:inherit; margin-bottom:2px;">
-                        <span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle;">account_tree</span>
-                        ${(state.projects.find(pp => pp.id === displayProject.parentId) || {}).name || ''}
-                    </div>` : ''}
-                    <div class="active-project-name">${displayProject.name}</div>
-                    <div class="active-project-time" data-pid="${displayProject.id}">00:00:00</div>
-                    <div style="font-size:12px; opacity:0.7; color:inherit;">Heute</div>
-                    <div style="display:flex; align-items:center; gap:8px; margin-top:4px; opacity:0.7;">
-                        <span class="material-symbols-rounded" style="font-size:16px; color:inherit;">history</span>
-                        <span class="active-project-total" data-pid="${displayProject.id}" style="font-size:14px; font-family:'Roboto Mono', monospace; color:inherit;">${formatMs(totalAllTime, false)}</span>
-                        <span style="font-size:11px; color:inherit;">Gesamt</span>
-                    </div>
-                    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-                        ${state.manualPauseActive
-                            ? `<button class="md-btn" onclick="toggleManualPause()" style="background:${stopBtnBg}; color:inherit;">
-                                   <span class="material-symbols-rounded">play_arrow</span> Weiter
-                               </button>`
-                            : `<button class="md-btn" onclick="toggleManualPause()" style="background:${stopBtnBg}; color:inherit;">
-                                   <span class="material-symbols-rounded">coffee</span> Pause
-                               </button>`
-                        }
-                        ${displayProject.id !== 'general' ?
-                            `<button class="md-btn" onclick="stopProjectById('${displayProject.id}')" style="background:${stopBtnBg}; color:inherit;">
-                                <span class="material-symbols-rounded">stop</span> Stoppen
-                            </button>`
-                        : ''}
-                    </div>
-                </div>
-            `;
+            const isBanner = document.getElementById('card-active').classList.contains('grid-wide');
+            const parentName = displayProject.parentId
+                ? (state.projects.find(pp => pp.id === displayProject.parentId) || {}).name || ''
+                : '';
+            const parentHtml = displayProject.parentId
+                ? `<div style="font-size:12px; opacity:0.6; color:inherit;">
+                       <span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle;">account_tree</span>
+                       ${parentName}
+                   </div>`
+                : '';
+            const pauseBtn = state.manualPauseActive
+                ? `<button class="md-btn" onclick="toggleManualPause()" style="background:${stopBtnBg}; color:inherit;">
+                       <span class="material-symbols-rounded">play_arrow</span> Weiter
+                   </button>`
+                : `<button class="md-btn" onclick="toggleManualPause()" style="background:${stopBtnBg}; color:inherit;">
+                       <span class="material-symbols-rounded">coffee</span> Pause
+                   </button>`;
+            const stopBtn = displayProject.id !== 'general'
+                ? `<button class="md-btn" onclick="stopProjectById('${displayProject.id}')" style="background:${stopBtnBg}; color:inherit;">
+                       <span class="material-symbols-rounded">stop</span> Stoppen
+                   </button>`
+                : '';
+            const totalHtml = `<div style="display:flex; align-items:center; gap:6px; opacity:0.75;">
+                <span class="material-symbols-rounded" style="font-size:16px; color:inherit;">history</span>
+                <span class="active-project-total" data-pid="${displayProject.id}" style="font-size:14px; font-family:'Roboto Mono', monospace; color:inherit;">${formatMs(totalAllTime, false)}</span>
+                <span style="font-size:11px; color:inherit;">Gesamt</span>
+            </div>`;
+
+            const cardInner = isBanner
+                ? `<div class="active-project-card active-banner-mode" style="background-color:${bgColor}; color:${textColor};">
+                       <div class="banner-section-left">
+                           <div class="active-project-number" style="background:${numberBgOpacity}">#${displayProject.number || '-'}</div>
+                           ${parentHtml}
+                           <div class="active-project-name">${displayProject.name}</div>
+                       </div>
+                       <div class="banner-section-center">
+                           <div class="active-project-time" data-pid="${displayProject.id}">00:00:00</div>
+                           <div style="font-size:12px; opacity:0.65; color:inherit; margin-top:2px;">Heute</div>
+                       </div>
+                       <div class="banner-section-right">
+                           ${totalHtml}
+                           <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                               ${pauseBtn}${stopBtn}
+                           </div>
+                       </div>
+                   </div>`
+                : `<div class="active-project-card" style="background-color:${bgColor}; color:${textColor};">
+                       <div class="active-project-number" style="background:${numberBgOpacity}">#${displayProject.number || '-'}</div>
+                       ${parentHtml}
+                       <div class="active-project-name">${displayProject.name}</div>
+                       <div class="active-project-time" data-pid="${displayProject.id}">00:00:00</div>
+                       <div style="font-size:12px; opacity:0.7; color:inherit;">Heute</div>
+                       ${totalHtml}
+                       <div style="display:flex; gap:8px; margin-top:4px; flex-wrap:wrap;">
+                           ${pauseBtn}${stopBtn}
+                       </div>
+                   </div>`;
+
+            container.innerHTML = `${pauseHtml}${reminderHtml}${cardInner}`;
         }
 
         function dismissReminder() {
