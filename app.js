@@ -1569,7 +1569,8 @@
 
             const totalAllTime = calculateNetDuration(displayProject);
 
-            const isBanner = document.getElementById('card-active').classList.contains('grid-wide');
+            // State ist Single Source of Truth – nicht DOM lesen (Race Condition mit applyCardOrder)
+            const isBanner = !!(state.settings.cardLayout || []).find(x => x.id === 'card-active')?.wide;
 
             // Build pause banner HTML – in beiden Modi als Banner über der Karte
             const pauseHtml = activePauseText
@@ -3255,6 +3256,8 @@
             // DOM aus State aktualisieren
             card.classList.toggle('grid-wide', !!(state.settings.cardLayout || []).find(x => x.id === card.id)?.wide);
             saveData();
+            // Aktivitätskarte neu rendern, damit Layout (Banner ↔ vertikal) zum neuen Modus passt
+            if (card.id === 'card-active') renderActiveProjectCard();
             layoutMasonry();
         }
 
