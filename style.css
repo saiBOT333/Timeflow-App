@@ -573,6 +573,21 @@ textarea.input-field {
     animation: reminderPulse 2s ease-in-out infinite;
 }
 
+/* Pause-Chip in Banner-Modus (linke Sektion) */
+.banner-pause-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.85;
+    background: rgba(0,0,0,0.15);
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 4px;
+    animation: reminderPulse 2s ease-in-out infinite;
+}
+
 /* --- DATA TABLE --- */
 .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .data-table th { text-align: left; color: var(--md-sys-color-on-surface-variant); padding: 12px; font-weight: 500; }
@@ -863,6 +878,28 @@ textarea.input-field {
     align-items: center;
     gap: 4px;
 }
+/* Reminder-Banner im Banner-Modus (horizontal) */
+.reminder-banner.reminder-banner-wide {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 0 32px;
+    text-align: left;
+}
+.reminder-banner.reminder-banner-wide .reminder-banner-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+.reminder-banner.reminder-banner-wide .reminder-banner-text {
+    font-size: 16px;
+    max-width: none;
+    flex: 1;
+}
+.reminder-banner.reminder-banner-wide .reminder-banner-close {
+    flex-shrink: 0;
+}
+
 @keyframes reminderPulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(212, 187, 252, 0.3); }
     50% { box-shadow: 0 0 32px 8px rgba(212, 187, 252, 0.2); }

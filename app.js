@@ -1558,33 +1558,43 @@
 
             const totalAllTime = calculateNetDuration(displayProject);
 
-            // Build pause banner HTML (inside Aktivitätsbereich)
-            let pauseHtml = '';
-            if (activePauseText) {
-                pauseHtml = `
-                    <div class="pause-banner visible">
-                        <span class="material-symbols-rounded">pause_circle</span>
-                        <span style="font-weight: 500;">${activePauseText}</span>
-                    </div>
-                `;
-            }
+            const isBanner = document.getElementById('card-active').classList.contains('grid-wide');
 
-            // Build reminder HTML
+            // Build pause banner HTML – im Banner-Modus als Chip in der linken Sektion
+            const pauseChipHtml = (isBanner && activePauseText)
+                ? `<div class="banner-pause-chip">
+                       <span class="material-symbols-rounded" style="font-size:14px;">pause_circle</span>
+                       ${activePauseText}
+                   </div>`
+                : '';
+            const pauseHtml = (!isBanner && activePauseText)
+                ? `<div class="pause-banner visible">
+                       <span class="material-symbols-rounded">pause_circle</span>
+                       <span style="font-weight:500;">${activePauseText}</span>
+                   </div>`
+                : '';
+
+            // Build reminder HTML – im Banner-Modus horizontal, sonst als Overlay
             let reminderHtml = '';
             if (activeReminder) {
-                reminderHtml = `
-                    <div class="reminder-banner" onclick="dismissReminder()">
-                        <span class="material-symbols-rounded reminder-banner-icon">notifications_active</span>
-                        <span class="reminder-banner-text">${activeReminder}</span>
-                        <span class="reminder-banner-close">
-                            <span class="material-symbols-rounded" style="font-size:16px;">close</span>
-                            Schließen
-                        </span>
-                    </div>
-                `;
+                reminderHtml = isBanner
+                    ? `<div class="reminder-banner reminder-banner-wide" onclick="dismissReminder()">
+                           <span class="material-symbols-rounded reminder-banner-icon">notifications_active</span>
+                           <span class="reminder-banner-text">${activeReminder}</span>
+                           <span class="reminder-banner-close">
+                               <span class="material-symbols-rounded" style="font-size:16px;">close</span>
+                               Schließen
+                           </span>
+                       </div>`
+                    : `<div class="reminder-banner" onclick="dismissReminder()">
+                           <span class="material-symbols-rounded reminder-banner-icon">notifications_active</span>
+                           <span class="reminder-banner-text">${activeReminder}</span>
+                           <span class="reminder-banner-close">
+                               <span class="material-symbols-rounded" style="font-size:16px;">close</span>
+                               Schließen
+                           </span>
+                       </div>`;
             }
-
-            const isBanner = document.getElementById('card-active').classList.contains('grid-wide');
             const parentName = displayProject.parentId
                 ? (state.projects.find(pp => pp.id === displayProject.parentId) || {}).name || ''
                 : '';
@@ -1618,6 +1628,7 @@
                            <div class="active-project-number" style="background:${numberBgOpacity}">#${displayProject.number || '-'}</div>
                            ${parentHtml}
                            <div class="active-project-name">${displayProject.name}</div>
+                           ${pauseChipHtml}
                        </div>
                        <div class="banner-section-center">
                            <div class="active-project-time" data-pid="${displayProject.id}">00:00:00</div>
