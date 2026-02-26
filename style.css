@@ -620,11 +620,14 @@ textarea.input-field {
 .weekly-table th.weekly-num-col,
 .weekly-table td.weekly-num-col {
     width: 40px;
+    max-width: 40px;
     text-align: left;
     font-family: 'Roboto Mono', monospace;
     font-size: 11px;
     color: var(--md-sys-color-on-surface-variant);
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     padding-right: 10px;
 }
 .weekly-table td.project-name-cell {
