@@ -37,6 +37,14 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
+// ── Message ──────────────────────────────────────────────────────────────────
+// Erlaubt der App, skipWaiting() manuell auszulösen (z.B. nach updatefound).
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
+
 // ── Activate ─────────────────────────────────────────────────────────────────
 // Alle veralteten Cache-Versionen aufräumen; Clients sofort übernehmen.
 self.addEventListener('activate', (event) => {

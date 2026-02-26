@@ -3722,6 +3722,19 @@
             if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
                 navigator.serviceWorker.register('./sw.js').then(reg => {
                     console.info('[PWA] Service Worker registriert:', reg.scope);
+                    // Bei jedem App-Start sofort auf neue SW-Version prüfen (umgeht 24h-HTTP-Cache)
+                    reg.update();
+                    // Neu installierter SW wartet auf Aktivierung → skipWaiting auslösen
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        if (!newWorker) return;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Neuer SW ist bereit – sofort übernehmen
+                                newWorker.postMessage({ type: 'SKIP_WAITING' });
+                            }
+                        });
+                    });
                 }).catch(err => {
                     console.warn('[PWA] Service Worker Registrierung fehlgeschlagen:', err.message);
                 });
