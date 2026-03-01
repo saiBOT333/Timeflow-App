@@ -4,6 +4,28 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 
 ---
 
+## [3.4.0] – 2026-03-01
+
+### Neu
+- **Auto-Pause „Jetzt beenden"**: Neuer Button im Pause-Banner stoppt eine laufende automatische Pause sofort – nützlich wenn man früher aus der Pause zurückkommt
+- **Auto-Pause `activeFrom`-Logik**: Neu konfigurierte Pausen deren Startzeit bereits vergangen ist greifen erst ab morgen; Badge „ab morgen" macht das in der Konfig sichtbar
+- **Auto-Pause Time-Picker**: Zeiteingabe jetzt als gestyltes Dropdown mit 5-Minuten-Raster statt Freitexteingabe – kein manuelles Tippen, vollständig themed (Light/Dark)
+- **Dark Theme Highlights**: Aktive Projekte erhalten einen farbigen Akzentstreifen links, markierte Wochenzeilen werden mit primärfarbenem Hintergrund hervorgehoben
+
+### Verbessert
+- **CSS-Refactoring (Schritt 3)**: Alle direkten `element.style.*`-Zuweisungen durch `classList.toggle` / `hidden`-Attribut ersetzt; State-Klassen `is-active`, `is-today`, `is-current`, `is-danger`, `list-item--fav/sub`, `bar--green/yellow/red/overtime`
+- **Auto-Pause Zeitzonen-Fix**: `todayStr` nutzt jetzt lokales Datum statt UTC – verhindert fehlerhafte Pausenerkennung rund um Mitternacht
+- **Auto-Pause Erkennung**: `exists`-Check nutzt `startTs` statt Label – verhindert Kollisionen zwischen manuellen und automatischen Pausen mit gleichem Namen
+- **Benutzerhandbuch**: Theme-Integration – verwendet jetzt `style.css` und MD3-Farbtoken statt hardcodierter Farben
+
+### Behoben
+- **Pause-Banner**: Erscheint wieder korrekt für manuelle und automatische Pausen (Crash durch tote `manualPauseBtn`-Referenz behoben)
+- **Stundenzettel**: Löschen-Button für manuelle Pausen funktioniert wieder (rief fälschlicherweise immer `deleteAutoPauseFromTimesheet` auf)
+- **Auto-Pause Default-Revival**: Leere Auto-Pause-Liste erzeugt keine Standardpausen mehr automatisch
+- **`skippedAutoPauses`**: Speichert jetzt `startTs` statt `{ date, label }` – stabil auch nach „Jetzt beenden"
+
+---
+
 ## [3.3.0] – 2026-02-26
 
 ### Neu

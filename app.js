@@ -1,5 +1,5 @@
         // --- VERSION ---
-        const APP_VERSION = '3.3.0';
+        const APP_VERSION = '3.4.0';
         let _versionClickCount = 0;
 
         // --- CONFIG ---
@@ -21,6 +21,19 @@
         // Das Popup erscheint automatisch beim nächsten Start, wenn APP_VERSION
         // noch nicht als gesehen gespeichert ist.
         const CHANGELOG = {
+            '3.4.0': {
+                title: 'Version 3.4.0',
+                subtitle: 'Auto-Pause-Overhaul & CSS-Refactoring',
+                changes: [
+                    { icon: 'smart_toy',        text: 'Auto-Pausen: 4 Grundfehler behoben – kein Default-Revival, korrekte Zeitzone, kollisionsfreie Erkennung' },
+                    { icon: 'schedule',         text: 'Auto-Pausen: Neue Pausen mit vergangener Startzeit greifen erst ab morgen – Badge „ab morgen" zeigt das an' },
+                    { icon: 'skip_next',        text: 'Auto-Pausen: „Jetzt beenden"-Button im Pause-Banner stoppt eine laufende Auto-Pause sofort' },
+                    { icon: 'tune',             text: 'Auto-Pausen: Zeiteingabe jetzt als Dropdown (5-Min-Raster) – kein manuelles Tippen mehr nötig' },
+                    { icon: 'bug_report',       text: 'Bugfix: Pause-Banner (manuell & automatisch) erscheint wieder korrekt im Aktivitätsbereich' },
+                    { icon: 'bug_report',       text: 'Bugfix: Löschen-Button für manuelle Pausen im Stundenzettel funktioniert wieder' },
+                    { icon: 'dark_mode',        text: 'Dark Theme: Aktive Projekte und markierte Wochenzeilen jetzt mit farbigem Akzent hervorgehoben' }
+                ]
+            },
             '3.3.0': {
                 title: 'Version 3.3.0',
                 subtitle: 'Banner-Layout & Verbesserungen',
