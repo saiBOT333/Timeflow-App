@@ -34,30 +34,30 @@
             <!-- Tab Navigation -->
             <div class="settings-tabs">
                 <button class="settings-tab active" data-tab="tab-general" onclick="switchSettingsTab('tab-general', this)">
-                    <span class="material-symbols-rounded" style="font-size:18px;">tune</span> Allgemein
+                    <span class="material-symbols-rounded">tune</span> Allgemein
                 </button>
                 <button class="settings-tab" data-tab="tab-progress" onclick="switchSettingsTab('tab-progress', this)">
-                    <span class="material-symbols-rounded" style="font-size:18px;">trending_up</span> Fortschritt
+                    <span class="material-symbols-rounded">trending_up</span> Fortschritt
                 </button>
                 <button class="settings-tab" data-tab="tab-links" onclick="switchSettingsTab('tab-links', this)">
-                    <span class="material-symbols-rounded" style="font-size:18px;">link</span> Links
+                    <span class="material-symbols-rounded">link</span> Links
                 </button>
                 <button class="settings-tab" data-tab="tab-reminders" onclick="switchSettingsTab('tab-reminders', this)">
-                    <span class="material-symbols-rounded" style="font-size:18px;">notifications</span> Erinnerungen
+                    <span class="material-symbols-rounded">notifications</span> Erinnerungen
                 </button>
             </div>
 
             <!-- TAB: Allgemein -->
             <div class="settings-tab-panel active" id="tab-general">
                 <div class="setting-group">
-                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Export-Dateiname (Prefix)</label>
+                    <label class="setting-label">Export-Dateiname (Prefix)</label>
                     <div class="input-container">
                         <input type="text" class="input-field" id="settingsPrefix" placeholder="z.B. TimeFlow_Export" oninput="pendingSettings.filePrefix = this.value.trim()">
                     </div>
                 </div>
 
                 <div class="setting-group">
-                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Zeiten runden (CSV)</label>
+                    <label class="setting-label">Zeiten runden (CSV)</label>
                     <div class="input-container">
                         <select class="input-field" id="settingsRounding" onchange="pendingSettings.rounding = this.value">
                             <option value="0">Exakt (Sekundengenau)</option>
@@ -71,11 +71,40 @@
                 </div>
 
                 <div class="setting-group">
-                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Begrüßungstext</label>
+                    <label class="setting-label">Begrüßungstext</label>
                     <div class="input-container">
                         <input type="text" class="input-field" id="settingsGreeting" placeholder="z.B. Guten Morgen! Bereit für einen produktiven Tag? 🚀" oninput="pendingSettings.greeting = this.value.trim()">
                     </div>
                     <div class="modal-hint">Wird beim Start der App animiert im Aktivitätsbereich angezeigt. Leer lassen zum Deaktivieren.</div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label" style="margin-bottom:4px;">Timer-Anzeige</label>
+                    <div class="setting-hint" style="margin-bottom:12px;">Wie soll ein laufender Timer dargestellt werden?</div>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <label class="timer-mode-option" id="timerModeStandardLabel">
+                            <input type="radio" name="timerMode" value="standard" id="timerModeStandard"
+                                onchange="pendingSettings.timerMode = 'standard'; updateTimerModePreview()">
+                            <div class="timer-mode-card" id="timerModeStandardCard">
+                                <span class="material-symbols-rounded" style="font-size:18px; color:var(--md-sys-color-primary);">timer</span>
+                                <div>
+                                    <div style="font-size:13px; font-weight:500;">Standard</div>
+                                    <div style="font-size:11px; color:var(--md-sys-color-on-surface-variant);">Laufende Sekundenanzeige – 01:23:45</div>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="timer-mode-option" id="timerModePulseLabel">
+                            <input type="radio" name="timerMode" value="pulse" id="timerModePulse"
+                                onchange="pendingSettings.timerMode = 'pulse'; updateTimerModePreview()">
+                            <div class="timer-mode-card" id="timerModePulseCard">
+                                <span class="material-symbols-rounded" style="font-size:18px; color:var(--md-sys-color-primary);">favorite</span>
+                                <div>
+                                    <div style="font-size:13px; font-weight:500;">Puls</div>
+                                    <div style="font-size:11px; color:var(--md-sys-color-on-surface-variant);">Keine Sekunden – sanfte Atem-Animation zeigt: läuft</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
 
             </div>
@@ -83,7 +112,7 @@
             <!-- TAB: Tagesfortschritt -->
             <div class="settings-tab-panel" id="tab-progress">
                 <div class="setting-group">
-                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Fortschrittsanzeige aktivieren</label>
+                    <label class="setting-label">Fortschrittsanzeige aktivieren</label>
                     <div style="display:flex; align-items:center; gap:12px;">
                         <input type="checkbox" id="settingsProgressEnabled" style="width:20px; height:20px; cursor:pointer;" onchange="pendingSettings.progressEnabled = this.checked; updateProgressPreview()">
                         <span style="font-size:13px; color:var(--md-sys-color-on-surface-variant);">Zeigt Uhr + Fortschrittsbalken im Aktivitätsbereich</span>
@@ -91,14 +120,25 @@
                 </div>
 
                 <div class="setting-group">
-                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Arbeitstag-Dauer (Stunden)</label>
+                    <label class="setting-label">Arbeitstag-Dauer (Stunden)</label>
                     <div class="input-container" style="width:120px;">
                         <input type="number" class="input-field" id="settingsWorkdayHours" min="1" max="24" step="0.5" placeholder="10" oninput="pendingSettings.workdayHours = parseFloat(this.value) || 10">
                     </div>
                 </div>
 
                 <div class="setting-group">
-                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Farbschwellen (%)</label>
+                    <label class="setting-label" style="margin-bottom:4px;">Automatischer Tagesabschluss</label>
+                    <div class="setting-hint" style="margin-bottom:8px;">Alle laufenden Timer werden täglich um diese Uhrzeit automatisch gestoppt. Leer lassen zum Deaktivieren.</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="input-container" style="width:120px;">
+                            <input type="time" class="input-field" id="settingsAutoStopTime" oninput="pendingSettings.autoStopTime = this.value">
+                        </div>
+                        <span class="setting-hint">Uhr (leer = deaktiviert)</span>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label class="setting-label">Farbschwellen (%)</label>
                     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                         <div style="display:flex; align-items:center; gap:6px;">
                             <span style="width:12px; height:12px; border-radius:50%; background:#FFCA28; display:inline-block;"></span>
@@ -121,7 +161,7 @@
 
                 <!-- Live Preview -->
                 <div class="setting-group">
-                    <label style="font-size:14px; font-weight:500; display:block; margin-bottom:10px;">Vorschau</label>
+                    <label class="setting-label" style="margin-bottom:10px;">Vorschau</label>
                     <div id="progressPreview" class="progress-preview">
                         <div class="progress-preview-bar">
                             <div class="progress-preview-zone green" id="previewZoneGreen"></div>
@@ -129,9 +169,9 @@
                             <div class="progress-preview-zone red" id="previewZoneRed"></div>
                         </div>
                         <div class="progress-preview-labels">
-                            <span style="color:#66BB6A;">Grün</span>
-                            <span id="previewYellowLabel" style="color:#FFCA28;">60%</span>
-                            <span id="previewRedLabel" style="color:#EF5350;">85%</span>
+                            <span style="color:var(--md-custom-color-success);">Grün</span>
+                            <span id="previewYellowLabel" style="color:var(--md-custom-color-warning);">60%</span>
+                            <span id="previewRedLabel" style="color:var(--md-custom-color-danger);">85%</span>
                             <span>100%</span>
                         </div>
                     </div>
@@ -143,10 +183,10 @@
                 <div class="setting-group">
                     <div id="externalLinksSettings" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px;"></div>
                     <button class="md-btn md-btn-tonal" onclick="addExternalLinkSetting()" style="width:100%;">
-                        <span class="material-symbols-rounded" style="font-size:18px;">add_link</span>
+                        <span class="material-symbols-rounded">add_link</span>
                         Link hinzufügen
                     </button>
-                    <div class="modal-hint">Konfiguriere Buttons für externe Webanwendungen. Wähle ein Icon und hinterlege eine URL.</div>
+                    <div class="modal-hint">Konfiguriere Buttons für externe Webanwendungen oder Programme. Trage eine Webadresse (<code>https://...</code>) oder eine Protokoll-URI eines Programms ein – z.&thinsp;B. <code>ms-word://</code>, <code>vscode://</code>, <code>obsidian://</code>, <code>slack://</code>. Direkte Dateipfade werden von Browsern aus Sicherheitsgründen nicht unterstützt.</div>
                 </div>
             </div>
 
@@ -161,7 +201,7 @@
                         <div class="input-container" style="flex:1; height:40px; min-width:120px;">
                             <input type="text" class="input-field" id="newReminderText" placeholder="Erinnerungstext..." style="font-size:14px;" onkeydown="if(event.key==='Enter') addReminderFromSettings()">
                         </div>
-                        <label style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--md-sys-color-on-surface-variant); cursor:pointer; white-space:nowrap;">
+                        <label class="setting-hint" style="display:flex; align-items:center; gap:4px; cursor:pointer; white-space:nowrap;">
                             <input type="checkbox" id="newReminderRecurring" style="width:16px; height:16px; cursor:pointer;">
                             <span>Täglich</span>
                         </label>
@@ -170,14 +210,14 @@
                         </button>
                     </div>
                     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
-                        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--md-sys-color-on-surface-variant); white-space:nowrap;">
+                        <label class="setting-hint" style="display:flex; align-items:center; gap:6px; white-space:nowrap;">
                             <span class="material-symbols-rounded" style="font-size:16px;">timer</span>
                             Alle
                         </label>
                         <div class="input-container" style="width:60px; height:36px;">
                             <input type="number" class="input-field" id="newReminderInterval" min="1" max="480" placeholder="–" style="font-size:14px; text-align:center;">
                         </div>
-                        <span style="font-size:12px; color:var(--md-sys-color-on-surface-variant);">Min. wiederholen</span>
+                        <span class="setting-hint">Min. wiederholen</span>
                         <span style="font-size:11px; color:var(--md-sys-color-on-surface-variant); opacity:0.6;">(leer = keine Wiederholung)</span>
                     </div>
                     <div class="modal-hint">Erinnerungen erscheinen im Aktivitätsbereich. Wiederkehrende werden täglich angezeigt. Mit Intervall (z.B. alle 30 Min.) wird ab der Startzeit regelmäßig wiederholt.</div>
@@ -185,7 +225,13 @@
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:24px;">
-                <span id="settingsVersionLabel" style="font-size:11px; color:var(--md-sys-color-on-surface-variant); opacity:0.6; font-family:'Roboto Mono',monospace;"></span>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <span id="settingsVersionLabel" onclick="onVersionLabelClick()"></span>
+                    <button id="resetAppBtn" onclick="resetApp()" hidden>
+                        <span class="material-symbols-rounded">restart_alt</span>
+                        App zurücksetzen
+                    </button>
+                </div>
                 <div style="display:flex; gap:8px;">
                     <button class="md-btn md-btn-tonal" onclick="closeModal('settingsModal')">Abbrechen</button>
                     <button class="md-btn md-btn-primary" onclick="saveSettings()">Speichern</button>
@@ -199,18 +245,25 @@
         <div class="modal-card">
             <div class="modal-title">Projekt bearbeiten</div>
             <div class="setting-group">
-                <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Projektnummer</label>
+                <label class="setting-label">Projektnummer</label>
                 <div class="input-container">
                     <input type="text" class="input-field" id="editProjectNum" placeholder="Nr.">
                 </div>
             </div>
             <div class="setting-group">
-                <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Projektname</label>
+                <label class="setting-label">Projektname</label>
                 <div class="input-container">
                     <input type="text" class="input-field" id="editProjectName" placeholder="Name">
                 </div>
             </div>
-            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+            <div class="setting-group">
+                <label class="setting-label" style="margin-bottom:4px;">Budget (Stunden)</label>
+                <div class="setting-hint" style="margin-bottom:8px;">Gesamtbudget für die Projektlaufzeit – leer lassen für kein Budget</div>
+                <div class="input-container" style="max-width:140px;">
+                    <input type="number" class="input-field" id="editProjectBudget" placeholder="z. B. 40" min="0" step="0.5">
+                </div>
+            </div>
+            <div class="modal-actions">
                 <button class="md-btn md-btn-tonal" onclick="closeModal('projectEditModal')">Abbrechen</button>
                 <button class="md-btn md-btn-primary" onclick="saveProjectEdit()">Speichern</button>
             </div>
@@ -221,9 +274,9 @@
     <div id="timeEditModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-title">Zeiten bearbeiten</div>
-            <div style="font-size:14px; color:var(--md-sys-color-primary); margin-bottom:12px;" id="timeEditProjectTitle"></div>
+            <div class="modal-subtitle" id="timeEditProjectTitle"></div>
             <div id="timeEditLogList" style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto;"></div>
-            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+            <div class="modal-actions">
                 <button class="md-btn md-btn-primary" onclick="closeModal('timeEditModal')">Fertig</button>
             </div>
         </div>
@@ -243,7 +296,7 @@
                 </button>
             </div>
             <div id="tagListContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
-            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+            <div class="modal-actions">
                 <button class="md-btn md-btn-primary" onclick="closeModal('tagModal')">Fertig</button>
             </div>
         </div>
@@ -253,9 +306,9 @@
     <div id="tagAssignModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-title">Tags zuordnen</div>
-            <div style="font-size:14px; color:var(--md-sys-color-primary); margin-bottom:12px;" id="tagAssignProjectTitle"></div>
+            <div class="modal-subtitle" id="tagAssignProjectTitle"></div>
             <div id="tagAssignList" style="display:flex; flex-direction:column; gap:8px;"></div>
-            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+            <div class="modal-actions">
                 <button class="md-btn md-btn-primary" onclick="closeModal('tagAssignModal')">Fertig</button>
             </div>
         </div>
@@ -265,14 +318,14 @@
     <div id="subProjectModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-title">Unterprojekt anlegen</div>
-            <div style="font-size:14px; color:var(--md-sys-color-primary); margin-bottom:12px;" id="subProjectParentTitle"></div>
+            <div class="modal-subtitle" id="subProjectParentTitle"></div>
             <div class="setting-group">
-                <label style="font-size:14px; font-weight:500; display:block; margin-bottom:8px;">Name des Unterprojekts</label>
+                <label class="setting-label">Name des Unterprojekts</label>
                 <div class="input-container">
                     <input type="text" class="input-field" id="subProjectName" placeholder="z.B. Besprechung allgemein" onkeydown="if(event.key==='Enter') saveSubProject()">
                 </div>
             </div>
-            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+            <div class="modal-actions">
                 <button class="md-btn md-btn-tonal" onclick="closeModal('subProjectModal')">Abbrechen</button>
                 <button class="md-btn md-btn-primary" onclick="saveSubProject()">Anlegen</button>
             </div>
@@ -289,7 +342,7 @@
                     <div id="confirmModalMessage" style="font-size:14px; color:var(--md-sys-color-on-surface-variant); line-height:1.5;"></div>
                 </div>
             </div>
-            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:24px;">
+            <div class="modal-actions">
                 <button class="md-btn md-btn-tonal" id="confirmModalCancel" onclick="resolveConfirmModal(false)">Abbrechen</button>
                 <button class="md-btn md-btn-primary" id="confirmModalOk" onclick="resolveConfirmModal(true)">OK</button>
             </div>
@@ -398,23 +451,23 @@
         <!-- QUICK ACTIONS -->
         <div class="quick-actions">
             <button class="action-btn" onclick="onGoodMorning()">
-                <span class="material-symbols-rounded" style="color:#FFB900;">wb_sunny</span>
+                <span class="material-symbols-rounded" style="color:var(--md-custom-color-star);">wb_sunny</span>
                 Start
             </button>
             <button class="action-btn" onclick="onFeierabend()">
-                <span class="material-symbols-rounded" style="color:#A8C7FA;">bedtime</span>
+                <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);">bedtime</span>
                 Feierabend
             </button>
             <button class="action-btn" id="homeOfficeBtn" onclick="toggleHomeOffice()">
-                <span class="material-symbols-rounded" style="color:#81C784;">home</span>
+                <span class="material-symbols-rounded" style="color:var(--md-custom-color-home-office);">home</span>
                 <span id="homeOfficeBtnLabel">Home Office</span>
             </button>
+            <div id="statusLinksContainer" class="status-links-container"></div>
         </div>
 
-        <!-- STATUS ROW: Fortschrittsanzeige + Externe Links (fest platziert) -->
+        <!-- STATUS ROW: Fortschrittsanzeige -->
         <div id="statusRow" class="status-row">
             <div id="dayProgressContainer" class="day-progress-inline"></div>
-            <div id="statusLinksContainer" class="status-links-container"></div>
         </div>
 
         <!-- TAG FILTER BAR -->
@@ -435,10 +488,10 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:2px;">
                     <button class="card-help-btn" onclick="openCardHelp('projekte')" data-tooltip="Hilfe: Neues Projekt">
-                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                        <span class="material-symbols-rounded">help_outline</span>
                     </button>
                     <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
-                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                        <span class="material-symbols-rounded">width_wide</span>
                     </button>
                     <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
                         <span class="material-symbols-rounded expand-icon">expand_more</span>
@@ -457,7 +510,7 @@
                         <span class="material-symbols-rounded">add</span>
                     </button>
                 </div>
-                <div style="font-size:12px; color:var(--md-sys-color-error); margin-top:8px; display:none;" id="inputErrorMsg">
+                <div id="inputErrorMsg" hidden>
                     Bitte Nummer und Name eingeben.
                 </div>
             </div>
@@ -468,18 +521,18 @@
             <div class="card-header">
                 <div class="card-title">
                     <span class="material-symbols-rounded drag-handle">drag_indicator</span>
-                    <span class="editable-title" contenteditable="true" onblur="saveTitle(this, 'title_active')" style="color:var(--md-sys-color-primary)">Aktivitätsbereich</span>
+                    <span class="editable-title" contenteditable="true" onblur="saveTitle(this, 'title_active')">Aktivitätsbereich</span>
                     <span class="material-symbols-rounded edit-hint-icon">edit</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:2px;">
                     <button class="card-help-btn" onclick="openCardHelp('zeiterfassung')" data-tooltip="Hilfe: Aktivität">
-                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                        <span class="material-symbols-rounded">help_outline</span>
                     </button>
                     <button class="icon-btn" onclick="openRemindersSettings()" title="Erinnerungen" style="width:32px; height:32px; opacity:0.5;">
-                        <span class="material-symbols-rounded" style="font-size:18px">notifications</span>
+                        <span class="material-symbols-rounded">notifications</span>
                     </button>
                     <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
-                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                        <span class="material-symbols-rounded">width_wide</span>
                     </button>
                 </div>
             </div>
@@ -498,10 +551,10 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:2px;">
                     <button class="card-help-btn" onclick="openCardHelp('projekte')" data-tooltip="Hilfe: Favoriten">
-                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                        <span class="material-symbols-rounded">help_outline</span>
                     </button>
                     <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
-                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                        <span class="material-symbols-rounded">width_wide</span>
                     </button>
                     <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
                         <span class="material-symbols-rounded expand-icon">expand_more</span>
@@ -510,7 +563,7 @@
             </div>
             <div class="card-content">
                 <ul class="list-container" id="favoriteProjectsList"></ul>
-                <div id="noFavsMsg" class="empty-state" style="display:none;">
+                <div id="noFavsMsg" class="empty-state" hidden>
                     <span class="material-symbols-rounded empty-state-icon">star</span>
                     <div class="empty-state-text">Noch keine Favoriten</div>
                     <div class="empty-state-hint">Neue Projekte erscheinen hier automatisch. Du kannst Projekte auch über das &#8942;-Menü als Favorit markieren.</div>
@@ -528,7 +581,7 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:2px;">
                     <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
-                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                        <span class="material-symbols-rounded">width_wide</span>
                     </button>
                     <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
                         <span class="material-symbols-rounded expand-icon">expand_more</span>
@@ -537,7 +590,7 @@
             </div>
             <div class="card-content">
                 <ul class="list-container" id="otherProjectsList"></ul>
-                <div id="noOthersMsg" class="empty-state" style="display:none;">
+                <div id="noOthersMsg" class="empty-state" hidden>
                     <span class="material-symbols-rounded empty-state-icon">folder_open</span>
                     <div class="empty-state-text">Keine weiteren Projekte</div>
                     <div class="empty-state-hint">Projekte ohne Favorit-Status erscheinen hier.</div>
@@ -554,14 +607,11 @@
                     <span class="material-symbols-rounded edit-hint-icon">edit</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:2px;">
-                    <button class="md-btn md-btn-tonal" id="manualPauseBtn" onclick="toggleManualPause()" style="height:32px; padding:0 16px;">
-                        <span class="material-symbols-rounded" style="font-size:18px">coffee</span>
-                    </button>
                     <button class="card-help-btn" onclick="openCardHelp('pausen')" data-tooltip="Hilfe: Pausen">
-                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                        <span class="material-symbols-rounded">help_outline</span>
                     </button>
                     <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
-                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                        <span class="material-symbols-rounded">width_wide</span>
                     </button>
                     <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
                         <span class="material-symbols-rounded expand-icon">expand_more</span>
@@ -576,7 +626,7 @@
                         <span id="autoPausesToggleLabel">Auto-Pausen konfigurieren</span>
                         <span class="material-symbols-rounded auto-pause-toggle-chevron" id="autoPausesChevron" style="font-size:16px; margin-left:auto;">expand_more</span>
                     </button>
-                    <div id="autoPausesDisplay" class="auto-pauses-panel" style="display:none;"></div>
+                    <div id="autoPausesDisplay" class="auto-pauses-panel" hidden></div>
                 </div>
             </div>
         </div>
@@ -591,23 +641,26 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:2px;">
                     <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateWeek(-1)">
-                        <span class="material-symbols-rounded" style="font-size:18px">chevron_left</span>
+                        <span class="material-symbols-rounded">chevron_left</span>
                     </button>
-                    <span id="weekLabel" style="font-size:13px; color:var(--md-sys-color-on-surface-variant); min-width:50px; text-align:center;">KW --</span>
+                    <span id="weekLabel">KW --</span>
                     <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateWeek(1)">
-                        <span class="material-symbols-rounded" style="font-size:18px">chevron_right</span>
+                        <span class="material-symbols-rounded">chevron_right</span>
                     </button>
-                    <button class="icon-btn" id="weekendToggleBtn" onclick="toggleWeekend()" title="Wochenende ein/ausblenden" style="width:28px; height:28px; opacity:0.6;">
-                        <span class="material-symbols-rounded" style="font-size:18px">weekend</span>
+                    <button class="icon-btn" style="width:28px; height:28px;" onclick="goToCurrentWeek()" title="Aktuelle Woche">
+                        <span class="material-symbols-rounded">today</span>
                     </button>
-                    <button class="icon-btn" id="weeklyDecimalBtn" onclick="toggleWeeklyDecimal()" title="Zeitformat: HH:MM / Dezimal" style="width:28px; height:28px; opacity:0.6;">
-                        <span class="material-symbols-rounded" style="font-size:18px">decimal_increase</span>
+                    <button class="icon-btn" id="weekendToggleBtn" onclick="toggleWeekend()" title="Wochenende ein/ausblenden">
+                        <span class="material-symbols-rounded">weekend</span>
+                    </button>
+                    <button class="icon-btn" id="weeklyDecimalBtn" onclick="toggleWeeklyDecimal()" title="Zeitformat: HH:MM / Dezimal">
+                        <span class="material-symbols-rounded">decimal_increase</span>
                     </button>
                     <button class="card-help-btn" onclick="openCardHelp('wochenuebersicht')" data-tooltip="Hilfe: Woche">
-                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                        <span class="material-symbols-rounded">help_outline</span>
                     </button>
                     <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
-                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                        <span class="material-symbols-rounded">width_wide</span>
                     </button>
                     <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
                         <span class="material-symbols-rounded expand-icon">expand_more</span>
@@ -636,7 +689,7 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:2px;">
                     <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
-                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                        <span class="material-symbols-rounded">width_wide</span>
                     </button>
                     <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
                         <span class="material-symbols-rounded expand-icon">expand_more</span>
@@ -658,20 +711,20 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:4px;">
                     <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateTimesheetDay(-1)">
-                        <span class="material-symbols-rounded" style="font-size:18px">chevron_left</span>
+                        <span class="material-symbols-rounded">chevron_left</span>
                     </button>
-                    <span id="timesheetDateLabel" style="font-size:13px; color:var(--md-sys-color-on-surface-variant); min-width:90px; text-align:center; cursor:pointer;" onclick="goToTimesheetToday()">--</span>
+                    <span id="timesheetDateLabel" onclick="goToTimesheetToday()">--</span>
                     <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateTimesheetDay(1)">
-                        <span class="material-symbols-rounded" style="font-size:18px">chevron_right</span>
+                        <span class="material-symbols-rounded">chevron_right</span>
                     </button>
                     <button class="icon-btn" style="width:28px; height:28px;" onclick="goToTimesheetToday()" title="Heute">
-                        <span class="material-symbols-rounded" style="font-size:18px">today</span>
+                        <span class="material-symbols-rounded">today</span>
                     </button>
                     <button class="card-help-btn" onclick="openCardHelp('zeiterfassung')" data-tooltip="Hilfe: Timesheet">
-                        <span class="material-symbols-rounded" style="font-size:18px">help_outline</span>
+                        <span class="material-symbols-rounded">help_outline</span>
                     </button>
                     <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
-                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                        <span class="material-symbols-rounded">width_wide</span>
                     </button>
                     <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
                         <span class="material-symbols-rounded expand-icon">expand_more</span>
@@ -693,7 +746,7 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:2px;">
                     <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
-                        <span class="material-symbols-rounded" style="font-size:18px">width_wide</span>
+                        <span class="material-symbols-rounded">width_wide</span>
                     </button>
                     <button class="icon-btn" onclick="toggleCard(this)" data-tooltip="Karte einklappen">
                         <span class="material-symbols-rounded expand-icon">expand_more</span>
@@ -701,11 +754,21 @@
                 </div>
             </div>
             <div class="card-content">
+                <div class="archive-search-wrap">
+                    <span class="material-symbols-rounded archive-search-icon">search</span>
+                    <input type="text" class="archive-search-input" id="archiveSearchInput" placeholder="Name oder Nummer suchen…"
+                        oninput="filterArchiveList(this.value)">
+                </div>
                 <ul class="list-container" id="archiveProjectsList"></ul>
-                <div id="noArchiveMsg" class="empty-state" style="display:none;">
+                <div id="noArchiveMsg" class="empty-state" hidden>
                     <span class="material-symbols-rounded empty-state-icon">archive</span>
                     <div class="empty-state-text">Archiv ist leer</div>
                     <div class="empty-state-hint">Archivierte Projekte erscheinen hier.</div>
+                </div>
+                <div id="noArchiveSearchMsg" class="empty-state" hidden>
+                    <span class="material-symbols-rounded empty-state-icon">search_off</span>
+                    <div class="empty-state-text">Keine Treffer</div>
+                    <div class="empty-state-hint">Kein Projekt mit diesem Namen oder dieser Nummer.</div>
                 </div>
             </div>
         </div>

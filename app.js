@@ -1,5 +1,6 @@
         // --- VERSION ---
         const APP_VERSION = '3.3.0';
+        let _versionClickCount = 0;
 
         // --- CONFIG ---
         const DEFAULT_AUTO_PAUSES = [
@@ -84,6 +85,7 @@
                 workdayHours: 10,
                 yellowPct: 60,
                 redPct: 85,
+                timerMode: 'standard',
                 reminders: [],
                 autoPauses: [],
                 showWeekend: true,
@@ -172,6 +174,9 @@
 
             // Collapsed-State von Elternprojekten in der Wochenübersicht
             collapsedWeeklyParents: new Set(),
+
+            // Markierte Zeilen in der Wochenübersicht (project-id)
+            weeklyMarkedRows:    new Set(),
 
             // Dezimaldarstellung in der Wochenübersicht (true = h.hh, false = hh:mm)
             weeklyDecimal:       false,
@@ -267,11 +272,45 @@
 
         // --- AUTO PAUSES HELPER ---
         function getAutoPauses() {
-            // Use configured auto-pauses, or migrate from defaults if not yet configured
-            if (!state.settings.autoPauses || state.settings.autoPauses.length === 0) {
-                state.settings.autoPauses = JSON.parse(JSON.stringify(DEFAULT_AUTO_PAUSES));
+            return state.settings.autoPauses || [];
+        }
+
+        function getLocalDateStr(date) {
+            const d = date || new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+
+        function calcActiveFrom(startTime) {
+            const now = new Date();
+            const todayStr = getLocalDateStr(now);
+            const startDt = new Date(todayStr + 'T' + startTime);
+            if (Date.now() >= startDt.getTime()) {
+                const tomorrow = new Date(now);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                return getLocalDateStr(tomorrow);
             }
-            return state.settings.autoPauses;
+            return todayStr;
+        }
+
+        function timeSelectHtml(value, index, field) {
+            const [vh, vm] = (value || '12:00').split(':');
+            let opts = '';
+            const valMin = parseInt(vm, 10);
+            const hasCustomMin = valMin % 5 !== 0;
+            for (let h = 0; h < 24; h++) {
+                for (let m = 0; m < 60; m += 5) {
+                    // Falls aktueller Wert nicht auf 5-Min-Raster liegt, extra einfügen
+                    if (hasCustomMin && h === parseInt(vh, 10) && m > valMin && (m - 5) < valMin) {
+                        const cv = vh + ':' + vm;
+                        opts += `<option value="${cv}" selected>${cv}</option>`;
+                    }
+                    const v = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                    const sel = v === value ? 'selected' : '';
+                    opts += `<option value="${v}" ${sel}>${v}</option>`;
+                }
+            }
+            const title = field === 'start' ? 'Startzeit' : 'Endzeit';
+            return `<select class="auto-pause-time-select" onchange="updateAutoPause(${index}, '${field}', this.value)" title="${title}">${opts}</select>`;
         }
 
         function renderAutoPausesDisplay() {
@@ -306,15 +345,16 @@
                 <span class="material-symbols-rounded" style="font-size:14px;">info</span> Home Office aktiv — automatische Pausen werden heute nicht ausgelöst
             </div>` : '';
 
+            const todayStr = getLocalDateStr();
             pauses.forEach((ap, i) => {
+                const isDelayed = ap.activeFrom && todayStr < ap.activeFrom;
                 html += `<div class="auto-pause-row ${isHO ? 'disabled' : ''}">
-                    <input type="text" class="auto-pause-time-input" value="${ap.start}"
-                        onchange="updateAutoPause(${i}, 'start', this.value)" title="Startzeit">
+                    ${timeSelectHtml(ap.start, i, 'start')}
                     <span style="opacity:0.4;">–</span>
-                    <input type="text" class="auto-pause-time-input" value="${ap.end}"
-                        onchange="updateAutoPause(${i}, 'end', this.value)" title="Endzeit">
+                    ${timeSelectHtml(ap.end, i, 'end')}
                     <input type="text" class="auto-pause-label-input" value="${escapeHtml(ap.label)}"
                         onchange="updateAutoPause(${i}, 'label', this.value)" placeholder="Bezeichnung">
+                    ${isDelayed ? `<span class="auto-pause-delayed-badge" title="Startzeit lag bereits in der Vergangenheit">ab morgen</span>` : ''}
                     <button class="icon-btn" style="width:24px; height:24px; color:var(--md-sys-color-error); opacity:0.5;"
                         onclick="removeAutoPause(${i})" title="Automatische Pause entfernen">
                         <span class="material-symbols-rounded" style="font-size:16px;">close</span>
@@ -333,10 +373,13 @@
             const pauses = getAutoPauses();
             if (!pauses[index]) return;
             if (field === 'start' || field === 'end') {
-                // Validate HH:MM format
                 if (!/^\d{2}:\d{2}$/.test(value)) return;
             }
             pauses[index][field] = value.trim();
+            // activeFrom neuberechnen wenn Startzeit geändert wird
+            if (field === 'start') {
+                pauses[index].activeFrom = calcActiveFrom(value.trim());
+            }
             state.settings.autoPauses = pauses;
             saveData();
             updateUI();
@@ -344,7 +387,8 @@
 
         function addAutoPause() {
             const pauses = getAutoPauses();
-            pauses.push({ start: '12:00', end: '12:30', label: 'Pause' });
+            const startTime = '12:00';
+            pauses.push({ start: startTime, end: '12:30', label: 'Pause', activeFrom: calcActiveFrom(startTime) });
             state.settings.autoPauses = pauses;
             saveData();
             updateUI();
@@ -368,7 +412,7 @@
             autoPausesPanelOpen = !autoPausesPanelOpen;
             const panel = document.getElementById('autoPausesDisplay');
             const btn = document.querySelector('.auto-pause-toggle-btn');
-            panel.style.display = autoPausesPanelOpen ? 'block' : 'none';
+            panel.hidden = !autoPausesPanelOpen;
             if (btn) btn.classList.toggle('open', autoPausesPanelOpen);
             // Inhalt beim Öffnen lazy rendern
             if (autoPausesPanelOpen) renderAutoPausesDisplay();
@@ -386,6 +430,7 @@
         function applyTheme() {
             const theme = state.settings.theme || 'dark';
             document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('tf_theme', theme);
             const btn = document.getElementById('themeToggleBtn');
             if (btn) {
                 btn.querySelector('.material-symbols-rounded').textContent =
@@ -599,6 +644,8 @@
                     workdayHours:    state.settings.workdayHours || 10,
                     yellowPct:       state.settings.yellowPct || 60,
                     redPct:          state.settings.redPct || 85,
+                    autoStopTime:    state.settings.autoStopTime || '',
+                    timerMode:       state.settings.timerMode || 'standard',
                     externalLinks:   JSON.parse(JSON.stringify(state.settings.externalLinks || []))
                 };
 
@@ -610,6 +657,9 @@
                 document.getElementById('settingsWorkdayHours').value = pendingSettings.workdayHours;
                 document.getElementById('settingsYellowPct').value = pendingSettings.yellowPct;
                 document.getElementById('settingsRedPct').value = pendingSettings.redPct;
+                document.getElementById('settingsAutoStopTime').value = pendingSettings.autoStopTime || '';
+                document.getElementById('timerMode' + (pendingSettings.timerMode === 'pulse' ? 'Pulse' : 'Standard')).checked = true;
+                updateTimerModePreview();
                 renderReminderListSettings();
                 renderExternalLinksSettings();
                 const versionLabel = document.getElementById('settingsVersionLabel');
@@ -627,6 +677,11 @@
             document.getElementById(id).classList.remove('open');
             if (id === 'tagAssignModal' || id === 'projectEditModal' || id === 'timeEditModal' || id === 'subProjectModal') editingProjectId = null;
             if (id === 'helpModal') document.getElementById('helpIframe').src = '';
+            if (id === 'settingsModal') {
+                _versionClickCount = 0;
+                const btn = document.getElementById('resetAppBtn');
+                if (btn) btn.hidden = true;
+            }
         }
 
         // --- CUSTOM CONFIRM / ALERT ---
@@ -636,22 +691,14 @@
             return new Promise(resolve => {
                 _confirmResolve = resolve;
                 document.getElementById('confirmModalIcon').textContent = icon;
-                document.getElementById('confirmModalIcon').style.color = danger ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-primary)';
                 document.getElementById('confirmModalTitle').textContent = title;
                 document.getElementById('confirmModalMessage').textContent = message;
                 const okBtn = document.getElementById('confirmModalOk');
                 okBtn.textContent = okText;
-                if (danger) {
-                    okBtn.className = 'md-btn';
-                    okBtn.style.background = 'var(--md-sys-color-error)';
-                    okBtn.style.color = 'var(--md-sys-color-on-error)';
-                } else {
-                    okBtn.className = 'md-btn md-btn-primary';
-                    okBtn.style.background = '';
-                    okBtn.style.color = '';
-                }
+                okBtn.className = danger ? 'md-btn' : 'md-btn md-btn-primary';
                 document.getElementById('confirmModalCancel').textContent = cancelText;
-                document.getElementById('confirmModalCancel').style.display = '';
+                document.getElementById('confirmModalCancel').hidden = false;
+                document.getElementById('confirmModal').classList.toggle('is-danger', danger);
                 document.getElementById('confirmModal').classList.add('open');
             });
         }
@@ -660,14 +707,12 @@
             return new Promise(resolve => {
                 _confirmResolve = resolve;
                 document.getElementById('confirmModalIcon').textContent = icon;
-                document.getElementById('confirmModalIcon').style.color = 'var(--md-sys-color-primary)';
                 document.getElementById('confirmModalTitle').textContent = title;
                 document.getElementById('confirmModalMessage').textContent = message;
                 document.getElementById('confirmModalOk').textContent = okText;
                 document.getElementById('confirmModalOk').className = 'md-btn md-btn-primary';
-                document.getElementById('confirmModalOk').style.background = '';
-                document.getElementById('confirmModalOk').style.color = '';
-                document.getElementById('confirmModalCancel').style.display = 'none';
+                document.getElementById('confirmModalCancel').hidden = true;
+                document.getElementById('confirmModal').classList.remove('is-danger');
                 document.getElementById('confirmModal').classList.add('open');
             });
         }
@@ -703,12 +748,63 @@
             state.settings.workdayHours    = pendingSettings.workdayHours;
             state.settings.yellowPct       = pendingSettings.yellowPct;
             state.settings.redPct          = pendingSettings.redPct;
+            state.settings.autoStopTime    = pendingSettings.autoStopTime || '';
+            state.settings.timerMode       = pendingSettings.timerMode || 'standard';
             // Externe Links: nur vollständige Einträge (label + url) übernehmen
             state.settings.externalLinks   = (pendingSettings.externalLinks || []).filter(l => l.label && l.url);
 
             saveData();
             closeModal('settingsModal');
             updateUI();
+        }
+
+        function onVersionLabelClick() {
+            _versionClickCount++;
+            const lbl = document.getElementById('settingsVersionLabel');
+            const btn = document.getElementById('resetAppBtn');
+            if (!lbl) return;
+
+            if (_versionClickCount >= 5) {
+                // Button einblenden
+                if (btn) { btn.hidden = false; }
+                _versionClickCount = 0;
+            } else {
+                // Visuelles Feedback: kurz aufleuchten
+                lbl.classList.add('flash');
+                setTimeout(() => { lbl.classList.remove('flash'); }, 150);
+            }
+        }
+
+        async function resetApp() {
+            const ok = await showConfirm(
+                'Alle Projekte, Zeiteinträge, Pausen und Einstellungen werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
+                { title: 'App zurücksetzen?', icon: 'restart_alt', okText: 'Alles löschen', danger: true }
+            );
+            if (!ok) return;
+
+            closeModal('settingsModal');
+
+            // IndexedDB komplett löschen
+            await new Promise((resolve) => {
+                const req = indexedDB.deleteDatabase('TimeFlowDB');
+                req.onsuccess = resolve;
+                req.onerror   = resolve;
+                req.onblocked = resolve;
+            });
+
+            // Alle localStorage-Keys der App entfernen
+            ['tf_state', 'tf_dayStart', 'tf_dayStartDate', 'tf_onboarded', 'tf_version_seen', 'tf_order'].forEach(k => localStorage.removeItem(k));
+
+            // Seite neu laden → App startet frisch mit Onboarding
+            location.reload();
+        }
+
+        function updateTimerModePreview() {
+            const isPulse = pendingSettings.timerMode === 'pulse';
+            const standardCard = document.getElementById('timerModeStandardCard');
+            const pulseCard = document.getElementById('timerModePulseCard');
+            if (standardCard) standardCard.classList.toggle('timer-mode-card--active', !isPulse);
+            if (pulseCard) pulseCard.classList.toggle('timer-mode-card--active', isPulse);
         }
 
         // --- SETTINGS TABS ---
@@ -806,18 +902,21 @@
         function tick() {
             try {
                 const now = Date.now();
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = getLocalDateStr();
 
                 // Skip auto-pauses in Home Office mode
                 if (!state.settings.homeOffice) {
                     const autoPauses = getAutoPauses();
                     autoPauses.forEach(ap => {
                         if (!ap.start || !ap.end || !ap.label) return;
+                        // Noch nicht aktiv? (neu erstellt/bearbeitet, Startzeit lag bereits in der Vergangenheit)
+                        if (ap.activeFrom && todayStr < ap.activeFrom) return;
                         const startDt = new Date(todayStr + 'T' + ap.start);
                         const endDt = new Date(todayStr + 'T' + ap.end);
-                        const exists = state.pauses.find(p => p.label === ap.label && isSameDay(new Date(p.startTs), new Date()));
+                        const exists = state.pauses.find(p => p.type === 'auto' && p.startTs === startDt.getTime());
+                        const skipped = (state.settings.skippedAutoPauses || []).some(s => s.startTs === startDt.getTime());
 
-                        if (!exists && now >= startDt.getTime()) {
+                        if (!exists && !skipped && now >= startDt.getTime()) {
                             state.pauses.push({
                                 id: crypto.randomUUID(),
                                 startTs: startDt.getTime(),
@@ -835,9 +934,45 @@
                 updateTimeBadges();
                 checkPauseStatus();
                 checkReminders();
+                checkAutoStop();
                 updateDayProgress();
             } catch (err) {
                 console.error('tick error:', err);
+            }
+        }
+
+        // --- AUTO STOP CHECK ---
+        function checkAutoStop() {
+            const autoStopTime = state.settings.autoStopTime;
+            if (!autoStopTime) return;
+            // Nur auslösen wenn mind. ein Timer läuft
+            const hasRunning = state.projects.some(p => p.status === 'running');
+            if (!hasRunning) return;
+
+            const now = new Date();
+            const todayDate = now.toISOString().split('T')[0];
+            const currentHHMM = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            // Tages-Reset
+            if (firedRemindersToday._date !== todayDate) {
+                firedRemindersToday = { _date: todayDate };
+            }
+
+            const autoStopKey = 'autoStop_' + autoStopTime;
+            if (firedRemindersToday[autoStopKey]) return; // Heute schon ausgelöst
+
+            if (currentHHMM >= autoStopTime) {
+                firedRemindersToday[autoStopKey] = true;
+                showConfirm(
+                    'Automatischer Tagesabschluss um ' + autoStopTime + ' Uhr – alle laufenden Timer jetzt stoppen?',
+                    { title: 'Tagesabschluss', icon: 'bedtime', okText: 'Stoppen', cancelText: 'Weiter arbeiten' }
+                ).then(confirmed => {
+                    if (confirmed) {
+                        stopAllProjects();
+                        saveData();
+                        updateUI();
+                    }
+                });
             }
         }
 
@@ -913,26 +1048,26 @@
             if (!container) return;
             if (state.settings.progressEnabled === false) {
                 container.innerHTML = '';
-                container.style.display = 'none';
+                container.hidden = true;
                 return;
             }
-            container.style.display = '';
+            container.hidden = false;
             const workedMs = getTotalWorkedTodayMs();
             const workdayMs = (state.settings.workdayHours || 10) * 3600000;
             const pct = (workedMs / workdayMs) * 100;
             const displayPct = Math.min(pct, 100);
             const yellowPct = state.settings.yellowPct || 60;
             const redPct = state.settings.redPct || 85;
-            let barColor = '#66BB6A';
-            if (pct > 100) barColor = '#CE93D8';
-            else if (pct >= redPct) barColor = '#EF5350';
-            else if (pct >= yellowPct) barColor = '#FFCA28';
+            let barClass = 'bar--green';
+            if (pct > 100) barClass = 'bar--overtime';
+            else if (pct >= redPct) barClass = 'bar--red';
+            else if (pct >= yellowPct) barClass = 'bar--yellow';
             const nowTime = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
             const remainMs = Math.max(0, workdayMs - workedMs);
             const estEndTime = new Date(Date.now() + remainMs).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
             const workedStr = formatMs(workedMs, false);
             const pctLabel = pct > 100
-                ? '<span style="color:#CE93D8; font-weight:600;">' + Math.round(pct) + '%</span> \u00B7 ' + workedStr + ' \u00B7 \u00DCberstunden!'
+                ? '<span class="overtime-label">' + Math.round(pct) + '%</span> \u00B7 ' + workedStr + ' \u00B7 \u00DCberstunden!'
                 : Math.round(pct) + '% \u00B7 ' + workedStr + ' \u00B7 Feierabend ~' + estEndTime;
 
             container.innerHTML = '<div class="day-progress-wrap" id="dayProgressWrap">'
@@ -941,7 +1076,7 @@
                 + '<span class="day-progress-pct">' + pctLabel + '</span>'
                 + '</div>'
                 + '<div class="day-progress-bar">'
-                + '<div class="day-progress-fill" id="dayProgressFill" style="width:' + displayPct + '%; background-color:' + barColor + ';"></div>'
+                + '<div class="day-progress-fill ' + barClass + '" id="dayProgressFill" style="width:' + displayPct + '%;"></div>'
                 + '</div>'
                 + '</div>';
         }
@@ -959,13 +1094,13 @@
             const yellowPct = state.settings.yellowPct || 60;
             const redPct = state.settings.redPct || 85;
 
-            let barColor = '#66BB6A'; // green
-            if (pct > 100) barColor = '#CE93D8'; // purple for >100%
-            else if (pct >= redPct) barColor = '#EF5350'; // red
-            else if (pct >= yellowPct) barColor = '#FFCA28'; // yellow
+            let barClass = 'bar--green';
+            if (pct > 100) barClass = 'bar--overtime';
+            else if (pct >= redPct) barClass = 'bar--red';
+            else if (pct >= yellowPct) barClass = 'bar--yellow';
 
             fill.style.width = displayPct + '%';
-            fill.style.backgroundColor = barColor;
+            fill.className = 'day-progress-fill ' + barClass;
 
             // Estimate end time based on worked time and remaining
             const remainMs = Math.max(0, workdayMs - workedMs);
@@ -977,7 +1112,7 @@
                 const nowTime = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
                 const workedStr = formatMs(workedMs, false);
                 const pctLabel = pct > 100
-                    ? `<span style="color:#CE93D8; font-weight:600;">${Math.round(pct)}%</span> · ${workedStr} · Überstunden!`
+                    ? `<span class="overtime-label">${Math.round(pct)}%</span> · ${workedStr} · Überstunden!`
                     : `${Math.round(pct)}% · ${workedStr} · Feierabend ~${estEndTime}`;
                 header.innerHTML = `
                     <span class="day-progress-clock">🕐 ${nowTime}</span>
@@ -1151,10 +1286,7 @@
             const btn = document.getElementById('homeOfficeBtn');
             if (!btn) return;
             const active = state.settings.homeOffice;
-            btn.style.background = active ? 'var(--md-sys-color-primary-container)' : '';
-            btn.style.borderColor = active ? 'var(--md-sys-color-primary)' : '';
-            const icon = btn.querySelector('.material-symbols-rounded');
-            if (icon) icon.style.color = active ? 'var(--md-sys-color-primary)' : '#81C784';
+            btn.classList.toggle('is-active', active);
             const label = document.getElementById('homeOfficeBtnLabel');
             if (label) label.textContent = active ? 'Home Office ✓' : 'Home Office';
         }
@@ -1171,10 +1303,10 @@
             const name = nameInput.value.trim();
 
             if (!num || !name) {
-                errMsg.style.display = 'block';
+                errMsg.hidden = false;
                 return;
             }
-            errMsg.style.display = 'none';
+            errMsg.hidden = true;
 
             const newProject = {
                 id: crypto.randomUUID(),
@@ -1322,13 +1454,39 @@
         function deletePause(id) {
             const pause = state.pauses.find(p => p.id === id);
             if(!pause) return;
-            
+
             // If deleting an active pause, reset status
             if(pause.active) {
                 state.manualPauseActive = false;
             }
-            
+
             state.pauses = state.pauses.filter(p => p.id !== id);
+            saveData();
+            updateUI();
+        }
+
+        async function deleteAutoPauseFromTimesheet(pauseId) {
+            const pause = state.pauses.find(p => p.id === pauseId);
+            if (!pause || pause.type !== 'auto') return;
+            const ok = await showConfirm(
+                `Automatische Pause „${pause.label}" für heute löschen?`,
+                { title: 'Autopause löschen', icon: 'delete', okText: 'Löschen', danger: true }
+            );
+            if (!ok) return;
+            if (!state.settings.skippedAutoPauses) state.settings.skippedAutoPauses = [];
+            state.settings.skippedAutoPauses.push({ startTs: pause.startTs });
+            state.pauses = state.pauses.filter(p => p.id !== pauseId);
+            saveData();
+            updateUI();
+        }
+
+        function endAutoPauseNow() {
+            const now = Date.now();
+            const pause = state.pauses.find(p =>
+                p.type === 'auto' && now >= p.startTs && now < p.endTs
+            );
+            if (!pause) return;
+            pause.endTs = now;
             saveData();
             updateUI();
         }
@@ -1351,13 +1509,12 @@
         let activePauseText = null;
 
         function checkPauseStatus() {
-            const btn = document.getElementById('manualPauseBtn');
             const now = Date.now();
             const isHO = state.settings.homeOffice;
 
             // Check if currently in a pause — ignore auto-pauses when Home Office is active
             const inManualPause = state.pauses.some(p => {
-                if (p.type === 'auto' && isHO) return false; // skip auto-pauses in HO
+                if (p.type === 'auto' && isHO) return false;
                 const end = p.active ? now + 1000 : p.endTs;
                 return now >= p.startTs && now < end && p.type === 'manual';
             });
@@ -1369,17 +1526,11 @@
 
             let newPauseText = null;
             if (state.manualPauseActive) {
-                btn.innerHTML = `<span class="material-symbols-rounded">play_arrow</span>`;
-                btn.className = "md-btn md-btn-primary";
-                newPauseText = "Manuelle Pause";
-            } else {
-                btn.innerHTML = `<span class="material-symbols-rounded">coffee</span>`;
-                btn.className = "md-btn md-btn-tonal";
-                if (inAutoPause) {
-                    newPauseText = "Automatische Pause";
-                } else if (inManualPause) {
-                    newPauseText = "Manuelle Pause";
-                }
+                newPauseText = 'Manuelle Pause';
+            } else if (inAutoPause) {
+                newPauseText = 'Automatische Pause';
+            } else if (inManualPause) {
+                newPauseText = 'Manuelle Pause';
             }
 
             // Only re-render if pause state changed
@@ -1445,7 +1596,7 @@
                     // Typing complete — keep cursor blinking for a moment, then transition
                     setTimeout(() => {
                         const cursor = document.getElementById('greetingCursor');
-                        if (cursor) cursor.style.display = 'none';
+                        if (cursor) cursor.hidden = true;
 
                         // Fade out greeting
                         const greetContainer = container.querySelector('.greeting-container');
@@ -1490,13 +1641,19 @@
                     others = others.filter(p => (p.tagIds || []).includes(uiState.filterTagId));
                 }
                 renderList('favoriteProjectsList', favorites);
-                document.getElementById('noFavsMsg').style.display = favorites.length === 0 ? 'flex' : 'none';
+                document.getElementById('noFavsMsg').hidden = favorites.length !== 0;
                 renderList('otherProjectsList', others);
-                document.getElementById('noOthersMsg').style.display = others.length === 0 ? 'flex' : 'none';
+                document.getElementById('noOthersMsg').hidden = others.length !== 0;
 
                 const archiveItems = state.projects.filter(p => p.category === 'archive');
                 renderList('archiveProjectsList', archiveItems);
-                document.getElementById('noArchiveMsg').style.display = archiveItems.length === 0 ? 'flex' : 'none';
+                // Suchfilter nach dem Rendern erneut anwenden (falls aktiv)
+                const archiveSearchInput = document.getElementById('archiveSearchInput');
+                const archiveQuery = archiveSearchInput ? archiveSearchInput.value : '';
+                filterArchiveList(archiveQuery, true);
+                if (!archiveQuery) {
+                    document.getElementById('noArchiveMsg').hidden = archiveItems.length !== 0;
+                }
 
                 renderPauses();
                 // Auto-Pause-Konfigurationspanel nur neu rendern wenn es offen ist (state-Variable)
@@ -1573,10 +1730,15 @@
             const isBanner = !!(state.settings.cardLayout || []).find(x => x.id === 'card-active')?.wide;
 
             // Build pause banner HTML – in beiden Modi als Banner über der Karte
+            const isAutoPause = activePauseText === 'Automatische Pause';
             const pauseHtml = activePauseText
                 ? `<div class="pause-banner visible">
                        <span class="material-symbols-rounded">pause_circle</span>
                        <span style="font-weight:500;">${activePauseText}</span>
+                       ${isAutoPause ? `<button class="pause-banner-end-btn" onclick="endAutoPauseNow()">
+                           <span class="material-symbols-rounded" style="font-size:16px;">skip_next</span>
+                           Jetzt beenden
+                       </button>` : ''}
                    </div>`
                 : '';
 
@@ -1724,21 +1886,16 @@
                 li.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchProject(p.id); } });
 
                 // --- SPECIAL STYLING FOR FAVORITES ---
-                let dotHtml = `<div class="color-dot" style="background-color: ${pColor}"></div>`;
+                const dotPulseClass = (isRunning && state.settings.timerMode === 'pulse') ? ' color-dot-pulse' : '';
+                let dotHtml = `<div class="color-dot${dotPulseClass}" style="background-color: ${pColor}"></div>`;
 
                 if (isFavList) {
-                    const opacity = isRunning ? 0.25 : 0.10;
-                    const bg = hexToRgba(pColor, opacity);
-                    li.style.cssText = `border: 1px solid ${pColor}; background-color: ${bg}; margin-bottom:4px;`;
-                    dotHtml = '';
+                    li.classList.add('list-item--fav');
                 }
 
                 // Sub-project indent styling
                 if (isSub) {
-                    li.style.marginLeft = '24px';
-                    li.style.borderLeft = `3px solid ${pColor}40`;
-                    li.style.paddingLeft = '8px';
-                    li.style.fontSize = '13px';
+                    li.classList.add('list-item--sub');
                 }
 
                 // --- VISIBLE ACTIONS (always shown) ---
@@ -1755,9 +1912,6 @@
 
                 // --- OVERFLOW MENU (⋮) ---
                 let menuItems = '';
-                menuItems += `<div class="proj-menu-item" onclick="openTimeEdit('${p.id}', event)">
-                    <span class="material-symbols-rounded">schedule</span> Zeiten bearbeiten
-                </div>`;
                 menuItems += `<div class="proj-menu-item" onclick="openProjectEdit('${p.id}', event)">
                     <span class="material-symbols-rounded">edit</span> Projekt bearbeiten
                 </div>`;
@@ -1813,14 +1967,34 @@
                 // Paket 12.2: Info icon for "Allgemein" project
                 const generalInfoIcon = p.id === 'general' ? '<span class="material-symbols-rounded" style="font-size:12px; opacity:0.35; margin-left:4px; vertical-align:middle;" data-tooltip="Erfasst die Zeit wenn kein anderes Projekt aktiv ist">info</span>' : '';
 
+                // Budget-Fortschrittsbalken (nur für Hauptprojekte mit gesetztem Budget)
+                let budgetBarHtml = '';
+                if (!isSub && p.budgetHours != null && p.budgetHours > 0) {
+                    const totalMs = calculateProjectTotalMs(p);
+                    // Unterprojekte einrechnen
+                    getChildProjects(p.id).forEach(c => { /* accumuliert beim updateUI */ });
+                    const budgetMs = p.budgetHours * 3600000;
+                    const pct = Math.min((totalMs / budgetMs) * 100, 100);
+                    const usedH = (totalMs / 3600000).toFixed(1);
+                    const budgetH = p.budgetHours % 1 === 0 ? p.budgetHours : p.budgetHours.toFixed(1);
+                    const colorClass = pct >= 90 ? 'budget-bar-fill--critical' : pct >= 70 ? 'budget-bar-fill--warn' : '';
+                    budgetBarHtml = `<div class="budget-bar-wrap" title="${usedH} / ${budgetH} h genutzt (${Math.round(pct)}%)">
+                        <div class="budget-bar-track">
+                            <div class="budget-bar-fill ${colorClass}" style="width:${pct}%"></div>
+                        </div>
+                        <span class="budget-bar-label">${usedH}/${budgetH}h</span>
+                    </div>`;
+                }
+
                 li.innerHTML = `
                     ${dotHtml}
                     <div class="item-content">
                         <div class="item-number">${pNum}${tagChips}${childBadge}</div>
                         <div class="item-text">${collapseToggle}${subIcon}${p.name}${generalInfoIcon}</div>
+                        ${budgetBarHtml}
                     </div>
                     <div class="item-times">
-                        <span class="time-chip" data-pid="${p.id}" ${isFavList ? `style="border:1px solid ${pColor}30; color:${pColor};"` : ''}>
+                        <span class="time-chip" data-pid="${p.id}" ${isFavList ? `style="border:1px solid ${pColor}30; color:${getReadableChipColor(pColor)};"` : ''}>
                             <span class="time-chip-label">Heute</span>00:00
                         </span>
                         <span class="time-chip-total" data-pid="${p.id}" style="font-size:11px; color:var(--md-sys-color-on-surface-variant); font-family:'Roboto Mono',monospace; opacity:0.6;">00:00</span>
@@ -1839,6 +2013,28 @@
                 uiState.collapsedParents.add(parentId);
             }
             updateUI();
+        }
+
+        // --- ARCHIVE SEARCH ---
+        function filterArchiveList(query, skipNoMsg) {
+            const list = document.getElementById('archiveProjectsList');
+            const noMsg = document.getElementById('noArchiveMsg');
+            const noSearchMsg = document.getElementById('noArchiveSearchMsg');
+            if (!list) return;
+            const q = (query || '').trim().toLowerCase();
+            const items = list.querySelectorAll('li');
+            let visibleCount = 0;
+            items.forEach(li => {
+                const text = li.textContent.toLowerCase();
+                const show = !q || text.includes(q);
+                li.hidden = !show;
+                if (show) visibleCount++;
+            });
+            const totalArchive = state.projects.filter(p => p.category === 'archive').length;
+            if (!skipNoMsg) {
+                if (noMsg) noMsg.hidden = !(totalArchive === 0 && !q);
+            }
+            if (noSearchMsg) noSearchMsg.hidden = !(q && visibleCount === 0);
         }
 
         // --- PROJECT OVERFLOW MENU ---
@@ -1907,13 +2103,7 @@
                 const endStr = p.endTs ? formatTimeInput(p.endTs) : '';
                 
                 const div = document.createElement('div');
-                div.style.display = 'flex';
-                div.style.alignItems = 'center';
-                div.style.justifyContent = 'space-between';
-                div.style.background = 'var(--md-sys-color-surface-container-high)';
-                div.style.padding = '8px 12px';
-                div.style.borderRadius = '8px';
-                div.style.marginBottom = '8px';
+                div.className = 'pause-config-item';
                 
                 div.innerHTML = `
                     <div style="display:flex; align-items:center; gap:8px;">
@@ -1963,8 +2153,22 @@
             if (displayProject) {
                 const todayMs = calculateNetDurationForDate(displayProject, todayStr);
                 const activeBadge = document.querySelector('.active-project-time');
+                const isPulseMode = state.settings.timerMode === 'pulse';
                 if (activeBadge && activeBadge.dataset.pid === displayProject.id) {
-                    activeBadge.innerText = formatMs(todayMs, true); // with seconds in active card
+                    // Puls-Modus: Keine Sekunden, Animation statt laufender Zahl
+                    if (!isPulseMode) {
+                        activeBadge.innerText = formatMs(todayMs, true); // Standard: mit Sekunden
+                    } else {
+                        // Nur aktualisieren wenn sich die Minute geändert hat (kein Sekunden-Flackern)
+                        const minuteStr = formatMs(todayMs, false);
+                        if (activeBadge.dataset.lastMinute !== minuteStr) {
+                            activeBadge.innerText = minuteStr;
+                            activeBadge.dataset.lastMinute = minuteStr;
+                        }
+                    }
+                    // Puls-Klasse setzen/entfernen
+                    const isRunningNow = displayProject.status === 'running';
+                    activeBadge.classList.toggle('timer-pulse', isPulseMode && isRunningNow);
                 }
                 const totalBadge = document.querySelector('.active-project-total');
                 if (totalBadge && totalBadge.dataset.pid === displayProject.id) {
@@ -2018,6 +2222,7 @@
             editingProjectId = projectId;
             document.getElementById('editProjectNum').value = p.number || '';
             document.getElementById('editProjectName').value = p.name || '';
+            document.getElementById('editProjectBudget').value = p.budgetHours != null ? p.budgetHours : '';
             openModal('projectEditModal');
         }
 
@@ -2027,12 +2232,22 @@
             if (!p) return;
             const num = document.getElementById('editProjectNum').value.trim();
             const name = document.getElementById('editProjectName').value.trim();
+            const budgetRaw = document.getElementById('editProjectBudget').value.trim();
             if (!name) return;
             p.number = num || p.number;
             p.name = name;
+            p.budgetHours = budgetRaw !== '' ? parseFloat(budgetRaw) : null;
             saveData();
             closeModal('projectEditModal');
             updateUI();
+        }
+
+        function calculateProjectTotalMs(project) {
+            // Summe aller Logs über die gesamte Projektlaufzeit (ohne Pausenabzug, da historisch)
+            const now = Date.now();
+            return (project.logs || []).reduce((sum, log) => {
+                return sum + Math.max(0, (log.end || now) - log.start);
+            }, 0);
         }
 
         // --- SUB-PROJECTS ---
@@ -2340,6 +2555,12 @@
             updateUI();
         }
 
+        function goToCurrentWeek() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            uiState.viewWeekStart = getWeekDates(todayStr)[0];
+            updateUI();
+        }
+
         function toggleWeekend() {
             state.settings.showWeekend = !state.settings.showWeekend;
             saveData();
@@ -2356,21 +2577,22 @@
             // Dezimal-Button visuell aktualisieren
             const decBtn = document.getElementById('weeklyDecimalBtn');
             if (decBtn) {
-                decBtn.style.opacity = uiState.weeklyDecimal ? '0.9' : '0.6';
-                decBtn.querySelector('.material-symbols-rounded').style.color = uiState.weeklyDecimal ? 'var(--md-sys-color-primary)' : '';
+                decBtn.classList.toggle('is-active', !!uiState.weeklyDecimal);
                 decBtn.title = uiState.weeklyDecimal ? 'Zeitformat: Dezimal (aktiv) – klicken für HH:MM' : 'Zeitformat: HH:MM – klicken für Dezimal';
             }
 
             const allDates = getWeekDates(uiState.viewWeekStart);
             const todayStr = new Date().toISOString().split('T')[0];
             const weekNum = getISOWeekNumber(allDates[0]);
-            document.getElementById('weekLabel').textContent = 'KW ' + weekNum;
+            const isCurrentWeek = uiState.viewWeekStart === getWeekDates(todayStr)[0];
+            const weekLabelEl = document.getElementById('weekLabel');
+            weekLabelEl.textContent = 'KW ' + weekNum;
+            weekLabelEl.classList.toggle('is-current', isCurrentWeek);
 
             // Update weekend toggle button style
             const wBtn = document.getElementById('weekendToggleBtn');
             if (wBtn) {
-                wBtn.style.opacity = state.settings.showWeekend ? '0.9' : '0.4';
-                wBtn.querySelector('.material-symbols-rounded').style.color = state.settings.showWeekend ? 'var(--md-sys-color-primary)' : '';
+                wBtn.classList.toggle('is-active', !!state.settings.showWeekend);
             }
 
             const allDayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
@@ -2427,8 +2649,11 @@
             });
             html += '<th>Summe</th></tr></thead><tbody>';
 
-            const dailyTotals = dates.map(() => 0);
-            let grandTotal = 0;
+            // dailyTotals immer aus ALLEN Projekten berechnen – unabhängig vom Collapse-Zustand
+            const dailyTotals = dates.map((dateStr) =>
+                orderedProjects.reduce((sum, p) => sum + calculateNetDurationForDate(p, dateStr), 0)
+            );
+            const grandTotal = dailyTotals.reduce((a, b) => a + b, 0);
 
             // Helper to render one project row
             function renderWeeklyProjectRow(p, isSub) {
@@ -2437,6 +2662,7 @@
                 // Check if this parent has children in the active list
                 const hasChildren = !p.parentId && activeProjects.some(c => c.parentId === p.id);
                 const isCollapsed = uiState.collapsedWeeklyParents.has(p.id);
+                const isMarked = uiState.weeklyMarkedRows.has(p.id);
                 const collapseBtn = hasChildren
                     ? '<span class="weekly-collapse-btn" onclick="toggleWeeklyCollapse(\'' + p.id + '\')" title="Unterprojekte ' + (isCollapsed ? 'einblenden' : 'ausblenden') + '">'
                       + '<span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle;">' + (isCollapsed ? 'expand_more' : 'expand_less') + '</span>'
@@ -2445,17 +2671,26 @@
                 const nameCell = collapseBtn + '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:' + (p.color || '#757575') + '; margin-right:6px; vertical-align:middle;"></span>' + indent + '<span style="' + nameStyle + '">' + p.name + '</span>';
 
                 // Single row per project
-                html += '<tr>';
+                const rowClass = isMarked ? 'weekly-row-marked' : '';
+                html += '<tr class="' + rowClass + '" onclick="toggleWeeklyRowMark(event, \'' + p.id + '\')" style="cursor:pointer;" title="Klicken zum Markieren">';
                 const numDisplay = (!isSub && p.number && p.number !== '-') ? p.number : '';
                 const fullLabel = (isSub && p.parentId ? (activeProjects.find(x => x.id === p.parentId) || {}).name + ' → ' + p.name : p.name) + (p.number && p.number !== '-' ? ' (' + p.number + ')' : '');
                 html += '<td class="weekly-num-col">' + escapeHtml(numDisplay) + '</td>';
                 html += '<td class="project-name-cell" title="' + escapeHtml(fullLabel) + '">' + nameCell + '</td>';
                 let rowTotal = 0;
+                let displayRowTotal = 0;
                 dates.forEach((dateStr, i) => {
                     const ms = calculateNetDurationForDate(p, dateStr);
+                    // Für Elternprojekte: Anzeigezeit = eigene Zeit + Summe der Kinderprojekte
+                    let displayMs = ms;
+                    if (hasChildren) {
+                        activeProjects.filter(c => c.parentId === p.id).forEach(c => {
+                            displayMs += calculateNetDurationForDate(c, dateStr);
+                        });
+                    }
                     const isToday = dateStr === todayStr;
-                    dailyTotals[i] += ms;
                     rowTotal += ms;
+                    displayRowTotal += displayMs;
                     // Collect notes from logs for this project on this date
                     const dayStart = new Date(dateStr + 'T00:00:00').getTime();
                     const dayEnd = dayStart + 86400000;
@@ -2471,12 +2706,14 @@
                     const noteMarker = dayNotes.length > 0
                         ? '<span class="weekly-note-marker" onclick="showNotePopup(event, \'' + p.id + '\', \'' + dateStr + '\')" title="' + dayNotes.length + ' Notiz' + (dayNotes.length > 1 ? 'en' : '') + '">\ud83d\udcdd</span>'
                         : '';
+                    // Elternprojekt: Gesamtzeit anzeigen (inkl. Kinder), bei Kindern eigene Zeit
+                    const shownMs = hasChildren ? displayMs : ms;
                     html += '<td class="weekly-day-col ' + (isToday ? 'today-col' : '') + '">'
-                        + (ms > 0 ? '<span class="weekly-time-pill">' + fmtW(ms) + '</span>' + noteMarker : '<span style="opacity:0.2;">\u2014</span>')
+                        + (shownMs > 0 ? '<span class="weekly-time-pill' + (hasChildren && displayMs > ms ? ' weekly-time-pill-total' : '') + '">' + fmtW(shownMs) + '</span>' + noteMarker : '<span style="opacity:0.2;">\u2014</span>')
                         + '</td>';
                 });
-                grandTotal += rowTotal;
-                html += '<td>' + fmtW(rowTotal) + '</td></tr>';
+                // Elternprojekt: Summen-Spalte zeigt Gesamtzeit inkl. Kinder
+                html += '<td>' + fmtW(hasChildren ? displayRowTotal : rowTotal) + '</td></tr>';
             }
 
             orderedProjects.forEach(p => {
@@ -2520,6 +2757,17 @@
                 uiState.collapsedWeeklyParents.add(parentId);
             }
             updateUI();
+        }
+
+        function toggleWeeklyRowMark(event, projectId) {
+            // Nicht auslösen bei Klick auf interaktive Elemente in der Zeile
+            if (event.target.closest('.weekly-collapse-btn, .weekly-note-marker')) return;
+            if (uiState.weeklyMarkedRows.has(projectId)) {
+                uiState.weeklyMarkedRows.delete(projectId);
+            } else {
+                uiState.weeklyMarkedRows.add(projectId);
+            }
+            renderWeeklyOverview();
         }
 
         function showNotePopup(event, projectId, dateStr) {
@@ -2651,7 +2899,8 @@
                             oninput="if(pendingSettings.externalLinks[${i}]) pendingSettings.externalLinks[${i}].label = this.value.trim()">
                     </div>
                     <div class="input-container" style="flex:2; min-width:160px; height:40px;">
-                        <input type="text" class="input-field ext-link-url" placeholder="https://..." value="${escapeHtml(l.url)}" style="font-size:13px;"
+                        <input type="text" class="input-field ext-link-url" placeholder="https://... oder Protokoll-URI" value="${escapeHtml(l.url)}" style="font-size:13px;"
+                            title="Webadresse (https://...) oder Protokoll-URI eines Programms (z.B. ms-word://, vscode://, obsidian://)"
                             oninput="if(pendingSettings.externalLinks[${i}]) pendingSettings.externalLinks[${i}].url = this.value.trim()">
                     </div>
                     <button class="icon-btn" onclick="removeExternalLink(${i})" style="width:32px; height:32px; color:var(--md-sys-color-error);">
@@ -2687,10 +2936,10 @@
             if (!container) return;
             const links = (state.settings.externalLinks || []).slice(0, 4);
             if (links.length === 0) {
-                container.style.display = 'none';
+                container.hidden = true;
                 return;
             }
-            container.style.display = '';
+            container.hidden = false;
             container.innerHTML = links.map(l => `
                 <button class="status-link-btn" onclick="openExternalLink('${escapeHtml(l.url)}')" title="${escapeHtml(l.label)}">
                     <span class="material-symbols-rounded">${escapeHtml(l.icon || 'open_in_new')}</span>
@@ -2701,7 +2950,12 @@
 
         function openExternalLink(url) {
             if (!url) return;
-            window.open(url, '_blank', 'noopener');
+            // Für HTTP/HTTPS: neuer Tab; für Protokoll-URIs (ms-word://, vscode://, etc.): direkter Aufruf
+            if (/^https?:\/\//i.test(url)) {
+                window.open(url, '_blank', 'noopener');
+            } else {
+                window.location.href = url;
+            }
         }
 
         // --- TIMESHEET (Daily Time Log) ---
@@ -2745,7 +2999,7 @@
                 const d = new Date(viewDate + 'T12:00:00');
                 const dayNames = ['So','Mo','Di','Mi','Do','Fr','Sa'];
                 lbl.textContent = dayNames[d.getDay()] + ', ' + d.getDate() + '.' + (d.getMonth()+1) + '.' + d.getFullYear();
-                lbl.style.color = isToday ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-on-surface-variant)';
+                lbl.classList.toggle('is-today', isToday);
             }
 
             // Collect all time entries for this day across all projects, sorted by start time
@@ -2772,6 +3026,8 @@
             });
             // Pausen für diesen Tag einsammeln und in die Timeline integrieren
             state.pauses.forEach(pause => {
+                // Aktive Pausen (noch nicht beendet) nur im heutigen Stundenzettel zeigen
+                if (pause.active && viewDate !== todayStr) return;
                 const pauseEnd = pause.active ? now : pause.endTs;
                 if (!pauseEnd || pauseEnd <= dayStart || pause.startTs >= dayEnd) return;
                 const clampedStart = Math.max(pause.startTs, dayStart);
@@ -2848,6 +3104,9 @@
                                     ? '<span class="ts-entry-running">läuft...</span>'
                                     : `<span style="font-size:12px; font-family:'Roboto Mono',monospace; color:var(--md-sys-color-on-surface-variant);">${endTime}</span>`
                                 }
+                                ${!entry.isActive
+                                    ? `<button class="icon-btn ts-delete-btn" onclick="${entry.pause.type === 'auto' ? `deleteAutoPauseFromTimesheet('${entry.pause.id}')` : `deletePause('${entry.pause.id}')`}" title="Pause löschen"><span class="material-symbols-rounded" style="font-size:16px">delete</span></button>`
+                                    : ''}
                             </div>
                         </div>
                     </div>`;
@@ -2988,7 +3247,7 @@
             const isToday = uiState.viewDate === new Date().toISOString().split('T')[0];
             const el = document.getElementById('dateDisplay');
             el.innerText = formatted;
-            el.style.color = isToday ? '' : 'var(--md-sys-color-primary)';
+            el.classList.toggle('is-today', isToday);
         }
 
         function navigateDate(offset) {
@@ -3033,8 +3292,21 @@
             return `${prefix}_${uiState.viewDate || new Date().toISOString().split('T')[0]}.${suffix}`;
         }
 
+        // Gibt eine für den Light Mode lesbare Textfarbe zurück (abdunkelt helle Farben)
+        function getReadableChipColor(hex) {
+            if (document.documentElement.getAttribute('data-theme') !== 'light') return hex;
+            const r = parseInt(hex.slice(1,3), 16) || 0;
+            const g = parseInt(hex.slice(3,5), 16) || 0;
+            const b = parseInt(hex.slice(5,7), 16) || 0;
+            const dr = Math.round(r * 0.50);
+            const dg = Math.round(g * 0.50);
+            const db = Math.round(b * 0.50);
+            return `rgb(${dr},${dg},${db})`;
+        }
+
         function downloadCSV() {
             const rounding = parseInt(state.settings.rounding || 0);
+            const fmt = ms => uiState.weeklyDecimal ? formatMsDecimal(ms) : formatMs(ms, false);
             const allDates = getWeekDates(uiState.viewWeekStart);
             const showWeekend = state.settings.showWeekend !== false;
             const dayIndices = showWeekend ? [0,1,2,3,4,5,6] : [0,1,2,3,4];
@@ -3071,11 +3343,11 @@
                 const dayCells = dates.map(dateStr => {
                     const rounded = getRoundedMs(calculateNetDurationForDate(p, dateStr), rounding);
                     rowTotal += rounded;
-                    return rounded > 0 ? formatMs(rounded, false) : '';
+                    return rounded > 0 ? fmt(rounded) : '';
                 });
                 csv += '"' + num.replace(/"/g, '""') + '";"' + name.replace(/"/g, '""') + '";'
                     + dayCells.map(c => '"' + c + '"').join(';')
-                    + ';"' + (rowTotal > 0 ? formatMs(rowTotal, false) : '') + '"\n';
+                    + ';"' + (rowTotal > 0 ? fmt(rowTotal) : '') + '"\n';
             });
 
             // Total row
@@ -3083,8 +3355,8 @@
                 orderedProjects.reduce((sum, p) => sum + getRoundedMs(calculateNetDurationForDate(p, dateStr), rounding), 0)
             );
             const grandTotal = dailyTotals.reduce((a, b) => a + b, 0);
-            csv += '"";Gesamt;' + dailyTotals.map(ms => '"' + (ms > 0 ? formatMs(ms, false) : '') + '"').join(';')
-                + ';"' + (grandTotal > 0 ? formatMs(grandTotal, false) : '') + '"\n';
+            csv += '"";Gesamt;' + dailyTotals.map(ms => '"' + (ms > 0 ? fmt(ms) : '') + '"').join(';')
+                + ';"' + (grandTotal > 0 ? fmt(grandTotal) : '') + '"\n';
 
             // Filename: Prefix_KW8_2026.csv
             const weekNum = getISOWeekNumber(allDates[0]);
@@ -3698,6 +3970,41 @@
                 state.projects = loaded.projects || [];
                 state.pauses = loaded.pauses || [];
                 state.tags = loaded.tags || [];
+
+                // --- Cleanup: Doppelte Auto-Pausen entfernen (UTC/lokal Timezone-Bug) ---
+                // Ein Bug in tick() konnte in der Stunde nach Mitternacht (lokal) Tausende
+                // identischer Auto-Pausen erzeugen. Beim Laden deduplizieren wir state.pauses:
+                // Pro Label+Tag+Startzeit nur den ersten Eintrag behalten.
+                const _pauseCountBefore = state.pauses.length;
+                const _seenPauseKeys = new Set();
+                state.pauses = state.pauses.filter(pause => {
+                    const dayKey = new Date(pause.startTs).toISOString().split('T')[0];
+                    const key = (pause.label || '') + '|' + (pause.type || '') + '|' + dayKey + '|' + pause.startTs;
+                    if (_seenPauseKeys.has(key)) return false;
+                    _seenPauseKeys.add(key);
+                    return true;
+                });
+                const _didDedup = state.pauses.length < _pauseCountBefore;
+
+                // --- Cleanup: Verwaiste aktive Pausen aus Vortagen automatisch beenden ---
+                // Wenn die App geschlossen wurde während eine manuelle Pause aktiv war,
+                // bleibt pause.active = true und pause.endTs = null für immer gesetzt.
+                // Solche Pausen tauchen im Stundenzettel für JEDEN Tag auf, da pauseEnd = now.
+                const _todayStr = new Date().toISOString().split('T')[0];
+                state.pauses.forEach(pause => {
+                    if (pause.active && pause.startTs) {
+                        const pauseDay = new Date(pause.startTs).toISOString().split('T')[0];
+                        if (pauseDay !== _todayStr) {
+                            // Pause am Ende des Starttags (23:59:59) automatisch schließen
+                            pause.endTs = new Date(pauseDay + 'T23:59:59').getTime();
+                            pause.active = false;
+                        }
+                    }
+                });
+                // Sync manualPauseActive mit tatsächlichem Zustand
+                if (!state.pauses.some(p => p.active)) {
+                    state.manualPauseActive = false;
+                }
                 if (loaded.customTitles) {
                     state.customTitles = { ...state.customTitles, ...loaded.customTitles };
                 }
@@ -3710,6 +4017,15 @@
                     if (!p.number && p.id !== 'general') p.number = '-';
                     if (!p.tagIds) p.tagIds = [];
                 });
+
+                // Bereinigten State sofort in DB persistieren, damit er beim nächsten
+                // Start nicht erneut aus dem rohen (duplizierten) Stand geladen wird.
+                if (_didDedup) {
+                    const _cleanSnapshot = JSON.parse(JSON.stringify(state));
+                    StorageManager.set(_cleanSnapshot).catch(err =>
+                        console.error('[Storage] Cleanup-Save fehlgeschlagen:', err)
+                    );
+                }
             }
             // applyCardOrder() wird von updateUI() aufgerufen — kein separater Aufruf nötig.
             // loadGridLayout() entfernt: tf_order wurde via migrateState() nach
