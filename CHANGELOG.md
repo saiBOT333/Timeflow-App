@@ -13,12 +13,15 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 - **Dark Theme Highlights**: Aktive Projekte erhalten einen farbigen Akzentstreifen links, markierte Wochenzeilen werden mit primärfarbenem Hintergrund hervorgehoben
 
 ### Verbessert
+- **CSV-Export**: Zeiten werden je nach gewähltem Anzeigeformat (Dezimal oder Stunden:Minuten) korrekt ausgegeben – konsistent mit der Wochenübersicht
+- **Design**: Visuelle Vereinheitlichung des Erscheinungsbilds in Light & Dark Theme; Eingabefelder, Badges und Statusanzeigen optisch überarbeitet
 - **CSS-Refactoring (Schritt 3)**: Alle direkten `element.style.*`-Zuweisungen durch `classList.toggle` / `hidden`-Attribut ersetzt; State-Klassen `is-active`, `is-today`, `is-current`, `is-danger`, `list-item--fav/sub`, `bar--green/yellow/red/overtime`
 - **Auto-Pause Zeitzonen-Fix**: `todayStr` nutzt jetzt lokales Datum statt UTC – verhindert fehlerhafte Pausenerkennung rund um Mitternacht
 - **Auto-Pause Erkennung**: `exists`-Check nutzt `startTs` statt Label – verhindert Kollisionen zwischen manuellen und automatischen Pausen mit gleichem Namen
 - **Benutzerhandbuch**: Theme-Integration – verwendet jetzt `style.css` und MD3-Farbtoken statt hardcodierter Farben
 
 ### Behoben
+- **Wochenübersicht**: Zeitenberechnung korrigiert – Summen werden jetzt korrekt zusammengerechnet
 - **Pause-Banner**: Erscheint wieder korrekt für manuelle und automatische Pausen (Crash durch tote `manualPauseBtn`-Referenz behoben)
 - **Stundenzettel**: Löschen-Button für manuelle Pausen funktioniert wieder (rief fälschlicherweise immer `deleteAutoPauseFromTimesheet` auf)
 - **Auto-Pause Default-Revival**: Leere Auto-Pause-Liste erzeugt keine Standardpausen mehr automatisch

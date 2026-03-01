@@ -31,7 +31,10 @@
                     { icon: 'tune',             text: 'Auto-Pausen: Zeiteingabe jetzt als Dropdown (5-Min-Raster) – kein manuelles Tippen mehr nötig' },
                     { icon: 'bug_report',       text: 'Bugfix: Pause-Banner (manuell & automatisch) erscheint wieder korrekt im Aktivitätsbereich' },
                     { icon: 'bug_report',       text: 'Bugfix: Löschen-Button für manuelle Pausen im Stundenzettel funktioniert wieder' },
-                    { icon: 'dark_mode',        text: 'Dark Theme: Aktive Projekte und markierte Wochenzeilen jetzt mit farbigem Akzent hervorgehoben' }
+                    { icon: 'bug_report',       text: 'Bugfix: Zeitenberechnung in der Wochenübersicht korrigiert – Summen werden jetzt korrekt zusammengerechnet' },
+                    { icon: 'dark_mode',        text: 'Dark Theme: Aktive Projekte und markierte Wochenzeilen jetzt mit farbigem Akzent hervorgehoben' },
+                    { icon: 'palette',          text: 'Design: Visuelle Verbesserungen und Vereinheitlichung des Erscheinungsbilds in Light & Dark Theme' },
+                    { icon: 'download',         text: 'CSV-Export: Zeiten werden je nach gewähltem Format (Dezimal oder Stunden) korrekt ausgegeben' }
                 ]
             },
             '3.3.0': {
