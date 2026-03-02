@@ -79,17 +79,17 @@
                 </div>
 
                 <div class="setting-group">
-                    <label class="setting-label" style="margin-bottom:4px;">Timer-Anzeige</label>
-                    <div class="setting-hint" style="margin-bottom:12px;">Wie soll ein laufender Timer dargestellt werden?</div>
+                    <label class="setting-label mb-4">Timer-Anzeige</label>
+                    <div class="setting-hint mb-12">Wie soll ein laufender Timer dargestellt werden?</div>
                     <div style="display:flex; flex-direction:column; gap:10px;">
                         <label class="timer-mode-option" id="timerModeStandardLabel">
                             <input type="radio" name="timerMode" value="standard" id="timerModeStandard"
                                 onchange="pendingSettings.timerMode = 'standard'; updateTimerModePreview()">
                             <div class="timer-mode-card" id="timerModeStandardCard">
-                                <span class="material-symbols-rounded" style="font-size:18px; color:var(--md-sys-color-primary);">timer</span>
+                                <span class="material-symbols-rounded fs-18-primary">timer</span>
                                 <div>
-                                    <div style="font-size:13px; font-weight:500;">Standard</div>
-                                    <div style="font-size:11px; color:var(--md-sys-color-on-surface-variant);">Laufende Sekundenanzeige – 01:23:45</div>
+                                    <div class="fs-13 fw-500">Standard</div>
+                                    <div class="fs-11 text-variant">Laufende Sekundenanzeige – 01:23:45</div>
                                 </div>
                             </div>
                         </label>
@@ -97,10 +97,10 @@
                             <input type="radio" name="timerMode" value="pulse" id="timerModePulse"
                                 onchange="pendingSettings.timerMode = 'pulse'; updateTimerModePreview()">
                             <div class="timer-mode-card" id="timerModePulseCard">
-                                <span class="material-symbols-rounded" style="font-size:18px; color:var(--md-sys-color-primary);">favorite</span>
+                                <span class="material-symbols-rounded fs-18-primary">favorite</span>
                                 <div>
-                                    <div style="font-size:13px; font-weight:500;">Puls</div>
-                                    <div style="font-size:11px; color:var(--md-sys-color-on-surface-variant);">Keine Sekunden – sanfte Atem-Animation zeigt: läuft</div>
+                                    <div class="fs-13 fw-500">Puls</div>
+                                    <div class="fs-11 text-variant">Keine Sekunden – sanfte Atem-Animation zeigt: läuft</div>
                                 </div>
                             </div>
                         </label>
@@ -115,7 +115,7 @@
                     <label class="setting-label">Fortschrittsanzeige aktivieren</label>
                     <div style="display:flex; align-items:center; gap:12px;">
                         <input type="checkbox" id="settingsProgressEnabled" style="width:20px; height:20px; cursor:pointer;" onchange="pendingSettings.progressEnabled = this.checked; updateProgressPreview()">
-                        <span style="font-size:13px; color:var(--md-sys-color-on-surface-variant);">Zeigt Uhr + Fortschrittsbalken im Aktivitätsbereich</span>
+                        <span class="fs-13-variant">Zeigt Uhr + Fortschrittsbalken im Aktivitätsbereich</span>
                     </div>
                 </div>
 
@@ -127,8 +127,8 @@
                 </div>
 
                 <div class="setting-group">
-                    <label class="setting-label" style="margin-bottom:4px;">Automatischer Tagesabschluss</label>
-                    <div class="setting-hint" style="margin-bottom:8px;">Alle laufenden Timer werden täglich um diese Uhrzeit automatisch gestoppt. Leer lassen zum Deaktivieren.</div>
+                    <label class="setting-label mb-4">Automatischer Tagesabschluss</label>
+                    <div class="setting-hint mb-8">Alle laufenden Timer werden täglich um diese Uhrzeit automatisch gestoppt. Leer lassen zum Deaktivieren.</div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div class="input-container" style="width:120px;">
                             <input type="time" class="input-field" id="settingsAutoStopTime" oninput="pendingSettings.autoStopTime = this.value">
@@ -142,26 +142,26 @@
                     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                         <div style="display:flex; align-items:center; gap:6px;">
                             <span style="width:12px; height:12px; border-radius:50%; background:#FFCA28; display:inline-block;"></span>
-                            <span style="font-size:13px;">Gelb ab</span>
+                            <span class="fs-13">Gelb ab</span>
                             <div class="input-container" style="width:70px; height:40px;">
-                                <input type="number" class="input-field" id="settingsYellowPct" min="1" max="99" placeholder="60" style="font-size:14px;" oninput="pendingSettings.yellowPct = parseInt(this.value) || 60; updateProgressPreview()">
+                                <input type="number" class="input-field fs-14" id="settingsYellowPct" min="1" max="99" placeholder="60" oninput="pendingSettings.yellowPct = parseInt(this.value) || 60; updateProgressPreview()">
                             </div>
-                            <span style="font-size:13px;">%</span>
+                            <span class="fs-13">%</span>
                         </div>
                         <div style="display:flex; align-items:center; gap:6px;">
                             <span style="width:12px; height:12px; border-radius:50%; background:#EF5350; display:inline-block;"></span>
-                            <span style="font-size:13px;">Rot ab</span>
+                            <span class="fs-13">Rot ab</span>
                             <div class="input-container" style="width:70px; height:40px;">
-                                <input type="number" class="input-field" id="settingsRedPct" min="1" max="100" placeholder="85" style="font-size:14px;" oninput="pendingSettings.redPct = parseInt(this.value) || 85; updateProgressPreview()">
+                                <input type="number" class="input-field fs-14" id="settingsRedPct" min="1" max="100" placeholder="85" oninput="pendingSettings.redPct = parseInt(this.value) || 85; updateProgressPreview()">
                             </div>
-                            <span style="font-size:13px;">%</span>
+                            <span class="fs-13">%</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Live Preview -->
                 <div class="setting-group">
-                    <label class="setting-label" style="margin-bottom:10px;">Vorschau</label>
+                    <label class="setting-label mb-12">Vorschau</label>
                     <div id="progressPreview" class="progress-preview">
                         <div class="progress-preview-bar">
                             <div class="progress-preview-zone green" id="previewZoneGreen"></div>
@@ -196,29 +196,29 @@
                     <div id="reminderListSettings" style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;"></div>
                     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                         <div class="input-container" style="width:90px; height:40px;">
-                            <input type="time" class="input-field" id="newReminderTime" style="font-size:14px;">
+                            <input type="time" class="input-field fs-14" id="newReminderTime">
                         </div>
                         <div class="input-container" style="flex:1; height:40px; min-width:120px;">
-                            <input type="text" class="input-field" id="newReminderText" placeholder="Erinnerungstext..." style="font-size:14px;" onkeydown="if(event.key==='Enter') addReminderFromSettings()">
+                            <input type="text" class="input-field fs-14" id="newReminderText" placeholder="Erinnerungstext..." onkeydown="if(event.key==='Enter') addReminderFromSettings()">
                         </div>
                         <label class="setting-hint" style="display:flex; align-items:center; gap:4px; cursor:pointer; white-space:nowrap;">
                             <input type="checkbox" id="newReminderRecurring" style="width:16px; height:16px; cursor:pointer;">
                             <span>Täglich</span>
                         </label>
                         <button class="icon-btn" onclick="addReminderFromSettings()" style="background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); width:36px; height:36px;">
-                            <span class="material-symbols-rounded" style="font-size:20px">add</span>
+                            <span class="material-symbols-rounded fs-20">add</span>
                         </button>
                     </div>
                     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
                         <label class="setting-hint" style="display:flex; align-items:center; gap:6px; white-space:nowrap;">
-                            <span class="material-symbols-rounded" style="font-size:16px;">timer</span>
+                            <span class="material-symbols-rounded fs-16">timer</span>
                             Alle
                         </label>
                         <div class="input-container" style="width:60px; height:36px;">
-                            <input type="number" class="input-field" id="newReminderInterval" min="1" max="480" placeholder="–" style="font-size:14px; text-align:center;">
+                            <input type="number" class="input-field fs-14" id="newReminderInterval" min="1" max="480" placeholder="–" style="text-align:center;">
                         </div>
                         <span class="setting-hint">Min. wiederholen</span>
-                        <span style="font-size:11px; color:var(--md-sys-color-on-surface-variant); opacity:0.6;">(leer = keine Wiederholung)</span>
+                        <span class="fs-11 text-variant op-60">(leer = keine Wiederholung)</span>
                     </div>
                     <div class="modal-hint">Erinnerungen erscheinen im Aktivitätsbereich. Wiederkehrende werden täglich angezeigt. Mit Intervall (z.B. alle 30 Min.) wird ab der Startzeit regelmäßig wiederholt.</div>
                 </div>
@@ -257,8 +257,8 @@
                 </div>
             </div>
             <div class="setting-group">
-                <label class="setting-label" style="margin-bottom:4px;">Budget (Stunden)</label>
-                <div class="setting-hint" style="margin-bottom:8px;">Gesamtbudget für die Projektlaufzeit – leer lassen für kein Budget</div>
+                <label class="setting-label mb-4">Budget (Stunden)</label>
+                <div class="setting-hint mb-8">Gesamtbudget für die Projektlaufzeit – leer lassen für kein Budget</div>
                 <div class="input-container" style="max-width:140px;">
                     <input type="number" class="input-field" id="editProjectBudget" placeholder="z. B. 40" min="0" step="0.5">
                 </div>
@@ -336,10 +336,10 @@
     <div id="confirmModal" class="modal-overlay">
         <div class="modal-card" style="max-width:400px;">
             <div style="display:flex; align-items:flex-start; gap:16px;">
-                <span class="material-symbols-rounded" id="confirmModalIcon" style="font-size:28px; color:var(--md-sys-color-primary); flex-shrink:0; margin-top:2px;">help_outline</span>
+                <span class="material-symbols-rounded fs-28 text-primary" id="confirmModalIcon" style="flex-shrink:0; margin-top:2px;">help_outline</span>
                 <div>
-                    <div class="modal-title" id="confirmModalTitle" style="font-size:18px; margin-bottom:8px;">Bestätigung</div>
-                    <div id="confirmModalMessage" style="font-size:14px; color:var(--md-sys-color-on-surface-variant); line-height:1.5;"></div>
+                    <div class="modal-title fs-18 mb-8" id="confirmModalTitle">Bestätigung</div>
+                    <div class="fs-14-variant" id="confirmModalMessage" style="line-height:1.5;"></div>
                 </div>
             </div>
             <div class="modal-actions">
@@ -353,7 +353,7 @@
     <div id="onboardingOverlay" class="onboarding-overlay hidden">
         <div class="onboarding-card">
             <div class="onboarding-icon">
-                <span class="material-symbols-rounded" id="onboardingIcon" style="font-size:48px; color:var(--md-sys-color-primary);">waving_hand</span>
+                <span class="material-symbols-rounded fs-48 text-primary" id="onboardingIcon">waving_hand</span>
             </div>
             <div class="onboarding-title" id="onboardingTitle">Willkommen bei TimeFlow!</div>
             <div class="onboarding-text" id="onboardingText">TimeFlow erfasst deine Arbeitszeit automatisch. Das Projekt &laquo;Allgemein&raquo; läuft bereits.</div>
@@ -370,10 +370,10 @@
     <div id="changelogModal" class="modal-overlay">
         <div class="modal-card" style="max-width:480px;">
             <div style="display:flex; align-items:center; gap:14px; margin-bottom:4px;">
-                <span class="material-symbols-rounded" style="font-size:32px; color:var(--md-sys-color-primary); flex-shrink:0;">new_releases</span>
+                <span class="material-symbols-rounded fs-32 text-primary" style="flex-shrink:0;">new_releases</span>
                 <div>
                     <div class="modal-title" id="changelogTitle" style="margin-bottom:2px;">Was ist neu?</div>
-                    <div id="changelogSubtitle" style="font-size:13px; color:var(--md-sys-color-on-surface-variant);"></div>
+                    <div class="fs-13-variant" id="changelogSubtitle"></div>
                 </div>
             </div>
             <div id="changelogList" style="display:flex; flex-direction:column; gap:14px; margin-top:20px; margin-bottom:4px;"></div>
@@ -388,15 +388,15 @@
         <div class="modal-card" style="width:90vw; max-width:900px; height:85vh; max-height:85vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
             <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px 12px; border-bottom:1px solid var(--md-sys-color-outline-variant);">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary); font-size:24px;">help</span>
-                    <span style="font-size:18px; font-weight:600; color:var(--md-sys-color-on-surface);">TimeFlow Anleitung</span>
+                    <span class="material-symbols-rounded fs-24 text-primary">help</span>
+                    <span class="fs-18 fw-600 text-on-surface">TimeFlow Anleitung</span>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                    <button class="icon-btn" onclick="window.open('TimeFlow_Anleitung.html','_blank')" title="In neuem Tab öffnen" style="width:32px; height:32px;">
-                        <span class="material-symbols-rounded" style="font-size:20px">open_in_new</span>
+                    <button class="icon-btn icon-btn-32" onclick="window.open('TimeFlow_Anleitung.html','_blank')" title="In neuem Tab öffnen">
+                        <span class="material-symbols-rounded fs-20">open_in_new</span>
                     </button>
-                    <button class="icon-btn" onclick="closeModal('helpModal')" title="Schließen" style="width:32px; height:32px;">
-                        <span class="material-symbols-rounded" style="font-size:20px">close</span>
+                    <button class="icon-btn icon-btn-32" onclick="closeModal('helpModal')" title="Schließen">
+                        <span class="material-symbols-rounded fs-20">close</span>
                     </button>
                 </div>
             </div>
@@ -411,12 +411,12 @@
             <div>
                 <h1 class="headline"><span class="logo-time">Time</span><span class="logo-flow">Flow</span></h1>
                 <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateDate(-1)" data-tooltip="Vorheriger Tag">
-                        <span class="material-symbols-rounded" style="font-size:20px">chevron_left</span>
+                    <button class="icon-btn icon-btn-28" onclick="navigateDate(-1)" data-tooltip="Vorheriger Tag">
+                        <span class="material-symbols-rounded fs-20">chevron_left</span>
                     </button>
                     <div class="subhead" id="dateDisplay" onclick="goToToday()" style="cursor:pointer;" data-tooltip="Zurück zu heute">Laden...</div>
-                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateDate(1)" data-tooltip="Nächster Tag">
-                        <span class="material-symbols-rounded" style="font-size:20px">chevron_right</span>
+                    <button class="icon-btn icon-btn-28" onclick="navigateDate(1)" data-tooltip="Nächster Tag">
+                        <span class="material-symbols-rounded fs-20">chevron_right</span>
                     </button>
                 </div>
             </div>
@@ -451,7 +451,7 @@
         <!-- QUICK ACTIONS -->
         <div class="quick-actions">
             <button class="action-btn" onclick="onGoodMorning()">
-                <span class="material-symbols-rounded" style="color:var(--md-custom-color-star);">wb_sunny</span>
+                <span class="material-symbols-rounded" style="color:var(--md-custom-color-star)">wb_sunny</span>
                 Start
             </button>
             <button class="action-btn" onclick="onFeierabend()">
@@ -528,7 +528,7 @@
                     <button class="card-help-btn" onclick="openCardHelp('zeiterfassung')" data-tooltip="Hilfe: Aktivität">
                         <span class="material-symbols-rounded">help_outline</span>
                     </button>
-                    <button class="icon-btn" onclick="openRemindersSettings()" title="Erinnerungen" style="width:32px; height:32px; opacity:0.5;">
+                    <button class="icon-btn icon-btn-32 op-50" onclick="openRemindersSettings()" title="Erinnerungen">
                         <span class="material-symbols-rounded">notifications</span>
                     </button>
                     <button class="grid-toggle-btn" onclick="toggleGridWidth(this)" title="Breite umschalten">
@@ -622,9 +622,9 @@
                 <div id="pauseList" style="display:flex; flex-direction:column; gap:8px;"></div>
                 <div id="autoPausesToggleWrap" style="margin-top:8px;">
                     <button class="auto-pause-toggle-btn" onclick="toggleAutoPausesPanel()">
-                        <span class="material-symbols-rounded" style="font-size:16px;">smart_toy</span>
+                        <span class="material-symbols-rounded fs-16">smart_toy</span>
                         <span id="autoPausesToggleLabel">Auto-Pausen konfigurieren</span>
-                        <span class="material-symbols-rounded auto-pause-toggle-chevron" id="autoPausesChevron" style="font-size:16px; margin-left:auto;">expand_more</span>
+                        <span class="material-symbols-rounded auto-pause-toggle-chevron fs-16" id="autoPausesChevron" style="margin-left:auto;">expand_more</span>
                     </button>
                     <div id="autoPausesDisplay" class="auto-pauses-panel" hidden></div>
                 </div>
@@ -640,14 +640,14 @@
                     <span class="material-symbols-rounded edit-hint-icon">edit</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:2px;">
-                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateWeek(-1)">
+                    <button class="icon-btn icon-btn-28" onclick="navigateWeek(-1)">
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <span id="weekLabel">KW --</span>
-                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateWeek(1)">
+                    <button class="icon-btn icon-btn-28" onclick="navigateWeek(1)">
                         <span class="material-symbols-rounded">chevron_right</span>
                     </button>
-                    <button class="icon-btn" style="width:28px; height:28px;" onclick="goToCurrentWeek()" title="Aktuelle Woche">
+                    <button class="icon-btn icon-btn-28" onclick="goToCurrentWeek()" title="Aktuelle Woche">
                         <span class="material-symbols-rounded">today</span>
                     </button>
                     <button class="icon-btn" id="weekendToggleBtn" onclick="toggleWeekend()" title="Wochenende ein/ausblenden">
@@ -710,14 +710,14 @@
                     <span class="material-symbols-rounded edit-hint-icon">edit</span>
                 </div>
                 <div style="display:flex; align-items:center; gap:4px;">
-                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateTimesheetDay(-1)">
+                    <button class="icon-btn icon-btn-28" onclick="navigateTimesheetDay(-1)">
                         <span class="material-symbols-rounded">chevron_left</span>
                     </button>
                     <span id="timesheetDateLabel" onclick="goToTimesheetToday()">--</span>
-                    <button class="icon-btn" style="width:28px; height:28px;" onclick="navigateTimesheetDay(1)">
+                    <button class="icon-btn icon-btn-28" onclick="navigateTimesheetDay(1)">
                         <span class="material-symbols-rounded">chevron_right</span>
                     </button>
-                    <button class="icon-btn" style="width:28px; height:28px;" onclick="goToTimesheetToday()" title="Heute">
+                    <button class="icon-btn icon-btn-28" onclick="goToTimesheetToday()" title="Heute">
                         <span class="material-symbols-rounded">today</span>
                     </button>
                     <button class="card-help-btn" onclick="openCardHelp('zeiterfassung')" data-tooltip="Hilfe: Timesheet">
