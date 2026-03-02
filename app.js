@@ -347,18 +347,18 @@
 
             if (pauses.length === 0) {
                 container.innerHTML = `<div class="auto-pause-empty">
-                    <span class="material-symbols-rounded" style="font-size:16px; opacity:0.5;">schedule_off</span>
+                    <span class="material-symbols-rounded fs-16 op-50">schedule_off</span>
                     <span>Keine automatischen Pausen konfiguriert.</span>
                     <button class="auto-pause-add-btn" onclick="addAutoPause()">
-                        <span class="material-symbols-rounded" style="font-size:14px;">add</span> Hinzufügen
+                        <span class="material-symbols-rounded fs-14">add</span> Hinzufügen
                     </button>
                 </div>`;
                 return;
             }
 
             let html = '<div class="auto-pause-list">';
-            html += isHO ? `<div style="font-size:11px; color:var(--md-sys-color-error); opacity:0.8; margin-bottom:6px; display:flex; align-items:center; gap:4px;">
-                <span class="material-symbols-rounded" style="font-size:14px;">info</span> Home Office aktiv — automatische Pausen werden heute nicht ausgelöst
+            html += isHO ? `<div class="fs-11 text-error op-80 mb-6" style="display:flex; align-items:center; gap:4px;">
+                <span class="material-symbols-rounded fs-14">info</span> Home Office aktiv — automatische Pausen werden heute nicht ausgelöst
             </div>` : '';
 
             const todayStr = getLocalDateStr();
@@ -366,20 +366,20 @@
                 const isDelayed = ap.activeFrom && todayStr < ap.activeFrom;
                 html += `<div class="auto-pause-row ${isHO ? 'disabled' : ''}">
                     ${timeSelectHtml(ap.start, i, 'start')}
-                    <span style="opacity:0.4;">–</span>
+                    <span class="op-40">–</span>
                     ${timeSelectHtml(ap.end, i, 'end')}
                     <input type="text" class="auto-pause-label-input" value="${escapeHtml(ap.label)}"
                         onchange="updateAutoPause(${i}, 'label', this.value)" placeholder="Bezeichnung">
                     ${isDelayed ? `<span class="auto-pause-delayed-badge" title="Startzeit lag bereits in der Vergangenheit">ab morgen</span>` : ''}
-                    <button class="icon-btn" style="width:24px; height:24px; color:var(--md-sys-color-error); opacity:0.5;"
+                    <button class="icon-btn icon-btn-24 text-error op-50"
                         onclick="removeAutoPause(${i})" title="Automatische Pause entfernen">
-                        <span class="material-symbols-rounded" style="font-size:16px;">close</span>
+                        <span class="material-symbols-rounded fs-16">close</span>
                     </button>
                 </div>`;
             });
 
             html += `<button class="auto-pause-add-btn" onclick="addAutoPause()">
-                <span class="material-symbols-rounded" style="font-size:14px;">add</span> Pause hinzufügen
+                <span class="material-symbols-rounded fs-14">add</span> Pause hinzufügen
             </button>`;
             html += '</div>';
             container.innerHTML = html;
@@ -602,8 +602,8 @@
             const list = document.getElementById('changelogList');
             list.innerHTML = entry.changes.map(c =>
                 `<div style="display:flex; align-items:flex-start; gap:12px;">
-                    <span class="material-symbols-rounded" style="font-size:20px; color:var(--md-sys-color-primary); flex-shrink:0; margin-top:1px;">${c.icon}</span>
-                    <span style="font-size:14px; color:var(--md-sys-color-on-surface-variant); line-height:1.5;">${c.text}</span>
+                    <span class="material-symbols-rounded fs-20 text-primary" style="flex-shrink:0; margin-top:1px;">${c.icon}</span>
+                    <span class="fs-14-variant" style="line-height:1.5;">${c.text}</span>
                 </div>`
             ).join('');
             openModal('changelogModal');
@@ -852,7 +852,7 @@
             const container = document.getElementById('reminderListSettings');
             const reminders = state.settings.reminders || [];
             if (reminders.length === 0) {
-                container.innerHTML = '<div style="font-size:13px; color:var(--md-sys-color-on-surface-variant); font-style:italic;">Keine Erinnerungen definiert.</div>';
+                container.innerHTML = '<div class="fs-13-variant" style="font-style:italic;">Keine Erinnerungen definiert.</div>';
                 return;
             }
             container.innerHTML = reminders.map((r, i) => {
@@ -867,12 +867,12 @@
                 }
                 return `
                 <div style="display:flex; align-items:center; gap:8px; background:var(--md-sys-color-surface-container-high); padding:8px 12px; border-radius:8px;">
-                    <span class="material-symbols-rounded" style="font-size:18px; color:var(--md-sys-color-tertiary);">${typeIcon}</span>
-                    <span style="font-family:'Roboto Mono',monospace; font-size:13px; min-width:45px;">${r.time}</span>
-                    <span style="flex:1; font-size:13px;">${r.text}</span>
-                    <span style="font-size:11px; color:var(--md-sys-color-on-surface-variant); white-space:nowrap;">${typeLabel}</span>
-                    <button class="icon-btn" style="width:28px; height:28px; color:var(--md-sys-color-error);" onclick="removeReminder(${i})">
-                        <span class="material-symbols-rounded" style="font-size:18px">delete</span>
+                    <span class="material-symbols-rounded fs-18 text-tertiary">${typeIcon}</span>
+                    <span class="fs-13" style="font-family:'Roboto Mono',monospace; min-width:45px;">${r.time}</span>
+                    <span class="fs-13" style="flex:1;">${r.text}</span>
+                    <span class="fs-11-variant" style="white-space:nowrap;">${typeLabel}</span>
+                    <button class="icon-btn icon-btn-28 text-error" onclick="removeReminder(${i})">
+                        <span class="material-symbols-rounded fs-18">delete</span>
                     </button>
                 </div>`;
             }).join('');
@@ -1720,7 +1720,7 @@
                     <div class="feierabend-display">
                         <div class="feierabend-icon">🎉</div>
                         <div class="feierabend-text">Feierabend!</div>
-                        <div style="font-size:14px; color:var(--md-sys-color-on-surface-variant); margin-top:8px;">Schönen Abend! Bis morgen.</div>
+                        <div class="fs-14-variant mt-8">Schönen Abend! Bis morgen.</div>
                     </div>
                 `;
                 return;
@@ -1730,7 +1730,7 @@
             const displayProject = runningProject || state.projects.find(p => p.id === 'general');
 
             if (!displayProject) {
-                 container.innerHTML = '<div style="opacity:0.5; text-align:center;">Kein aktives Projekt</div>';
+                 container.innerHTML = '<div class="op-50" style="text-align:center;">Kein aktives Projekt</div>';
                  return;
             }
 
@@ -1750,9 +1750,9 @@
             const pauseHtml = activePauseText
                 ? `<div class="pause-banner visible">
                        <span class="material-symbols-rounded">pause_circle</span>
-                       <span style="font-weight:500;">${activePauseText}</span>
+                       <span class="fw-500">${activePauseText}</span>
                        ${isAutoPause ? `<button class="pause-banner-end-btn" onclick="endAutoPauseNow()">
-                           <span class="material-symbols-rounded" style="font-size:16px;">skip_next</span>
+                           <span class="material-symbols-rounded fs-16">skip_next</span>
                            Jetzt beenden
                        </button>` : ''}
                    </div>`
@@ -1766,7 +1766,7 @@
                            <span class="material-symbols-rounded reminder-banner-icon">notifications_active</span>
                            <span class="reminder-banner-text">${activeReminder}</span>
                            <span class="reminder-banner-close">
-                               <span class="material-symbols-rounded" style="font-size:16px;">close</span>
+                               <span class="material-symbols-rounded fs-16">close</span>
                                Schließen
                            </span>
                        </div>`
@@ -1774,7 +1774,7 @@
                            <span class="material-symbols-rounded reminder-banner-icon">notifications_active</span>
                            <span class="reminder-banner-text">${activeReminder}</span>
                            <span class="reminder-banner-close">
-                               <span class="material-symbols-rounded" style="font-size:16px;">close</span>
+                               <span class="material-symbols-rounded fs-16">close</span>
                                Schließen
                            </span>
                        </div>`;
@@ -1783,8 +1783,8 @@
                 ? (state.projects.find(pp => pp.id === displayProject.parentId) || {}).name || ''
                 : '';
             const parentHtml = displayProject.parentId
-                ? `<div style="font-size:12px; opacity:0.6; color:inherit;">
-                       <span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle;">account_tree</span>
+                ? `<div class="fs-12 op-60" style="color:inherit;">
+                       <span class="material-symbols-rounded fs-14" style="vertical-align:middle;">account_tree</span>
                        ${parentName}
                    </div>`
                 : '';
@@ -1800,10 +1800,10 @@
                        <span class="material-symbols-rounded">stop</span> Stoppen
                    </button>`
                 : '';
-            const totalHtml = `<div style="display:flex; align-items:center; gap:6px; opacity:0.75;">
-                <span class="material-symbols-rounded" style="font-size:16px; color:inherit;">history</span>
-                <span class="active-project-total" data-pid="${displayProject.id}" style="font-size:14px; font-family:'Roboto Mono', monospace; color:inherit;">${formatMs(totalAllTime, false)}</span>
-                <span style="font-size:11px; color:inherit;">Gesamt</span>
+            const totalHtml = `<div class="op-75" style="display:flex; align-items:center; gap:6px;">
+                <span class="material-symbols-rounded fs-16" style="color:inherit;">history</span>
+                <span class="active-project-total fs-14" data-pid="${displayProject.id}" style="font-family:'Roboto Mono', monospace; color:inherit;">${formatMs(totalAllTime, false)}</span>
+                <span class="fs-11" style="color:inherit;">Gesamt</span>
             </div>`;
 
             const cardInner = isBanner
@@ -1815,7 +1815,7 @@
                        </div>
                        <div class="banner-section-center">
                            <div class="active-project-time" data-pid="${displayProject.id}">00:00:00</div>
-                           <div style="font-size:12px; opacity:0.65; color:inherit; margin-top:2px;">Heute</div>
+                           <div class="fs-12 op-65" style="color:inherit; margin-top:2px;">Heute</div>
                        </div>
                        <div class="banner-section-right">
                            ${totalHtml}
@@ -1829,7 +1829,7 @@
                        ${parentHtml}
                        <div class="active-project-name">${displayProject.name}</div>
                        <div class="active-project-time" data-pid="${displayProject.id}">00:00:00</div>
-                       <div style="font-size:12px; opacity:0.7; color:inherit;">Heute</div>
+                       <div class="fs-12 op-70" style="color:inherit;">Heute</div>
                        ${totalHtml}
                        <div style="display:flex; gap:8px; margin-top:4px; flex-wrap:wrap;">
                            ${pauseBtn}${stopBtn}
@@ -1957,7 +1957,7 @@
                 actionsHtml += `
                     <div class="proj-menu-wrap">
                         <button class="icon-btn proj-menu-trigger" onclick="toggleProjectMenu(this, event)" data-tooltip="Aktionen" data-project-id="${p.id}">
-                            <span class="material-symbols-rounded" style="font-size:20px">more_vert</span>
+                            <span class="material-symbols-rounded fs-20">more_vert</span>
                         </button>
                         <div class="proj-menu">${menuItems}</div>
                     </div>`;
@@ -1970,18 +1970,18 @@
                 }).join('');
 
                 // Sub-project icon prefix
-                const subIcon = isSub ? '<span class="material-symbols-rounded" style="font-size:14px; opacity:0.4; margin-right:2px;">subdirectory_arrow_right</span>' : '';
+                const subIcon = isSub ? '<span class="material-symbols-rounded fs-14 op-40" style="margin-right:2px;">subdirectory_arrow_right</span>' : '';
                 // Inline collapse toggle for parent projects
                 const collapseToggle = hasChildren ?
                     '<span class="inline-collapse-btn" onclick="toggleCollapseChildren(\'' + p.id + '\', event)" data-tooltip="' + (uiState.collapsedParents.has(p.id) ? 'Unterprojekte einblenden' : 'Unterprojekte ausblenden') + '">'
-                    + '<span class="material-symbols-rounded" style="font-size:16px;">' + (uiState.collapsedParents.has(p.id) ? 'expand_more' : 'expand_less') + '</span></span>'
+                    + '<span class="material-symbols-rounded fs-16">' + (uiState.collapsedParents.has(p.id) ? 'expand_more' : 'expand_less') + '</span></span>'
                     : '';
                 // Parent project: show child count if has children
-                const collapseIcon = hasChildren && uiState.collapsedParents.has(p.id) ? '<span class="material-symbols-rounded" style="font-size:12px; opacity:0.4; margin-left:2px;">more_horiz</span>' : '';
-                const childBadge = hasChildren ? `<span style="font-size:10px; padding:1px 6px; border-radius:4px; background:rgba(168,199,250,0.15); color:var(--md-sys-color-primary); margin-left:4px;">${getChildProjects(p.id).length} UP${collapseIcon}</span>` : '';
+                const collapseIcon = hasChildren && uiState.collapsedParents.has(p.id) ? '<span class="material-symbols-rounded fs-12 op-40" style="margin-left:2px;">more_horiz</span>' : '';
+                const childBadge = hasChildren ? `<span class="fs-10 text-primary" style="padding:1px 6px; border-radius:4px; background:rgba(168,199,250,0.15); margin-left:4px;">${getChildProjects(p.id).length} UP${collapseIcon}</span>` : '';
 
                 // Paket 12.2: Info icon for "Allgemein" project
-                const generalInfoIcon = p.id === 'general' ? '<span class="material-symbols-rounded" style="font-size:12px; opacity:0.35; margin-left:4px; vertical-align:middle;" data-tooltip="Erfasst die Zeit wenn kein anderes Projekt aktiv ist">info</span>' : '';
+                const generalInfoIcon = p.id === 'general' ? '<span class="material-symbols-rounded fs-12 op-35" style="margin-left:4px; vertical-align:middle;" data-tooltip="Erfasst die Zeit wenn kein anderes Projekt aktiv ist">info</span>' : '';
 
                 // Budget-Fortschrittsbalken (nur für Hauptprojekte mit gesetztem Budget)
                 let budgetBarHtml = '';
@@ -2013,7 +2013,7 @@
                         <span class="time-chip" data-pid="${p.id}" ${isFavList ? `style="border:1px solid ${pColor}30; color:${getReadableChipColor(pColor)};"` : ''}>
                             <span class="time-chip-label">Heute</span>00:00
                         </span>
-                        <span class="time-chip-total" data-pid="${p.id}" style="font-size:11px; color:var(--md-sys-color-on-surface-variant); font-family:'Roboto Mono',monospace; opacity:0.6;">00:00</span>
+                        <span class="time-chip-total fs-11-variant op-60" data-pid="${p.id}" style="font-family:'Roboto Mono',monospace;">00:00</span>
                     </div>
                     <div class="item-actions">${actionsHtml}</div>
                 `;
@@ -2123,21 +2123,21 @@
                 
                 div.innerHTML = `
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <span class="material-symbols-rounded" style="font-size:18px; color:var(--md-sys-color-secondary)">
+                        <span class="material-symbols-rounded fs-18 text-secondary">
                             ${p.type === 'auto' ? 'smart_toy' : 'coffee'}
                         </span>
-                        <span style="font-size:14px">${p.label}</span>
+                        <span class="fs-14">${p.label}</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:4px;">
                         <input type="text" value="${startStr}" onchange="updatePauseTime('${p.id}', 'start', this.value)"
                             style="background:transparent; border:none; width:44px; text-align:center; color:var(--md-sys-color-on-surface); font-family:monospace;">
-                        <span style="opacity:0.5">-</span>
+                        <span class="op-50">-</span>
                         <input type="text" value="${endStr}" ${p.active ? 'disabled' : ''} onchange="updatePauseTime('${p.id}', 'end', this.value)"
                             style="background:transparent; border:none; width:44px; text-align:center; color:var(--md-sys-color-on-surface); font-family:monospace;">
                             
-                        <button class="icon-btn" style="width:24px; height:24px; margin-left:8px; color:var(--md-sys-color-error);" 
+                        <button class="icon-btn icon-btn-24 text-error" style="margin-left:8px;"
                             onclick="deletePause('${p.id}')" title="Pause löschen">
-                            <span class="material-symbols-rounded" style="font-size:18px">delete</span>
+                            <span class="material-symbols-rounded fs-18">delete</span>
                         </button>
                     </div>
                 `;
@@ -2347,7 +2347,7 @@
             });
 
             if (relevantLogs.length === 0) {
-                container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--md-sys-color-on-surface-variant); font-size:13px; font-style:italic;">Keine Eintr\u00e4ge f\u00fcr diesen Tag.</div>';
+                container.innerHTML = '<div class="fs-13-variant" style="padding:16px; text-align:center; font-style:italic;">Keine Eintr\u00e4ge f\u00fcr diesen Tag.</div>';
                 return;
             }
 
@@ -2360,18 +2360,18 @@
                 const isActive = !log.end;
 
                 return '<div style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:var(--md-sys-color-surface-container-high); border-radius:8px;' + (isActive ? ' border:1px solid var(--md-sys-color-primary);' : '') + '">' +
-                    '<span class="material-symbols-rounded" style="font-size:18px; color:var(--md-sys-color-on-surface-variant);">schedule</span>' +
+                    '<span class="material-symbols-rounded fs-18 text-variant">schedule</span>' +
                     '<input type="text" value="' + startTime + '" ' +
                         'onchange="updateLogTime(\'' + project.id + '\', ' + log.originalIndex + ', \'start\', this.value)" ' +
-                        'style="background:transparent; border:none; width:50px; text-align:center; color:var(--md-sys-color-on-surface); font-family:monospace; font-size:14px;">' +
-                    '<span style="opacity:0.5;">\u2192</span>' +
+                        'class="fs-14 text-on-surface" style="background:transparent; border:none; width:50px; text-align:center; font-family:monospace;">' +
+                    '<span class="op-50">\u2192</span>' +
                     (isActive ?
-                        '<span style="color:var(--md-sys-color-primary); font-family:monospace; font-size:14px;">l\u00e4uft...</span>' :
+                        '<span class="fs-14 text-primary" style="font-family:monospace;">l\u00e4uft...</span>' :
                         '<input type="text" value="' + endTime + '" ' +
                             'onchange="updateLogTime(\'' + project.id + '\', ' + log.originalIndex + ', \'end\', this.value)" ' +
-                            'style="background:transparent; border:none; width:50px; text-align:center; color:var(--md-sys-color-on-surface); font-family:monospace; font-size:14px;">') +
-                    '<span style="flex:1; text-align:right; font-family:monospace; font-size:12px; color:var(--md-sys-color-on-surface-variant);">' + formatMs(durationMs, false) + '</span>' +
-                    (!isActive ? '<button class="icon-btn" style="width:24px; height:24px; color:var(--md-sys-color-error);" onclick="deleteLog(\'' + project.id + '\', ' + log.originalIndex + ')" title="Eintrag l\u00f6schen"><span class="material-symbols-rounded" style="font-size:18px">delete</span></button>' : '') +
+                            'class="fs-14 text-on-surface" style="background:transparent; border:none; width:50px; text-align:center; font-family:monospace;">') +
+                    '<span class="fs-12-variant" style="flex:1; text-align:right; font-family:monospace;">' + formatMs(durationMs, false) + '</span>' +
+                    (!isActive ? '<button class="icon-btn icon-btn-24 text-error" onclick="deleteLog(\'' + project.id + '\', ' + log.originalIndex + ')" title="Eintrag l\u00f6schen"><span class="material-symbols-rounded fs-18">delete</span></button>' : '') +
                 '</div>';
             }).join('');
         }
@@ -2475,15 +2475,15 @@
             const container = document.getElementById('tagListContainer');
             if (!container) return;
             if (state.tags.length === 0) {
-                container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--md-sys-color-on-surface-variant); font-size:13px; font-style:italic;">Noch keine Tags erstellt.</div>';
+                container.innerHTML = '<div class="fs-13-variant" style="padding:16px; text-align:center; font-style:italic;">Noch keine Tags erstellt.</div>';
                 return;
             }
             container.innerHTML = state.tags.map(t => `
                 <div style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--md-sys-color-surface-container-high); border-radius:8px;">
                     <span style="width:16px; height:16px; border-radius:4px; background:${t.color}; flex-shrink:0;"></span>
-                    <span style="flex:1; font-size:14px;">${t.name}</span>
-                    <button class="icon-btn" style="width:28px; height:28px; color:var(--md-sys-color-error);" onclick="deleteTag('${t.id}')">
-                        <span class="material-symbols-rounded" style="font-size:18px">delete</span>
+                    <span class="fs-14" style="flex:1;">${t.name}</span>
+                    <button class="icon-btn icon-btn-28 text-error" onclick="deleteTag('${t.id}')">
+                        <span class="material-symbols-rounded fs-18">delete</span>
                     </button>
                 </div>
             `).join('');
@@ -2493,7 +2493,7 @@
             const container = document.getElementById('tagFilterBar');
             if (!container) return;
             if (state.tags.length === 0) { container.innerHTML = ''; return; }
-            let html = '<span class="material-symbols-rounded" style="font-size:18px; color:var(--md-sys-color-on-surface-variant);">filter_alt</span>';
+            let html = '<span class="material-symbols-rounded fs-18 text-variant">filter_alt</span>';
             html += state.tags.map(t => {
                 const active = uiState.filterTagId === t.id;
                 return '<button onclick="setTagFilter(\'' + t.id + '\')" style="font-size:12px; padding:4px 10px; border-radius:16px; border:1px solid ' + t.color + '; background:' + (active ? t.color + '30' : 'transparent') + '; color:' + t.color + '; cursor:pointer; font-family:var(--font-stack); font-weight:' + (active ? '700' : '400') + ';">' + t.name + '</button>';
@@ -2515,14 +2515,14 @@
 
             const container = document.getElementById('tagAssignList');
             if (state.tags.length === 0) {
-                container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--md-sys-color-on-surface-variant); font-size:13px;">Erstelle zuerst Tags über das Label-Icon im Header.</div>';
+                container.innerHTML = '<div class="fs-13-variant" style="padding:16px; text-align:center;">Erstelle zuerst Tags über das Label-Icon im Header.</div>';
             } else {
                 container.innerHTML = state.tags.map(t => {
                     const checked = (p.tagIds || []).includes(t.id);
                     return '<label style="display:flex; align-items:center; gap:12px; padding:10px; background:var(--md-sys-color-surface-container-high); border-radius:8px; cursor:pointer;">' +
                         '<input type="checkbox" ' + (checked ? 'checked' : '') + ' onchange="toggleProjectTag(\'' + projectId + '\', \'' + t.id + '\')" style="width:18px; height:18px; accent-color:' + t.color + ';">' +
                         '<span style="width:12px; height:12px; border-radius:3px; background:' + t.color + ';"></span>' +
-                        '<span style="font-size:14px;">' + t.name + '</span>' +
+                        '<span class="fs-14">' + t.name + '</span>' +
                     '</label>';
                 }).join('');
             }
@@ -2646,7 +2646,7 @@
 
             let html = '<div class="week-summary-bar">'
                 + '<div class="week-summary-text">'
-                + '<span class="material-symbols-rounded" style="font-size:18px;">date_range</span>'
+                + '<span class="material-symbols-rounded fs-18">date_range</span>'
                 + '<span><strong>' + weekTotalStr + '</strong> / ' + weekTargetStr + ' Std</span>'
                 + '<span class="week-summary-pct">' + Math.round(weekPct) + '%</span>'
                 + '</div>'
@@ -2673,7 +2673,7 @@
 
             // Helper to render one project row
             function renderWeeklyProjectRow(p, isSub) {
-                const indent = isSub ? '<span style="opacity:0.4; margin-right:2px;">↳</span> ' : '';
+                const indent = isSub ? '<span class="op-40" style="margin-right:2px;">↳</span> ' : '';
                 const nameStyle = isSub ? 'font-size:12px; opacity:0.85;' : '';
                 // Check if this parent has children in the active list
                 const hasChildren = !p.parentId && activeProjects.some(c => c.parentId === p.id);
@@ -2681,7 +2681,7 @@
                 const isMarked = uiState.weeklyMarkedRows.has(p.id);
                 const collapseBtn = hasChildren
                     ? '<span class="weekly-collapse-btn" onclick="toggleWeeklyCollapse(\'' + p.id + '\')" title="Unterprojekte ' + (isCollapsed ? 'einblenden' : 'ausblenden') + '">'
-                      + '<span class="material-symbols-rounded" style="font-size:14px; vertical-align:middle;">' + (isCollapsed ? 'expand_more' : 'expand_less') + '</span>'
+                      + '<span class="material-symbols-rounded fs-14" style="vertical-align:middle;">' + (isCollapsed ? 'expand_more' : 'expand_less') + '</span>'
                       + '</span>'
                     : '';
                 const nameCell = collapseBtn + '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:' + (p.color || '#757575') + '; margin-right:6px; vertical-align:middle;"></span>' + indent + '<span style="' + nameStyle + '">' + p.name + '</span>';
@@ -2725,7 +2725,7 @@
                     // Elternprojekt: Gesamtzeit anzeigen (inkl. Kinder), bei Kindern eigene Zeit
                     const shownMs = hasChildren ? displayMs : ms;
                     html += '<td class="weekly-day-col ' + (isToday ? 'today-col' : '') + '">'
-                        + (shownMs > 0 ? '<span class="weekly-time-pill' + (hasChildren && displayMs > ms ? ' weekly-time-pill-total' : '') + '">' + fmtW(shownMs) + '</span>' + noteMarker : '<span style="opacity:0.2;">\u2014</span>')
+                        + (shownMs > 0 ? '<span class="weekly-time-pill' + (hasChildren && displayMs > ms ? ' weekly-time-pill-total' : '') + '">' + fmtW(shownMs) + '</span>' + noteMarker : '<span class="op-20">\u2014</span>')
                         + '</td>';
                 });
                 // Elternprojekt: Summen-Spalte zeigt Gesamtzeit inkl. Kinder
@@ -2751,7 +2751,7 @@
             html += '</tbody></table>';
 
             if (orderedProjects.length === 0) {
-                html = '<div style="padding:16px; text-align:center; color:var(--md-sys-color-on-surface-variant); font-size:13px; font-style:italic;">Keine Daten f\u00fcr diese Woche.</div>';
+                html = '<div class="fs-13-variant" style="padding:16px; text-align:center; font-style:italic;">Keine Daten f\u00fcr diese Woche.</div>';
             }
 
             container.innerHTML = html;
@@ -2902,7 +2902,7 @@
             // Liest aus pendingSettings (nicht aus state) — Änderungen sind noch nicht gespeichert
             const links = pendingSettings.externalLinks || [];
             if (links.length === 0) {
-                container.innerHTML = '<div style="font-size:13px; color:var(--md-sys-color-on-surface-variant); font-style:italic;">Noch keine Links konfiguriert.</div>';
+                container.innerHTML = '<div class="fs-13-variant" style="font-style:italic;">Noch keine Links konfiguriert.</div>';
                 return;
             }
             container.innerHTML = links.map((l, i) => `
@@ -2911,16 +2911,16 @@
                         <span class="material-symbols-rounded">${escapeHtml(l.icon || 'open_in_new')}</span>
                     </button>
                     <div class="input-container" style="flex:1; min-width:100px; height:40px;">
-                        <input type="text" class="input-field ext-link-label" placeholder="Bezeichnung" value="${escapeHtml(l.label)}" style="font-size:13px;"
+                        <input type="text" class="input-field ext-link-label fs-13" placeholder="Bezeichnung" value="${escapeHtml(l.label)}"
                             oninput="if(pendingSettings.externalLinks[${i}]) pendingSettings.externalLinks[${i}].label = this.value.trim()">
                     </div>
                     <div class="input-container" style="flex:2; min-width:160px; height:40px;">
-                        <input type="text" class="input-field ext-link-url" placeholder="https://... oder Protokoll-URI" value="${escapeHtml(l.url)}" style="font-size:13px;"
+                        <input type="text" class="input-field ext-link-url fs-13" placeholder="https://... oder Protokoll-URI" value="${escapeHtml(l.url)}"
                             title="Webadresse (https://...) oder Protokoll-URI eines Programms (z.B. ms-word://, vscode://, obsidian://)"
                             oninput="if(pendingSettings.externalLinks[${i}]) pendingSettings.externalLinks[${i}].url = this.value.trim()">
                     </div>
-                    <button class="icon-btn" onclick="removeExternalLink(${i})" style="width:32px; height:32px; color:var(--md-sys-color-error);">
-                        <span class="material-symbols-rounded" style="font-size:18px;">delete</span>
+                    <button class="icon-btn icon-btn-32 text-error" onclick="removeExternalLink(${i})">
+                        <span class="material-symbols-rounded fs-18">delete</span>
                     </button>
                     <div class="icon-picker-dropdown hidden" id="iconPicker_${i}">
                         ${getIconPickerOptions(i)}
@@ -3074,7 +3074,7 @@
                 + (pauseEntryCount > 0 ? ' · ' + pauseEntryCount + ' Pause' + (pauseEntryCount > 1 ? 'n' : '') : '');
             html += `<div class="ts-day-summary">
                 <div class="ts-day-summary-left">
-                    <span class="material-symbols-rounded" style="font-size:20px; color:var(--md-sys-color-primary);">schedule</span>
+                    <span class="material-symbols-rounded fs-20-primary">schedule</span>
                     <span class="ts-day-summary-label">${isToday ? 'Heute gearbeitet' : 'Gearbeitet'}</span>
                 </div>
                 <div class="ts-day-summary-right">
@@ -3084,7 +3084,7 @@
             </div>`;
 
             if (entries.length === 0) {
-                html += '<div style="padding:20px; text-align:center; color:var(--md-sys-color-on-surface-variant); font-size:13px; font-style:italic;">Keine Zeiteinträge für diesen Tag.</div>';
+                html += '<div class="fs-13-variant" style="padding:20px; text-align:center; font-style:italic;">Keine Zeiteinträge für diesen Tag.</div>';
                 container.innerHTML = html;
                 return;
             }
@@ -3107,21 +3107,21 @@
                     html += `<div class="ts-entry ${entry.isActive ? 'active' : ''}">
                         <div class="ts-entry-timeline-dot" style="background:var(--md-sys-color-outline);"></div>
                         ${lineHtml}
-                        <div class="ts-entry-content" style="opacity:0.75; border-left: 2px solid var(--md-sys-color-outline-variant);">
+                        <div class="ts-entry-content op-75" style="border-left: 2px solid var(--md-sys-color-outline-variant);">
                             <div class="ts-entry-header">
-                                <span class="material-symbols-rounded" style="font-size:15px; color:var(--md-sys-color-on-surface-variant); flex-shrink:0;">${typeIcon}</span>
-                                <span class="ts-entry-project" style="color:var(--md-sys-color-on-surface-variant);">${escapeHtml(typeLabel)}</span>
-                                <span class="ts-entry-duration" style="color:var(--md-sys-color-on-surface-variant);">${durationStr}</span>
+                                <span class="material-symbols-rounded fs-15 text-variant" style="flex-shrink:0;">${typeIcon}</span>
+                                <span class="ts-entry-project text-variant">${escapeHtml(typeLabel)}</span>
+                                <span class="ts-entry-duration text-variant">${durationStr}</span>
                             </div>
                             <div class="ts-entry-times">
-                                <span style="font-size:12px; font-family:'Roboto Mono',monospace; color:var(--md-sys-color-on-surface-variant);">${startTime}</span>
+                                <span class="fs-12 text-variant" style="font-family:'Roboto Mono',monospace;">${startTime}</span>
                                 <span class="ts-entry-arrow">→</span>
                                 ${entry.isActive
                                     ? '<span class="ts-entry-running">läuft...</span>'
-                                    : `<span style="font-size:12px; font-family:'Roboto Mono',monospace; color:var(--md-sys-color-on-surface-variant);">${endTime}</span>`
+                                    : `<span class="fs-12 text-variant" style="font-family:'Roboto Mono',monospace;">${endTime}</span>`
                                 }
                                 ${!entry.isActive
-                                    ? `<button class="icon-btn ts-delete-btn" onclick="${entry.pause.type === 'auto' ? `deleteAutoPauseFromTimesheet('${entry.pause.id}')` : `deletePause('${entry.pause.id}')`}" title="Pause löschen"><span class="material-symbols-rounded" style="font-size:16px">delete</span></button>`
+                                    ? `<button class="icon-btn ts-delete-btn" onclick="${entry.pause.type === 'auto' ? `deleteAutoPauseFromTimesheet('${entry.pause.id}')` : `deletePause('${entry.pause.id}')`}" title="Pause löschen"><span class="material-symbols-rounded fs-16">delete</span></button>`
                                     : ''}
                             </div>
                         </div>
@@ -3164,7 +3164,7 @@
                                     title="Endzeit bearbeiten">`
                             }
                             ${!entry.isActive ? `<button class="icon-btn ts-delete-btn" onclick="deleteTimesheetLog('${p.id}', ${entry.logIdx})" title="Eintrag löschen">
-                                <span class="material-symbols-rounded" style="font-size:16px">delete</span>
+                                <span class="material-symbols-rounded fs-16">delete</span>
                             </button>` : ''}
                         </div>
                         <div class="ts-entry-note-row">
@@ -3640,16 +3640,16 @@
             html += '<div style="border-top:1px solid var(--md-sys-color-outline-variant); margin:4px 0;"></div>';
             html += `<div class="card-vis-item" onclick="toggleCompactMode()">
                 <input type="checkbox" id="compactModeCheck" ${state.settings.compactMode ? 'checked' : ''} onclick="event.stopPropagation(); toggleCompactMode()">
-                <span class="material-symbols-rounded" style="font-size:18px;">density_small</span>
+                <span class="material-symbols-rounded fs-18">density_small</span>
                 Kompaktmodus
             </div>`;
 
             // Divider + Presets
             html += '<div style="border-top:1px solid var(--md-sys-color-outline-variant); margin:4px 0;"></div>';
             html += `<div style="padding:8px 16px; display:flex; gap:6px;">
-                <button class="md-btn md-btn-tonal" onclick="applyPreset('minimal')" style="flex:1; height:32px; font-size:12px;">Minimal</button>
-                <button class="md-btn md-btn-tonal" onclick="applyPreset('standard')" style="flex:1; height:32px; font-size:12px;">Standard</button>
-                <button class="md-btn md-btn-tonal" onclick="applyPreset('all')" style="flex:1; height:32px; font-size:12px;">Alle</button>
+                <button class="md-btn md-btn-tonal fs-12" onclick="applyPreset('minimal')" style="flex:1; height:32px;">Minimal</button>
+                <button class="md-btn md-btn-tonal fs-12" onclick="applyPreset('standard')" style="flex:1; height:32px;">Standard</button>
+                <button class="md-btn md-btn-tonal fs-12" onclick="applyPreset('all')" style="flex:1; height:32px;">Alle</button>
             </div>`;
 
             menu.innerHTML = html;
@@ -4058,11 +4058,11 @@
             toast.id = 'update-toast';
             toast.className = 'update-toast';
             toast.innerHTML = `
-                <span class="material-symbols-rounded" style="color:var(--md-sys-color-primary);font-size:20px;flex-shrink:0;">new_releases</span>
+                <span class="material-symbols-rounded fs-20 text-primary" style="flex-shrink:0;">new_releases</span>
                 <span style="flex:1;">Neue Version verfügbar</span>
-                <button class="text-btn" style="font-weight:600;color:var(--md-sys-color-primary);white-space:nowrap;" onclick="window.location.reload()">Aktualisieren</button>
+                <button class="text-btn fw-600 text-primary" style="white-space:nowrap;" onclick="window.location.reload()">Aktualisieren</button>
                 <button class="icon-btn" title="Schließen" onclick="document.getElementById('update-toast').remove()">
-                    <span class="material-symbols-rounded" style="font-size:18px;">close</span>
+                    <span class="material-symbols-rounded fs-18">close</span>
                 </button>`;
             document.body.appendChild(toast);
         }

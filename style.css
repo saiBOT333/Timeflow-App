@@ -2119,3 +2119,74 @@ textarea.input-field {
         border-radius: var(--md-sys-shape-corner-small);
     }
 }
+
+/* ── SCHRITT 4: Utility-Klassen (ehemals Inline-Styles) ── */
+
+/* Font-Sizes (Icons & Text) */
+.fs-10 { font-size: 10px; }
+.fs-11 { font-size: 11px; }
+.fs-12 { font-size: 12px; }
+.fs-13 { font-size: 13px; }
+.fs-14 { font-size: 14px; }
+.fs-15 { font-size: 15px; }
+.fs-16 { font-size: 16px; }
+.fs-18 { font-size: 18px; }
+.fs-20 { font-size: 20px; }
+.fs-24 { font-size: 24px; }
+.fs-28 { font-size: 28px; }
+.fs-32 { font-size: 32px; }
+.fs-48 { font-size: 48px; }
+
+/* Farb-Utilities */
+.text-primary   { color: var(--md-sys-color-primary); }
+.text-secondary { color: var(--md-sys-color-secondary); }
+.text-tertiary  { color: var(--md-sys-color-tertiary); }
+.text-error     { color: var(--md-sys-color-error); }
+.text-variant   { color: var(--md-sys-color-on-surface-variant); }
+.text-on-surface { color: var(--md-sys-color-on-surface); }
+.text-on-primary { color: var(--md-sys-color-on-primary); }
+.text-outline   { color: var(--md-sys-color-outline-variant); }
+
+/* Opacity-Utilities */
+.op-20 { opacity: 0.2; }
+.op-35 { opacity: 0.35; }
+.op-40 { opacity: 0.4; }
+.op-50 { opacity: 0.5; }
+.op-60 { opacity: 0.6; }
+.op-65 { opacity: 0.65; }
+.op-70 { opacity: 0.7; }
+.op-75 { opacity: 0.75; }
+.op-80 { opacity: 0.8; }
+
+/* Icon-Button Größen */
+.icon-btn-20 { width: 20px !important; height: 20px !important; }
+.icon-btn-24 { width: 24px !important; height: 24px !important; }
+.icon-btn-28 { width: 28px !important; height: 28px !important; }
+.icon-btn-32 { width: 32px !important; height: 32px !important; }
+
+/* Häufige Kombinationen */
+.fs-14-variant { font-size: 14px; color: var(--md-sys-color-on-surface-variant); }
+.fs-13-variant { font-size: 13px; color: var(--md-sys-color-on-surface-variant); }
+.fs-12-variant { font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
+.fs-18-primary { font-size: 18px; color: var(--md-sys-color-primary); }
+.fs-16-primary { font-size: 16px; color: var(--md-sys-color-primary); }
+.fs-14-primary { font-size: 14px; color: var(--md-sys-color-primary); }
+.fs-16-error   { font-size: 16px; color: var(--md-sys-color-error); }
+.fs-18-error   { font-size: 18px; color: var(--md-sys-color-error); }
+.fs-11-variant { font-size: 11px; color: var(--md-sys-color-on-surface-variant); }
+.fs-15-variant { font-size: 15px; color: var(--md-sys-color-on-surface-variant); }
+.fs-20-primary { font-size: 20px; color: var(--md-sys-color-primary); }
+
+/* Margin/Padding Utilities */
+.mb-4  { margin-bottom: 4px; }
+.mb-6  { margin-bottom: 6px; }
+.mb-8  { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.mt-4  { margin-top: 4px; }
+.mt-8  { margin-top: 8px; }
+.gap-2 { gap: 2px; }
+.gap-4 { gap: 4px; }
+.gap-6 { gap: 6px; }
+.gap-8 { gap: 8px; }
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
