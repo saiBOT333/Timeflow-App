@@ -1,6 +1,7 @@
         import { APP_VERSION, DEFAULT_AUTO_PAUSES, MATERIAL_PALETTE, ARCHIVE_COLOR, CHANGELOG } from './src/config.js';
         import { state, uiState } from './src/state.js';
         import { formatMs, formatMsDecimal, formatTimeInput, incrementTime, isSameDay, hexToRgba, getContrastTextColor, escapeHtml } from './src/utils.js';
+        import { getRoundedMs, getOverlap, mergeIntervals, calculateNetDuration, calculateNetDurationForDate, calculateNetDurationForRange } from './src/calculations.js';
 
         // --- LAUFZEIT-ZÄHLER (kein Config-Wert) ---
         let _versionClickCount = 0;
@@ -967,94 +968,6 @@
             }
         }
 
-        function calculateNetDuration(project) {
-            let totalMs = 0;
-            const now = Date.now();
-            const pauseIntervals = state.pauses.map(p => ({
-                start: p.startTs,
-                end: p.active ? now : (p.endTs || now)
-            }));
-            const mergedPauses = mergeIntervals(pauseIntervals);
-
-            project.logs.forEach(log => {
-                const logStart = log.start;
-                const logEnd = log.end || now;
-                if (logEnd <= logStart) return;
-                let duration = logEnd - logStart;
-                mergedPauses.forEach(pause => {
-                    duration -= getOverlap(logStart, logEnd, pause.start, pause.end);
-                });
-                totalMs += Math.max(0, duration);
-            });
-            return Math.max(0, totalMs);
-        }
-
-        function calculateNetDurationForDate(project, dateStr) {
-            const dayStart = new Date(dateStr + 'T00:00:00').getTime();
-            const dayEnd = dayStart + 86400000;
-            const now = Date.now();
-
-            const pauseIntervals = state.pauses
-                .filter(p => {
-                    const pEnd = p.active ? now : (p.endTs || now);
-                    return pEnd > dayStart && p.startTs < dayEnd;
-                })
-                .map(p => ({
-                    start: Math.max(p.startTs, dayStart),
-                    end: Math.min(p.active ? now : (p.endTs || now), dayEnd)
-                }));
-            const mergedPauses = mergeIntervals(pauseIntervals);
-
-            let totalMs = 0;
-            (project.logs || []).forEach(log => {
-                const logStart = Math.max(log.start, dayStart);
-                const logEnd = Math.min(log.end || now, dayEnd);
-                if (logEnd <= logStart) return;
-                let duration = logEnd - logStart;
-                mergedPauses.forEach(pause => {
-                    duration -= getOverlap(logStart, logEnd, pause.start, pause.end);
-                });
-                totalMs += Math.max(0, duration);
-            });
-            return Math.max(0, totalMs);
-        }
-
-        function calculateNetDurationForRange(project, startDateStr, endDateStr) {
-            let total = 0;
-            const start = new Date(startDateStr + 'T12:00:00');
-            const end = new Date(endDateStr + 'T12:00:00');
-            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                total += calculateNetDurationForDate(project, d.toISOString().split('T')[0]);
-            }
-            return total;
-        }
-
-        function getRoundedMs(ms, roundingMin) {
-            // New Logic: 0 = Exact, >0 = Round up to X minutes
-            if (!roundingMin || roundingMin == 0) return ms; 
-            const minutes = ms / 60000;
-            const roundedMinutes = Math.ceil(minutes / roundingMin) * roundingMin;
-            return roundedMinutes * 60000;
-        }
-
-        function getOverlap(start1, end1, start2, end2) {
-            const start = Math.max(start1, start2);
-            const end = Math.min(end1, end2);
-            return Math.max(0, end - start);
-        }
-
-        function mergeIntervals(intervals) {
-            if (intervals.length === 0) return [];
-            intervals.sort((a, b) => a.start - b.start);
-            const stack = [intervals[0]];
-            for (let i = 1; i < intervals.length; i++) {
-                const top = stack[stack.length - 1];
-                const current = intervals[i];
-                if (top.end >= current.start) top.end = Math.max(top.end, current.end);
-                else stack.push(current);
-            }
-            return stack;
-        }
 
         function getDistinctColor() {
             const usedColors = new Set(state.projects.filter(p => p.category !== 'archive').map(p => p.color));
