@@ -1,5 +1,6 @@
         import { APP_VERSION, DEFAULT_AUTO_PAUSES, MATERIAL_PALETTE, ARCHIVE_COLOR, CHANGELOG } from './src/config.js';
         import { state, uiState } from './src/state.js';
+        import { formatMs, formatMsDecimal, formatTimeInput, incrementTime, isSameDay, hexToRgba, getContrastTextColor, escapeHtml } from './src/utils.js';
 
         // --- LAUFZEIT-ZÄHLER (kein Config-Wert) ---
         let _versionClickCount = 0;
@@ -877,11 +878,6 @@
             });
         }
 
-        function incrementTime(hhmm, minutes) {
-            const [h, m] = hhmm.split(':').map(Number);
-            const total = h * 60 + m + minutes;
-            return (Math.floor(total / 60) % 24).toString().padStart(2, '0') + ':' + (total % 60).toString().padStart(2, '0');
-        }
 
         // --- DAY PROGRESS UPDATE ---
         function getTotalWorkedTodayMs() {
@@ -1524,26 +1520,6 @@
             }
         }
 
-        // Helper function for color conversion
-        function hexToRgba(hex, alpha) {
-            hex = hex.replace('#', '');
-            const r = parseInt(hex.substring(0, 2), 16);
-            const g = parseInt(hex.substring(2, 4), 16);
-            const b = parseInt(hex.substring(4, 6), 16);
-            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        }
-
-        // --- PAKET 5.1: Dynamische Kontrastberechnung (WCAG) ---
-        function getContrastTextColor(hexColor) {
-            if (!hexColor || hexColor.startsWith('var(')) return '#FFFBFE';
-            const hex = hexColor.replace('#', '');
-            const r = parseInt(hex.substring(0, 2), 16) / 255;
-            const g = parseInt(hex.substring(2, 4), 16) / 255;
-            const b = parseInt(hex.substring(4, 6), 16) / 255;
-            const toLinear = (c) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-            const luminance = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
-            return luminance > 0.5 ? '#1C1B1F' : '#FFFBFE';
-        }
 
         function renderActiveProjectCard() {
             const container = document.getElementById('activeProjectDisplay');
@@ -2591,9 +2567,6 @@
             container.innerHTML = html;
         }
 
-        function escapeHtml(str) {
-            return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
 
         function toggleWeeklyDecimal() {
             uiState.weeklyDecimal = !uiState.weeklyDecimal;
@@ -3072,24 +3045,6 @@
         }
 
         // --- UTILS ---
-        function formatMs(ms, includeSeconds = true) {
-            const s = Math.floor((ms / 1000) % 60);
-            const m = Math.floor((ms / (1000 * 60)) % 60);
-            const h = Math.floor((ms / (1000 * 60 * 60)));
-            const pad = (n) => n.toString().padStart(2, '0');
-            return `${pad(h)}:${pad(m)}${includeSeconds ? ':' + pad(s) : ''}`;
-        }
-
-        // Dezimalformat: Millisekunden → "h.hh" (z.B. 5400000 → "1.50")
-        // Wird in der Wochenübersicht verwendet, wenn uiState.weeklyDecimal aktiv ist.
-        function formatMsDecimal(ms) {
-            const hours = ms / 3600000;
-            return hours.toFixed(2).replace('.', ',');
-        }
-        function formatTimeInput(ts) {
-            const d = new Date(ts);
-            return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-        }
         function updateDateDisplay() {
             const d = new Date(uiState.viewDate + 'T12:00:00');
             const options = { weekday: 'short', day: 'numeric', month: 'long' };
@@ -3112,9 +3067,6 @@
             uiState.viewDate = new Date().toISOString().split('T')[0];
             updateDateDisplay();
             updateUI();
-        }
-        function isSameDay(d1, d2) {
-            return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
         }
         function toggleCard(btn) {
             const card = btn.closest('.md-card');
