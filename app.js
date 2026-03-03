@@ -3,6 +3,10 @@
         import { formatMs, formatMsDecimal, formatTimeInput, incrementTime, isSameDay, hexToRgba, getContrastTextColor, escapeHtml } from './src/utils.js';
         import { getRoundedMs, getOverlap, mergeIntervals, calculateNetDuration, calculateNetDurationForDate, calculateNetDurationForRange } from './src/calculations.js';
         import { StorageManager, saveData, saveDataImmediate, migrateState, loadData } from './src/storage.js';
+        import { showConfirm, showAlert, resolveConfirmModal } from './src/ui/dialogs.js';
+        import { pushUndo, popUndo, hasUndo, showUndoToast, hideUndoToast } from './src/undo.js';
+        import { toggleManualPause, deletePause, deleteAutoPauseFromTimesheet, endAutoPauseNow, updatePauseTime } from './src/pauses.js';
+        import { getDistinctColor, startProject, stopProject, stopAllProjects, addProject, switchProject, stopProjectById, toggleFavorite, setCategory, deleteProject, openProjectEdit, saveProjectEdit, openSubProjectModal, saveSubProject, getChildProjects, isParentProject, calculateProjectTotalMs } from './src/projects.js';
 
         // --- LAUFZEIT-ZÄHLER (kein Config-Wert) ---
         let _versionClickCount = 0;
@@ -12,8 +16,7 @@
         // synchronisiert. saveSettings() flusht pendingSettings → state, liest nie DOM.
         let pendingSettings = {};
 
-        // Current editing project
-        let editingProjectId = null;
+        // editingProjectId → uiState.editingProjectId (src/state.js)
 
         // Greeting animation state (runtime only)
         let greetingShown = false;
@@ -27,9 +30,7 @@
         // Feierabend state
         let feierabendActive = false;
 
-        // Undo stack (runtime only, max 5)
-        let undoStack = [];
-        let undoToastTimeout = null;
+        // undoStack, undoToastTimeout → src/undo.js
 
         // Day start time (for progress bar)
         let dayStartTime = null;
@@ -452,7 +453,7 @@
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('open');
-            if (id === 'tagAssignModal' || id === 'projectEditModal' || id === 'timeEditModal' || id === 'subProjectModal') editingProjectId = null;
+            if (id === 'tagAssignModal' || id === 'projectEditModal' || id === 'timeEditModal' || id === 'subProjectModal') uiState.editingProjectId = null;
             if (id === 'helpModal') document.getElementById('helpIframe').src = '';
             if (id === 'settingsModal') {
                 _versionClickCount = 0;
@@ -461,46 +462,7 @@
             }
         }
 
-        // --- CUSTOM CONFIRM / ALERT ---
-        let _confirmResolve = null;
-
-        function showConfirm(message, { title = 'Bestätigung', icon = 'help_outline', okText = 'OK', cancelText = 'Abbrechen', danger = false } = {}) {
-            return new Promise(resolve => {
-                _confirmResolve = resolve;
-                document.getElementById('confirmModalIcon').textContent = icon;
-                document.getElementById('confirmModalTitle').textContent = title;
-                document.getElementById('confirmModalMessage').textContent = message;
-                const okBtn = document.getElementById('confirmModalOk');
-                okBtn.textContent = okText;
-                okBtn.className = danger ? 'md-btn' : 'md-btn md-btn-primary';
-                document.getElementById('confirmModalCancel').textContent = cancelText;
-                document.getElementById('confirmModalCancel').hidden = false;
-                document.getElementById('confirmModal').classList.toggle('is-danger', danger);
-                document.getElementById('confirmModal').classList.add('open');
-            });
-        }
-
-        function showAlert(message, { title = 'Hinweis', icon = 'info', okText = 'OK' } = {}) {
-            return new Promise(resolve => {
-                _confirmResolve = resolve;
-                document.getElementById('confirmModalIcon').textContent = icon;
-                document.getElementById('confirmModalTitle').textContent = title;
-                document.getElementById('confirmModalMessage').textContent = message;
-                document.getElementById('confirmModalOk').textContent = okText;
-                document.getElementById('confirmModalOk').className = 'md-btn md-btn-primary';
-                document.getElementById('confirmModalCancel').hidden = true;
-                document.getElementById('confirmModal').classList.remove('is-danger');
-                document.getElementById('confirmModal').classList.add('open');
-            });
-        }
-
-        function resolveConfirmModal(result) {
-            document.getElementById('confirmModal').classList.remove('open');
-            if (_confirmResolve) {
-                _confirmResolve(result);
-                _confirmResolve = null;
-            }
-        }
+        // showConfirm, showAlert, resolveConfirmModal → src/ui/dialogs.js
 
         function openHelpModal() {
             const iframe = document.getElementById('helpIframe');
@@ -894,13 +856,7 @@
         }
 
 
-        function getDistinctColor() {
-            const usedColors = new Set(state.projects.filter(p => p.category !== 'archive').map(p => p.color));
-            for (let color of MATERIAL_PALETTE) {
-                if (!usedColors.has(color)) return color;
-            }
-            return MATERIAL_PALETTE[Math.floor(Math.random() * MATERIAL_PALETTE.length)];
-        }
+        // getDistinctColor → src/projects.js
 
         // --- QUICK ACTIONS ---
         function onGoodMorning() {
@@ -975,219 +931,11 @@
             if (label) label.textContent = active ? 'Home Office ✓' : 'Home Office';
         }
 
-        // --- ACTIONS ---
-        function handleNewProject(e) { if (e.key === 'Enter') addProject(); }
+        // addProject, switchProject, startProject, stopProject, stopAllProjects,
+        // toggleFavorite, setCategory, deleteProject → src/projects.js
 
-        function addProject() {
-            const numInput = document.getElementById('newProjectNum');
-            const nameInput = document.getElementById('newProjectName');
-            const errMsg = document.getElementById('inputErrorMsg');
-            
-            const num = numInput.value.trim();
-            const name = nameInput.value.trim();
-
-            if (!num || !name) {
-                errMsg.hidden = false;
-                return;
-            }
-            errMsg.hidden = true;
-
-            const newProject = {
-                id: crypto.randomUUID(),
-                number: num,
-                name: name,
-                category: 'active',
-                isFavorite: true,
-                color: getDistinctColor(),
-                status: 'stopped',
-                logs: [],
-                tagIds: [],
-                parentId: null
-            };
-
-            state.projects.unshift(newProject);
-            numInput.value = '';
-            nameInput.value = '';
-            numInput.focus();
-            saveData();
-            updateUI();
-        }
-
-        function switchProject(id) {
-            const project = state.projects.find(p => p.id === id);
-            if (!project) return;
-            if (state.manualPauseActive) toggleManualPause();
-            if (project.status === 'running') {
-                stopProject(project);
-                if (id !== 'general') startProject('general');
-            } else {
-                stopAllProjects();
-                startProject(id);
-            }
-            saveData();
-            updateUI();
-        }
-
-        function startProject(idOrObj) {
-            const project = typeof idOrObj === 'string' ? state.projects.find(p => p.id === idOrObj) : idOrObj;
-            if (project) {
-                project.status = 'running';
-                project.logs.push({ start: Date.now(), end: null });
-            }
-        }
-
-        function stopProject(project) {
-            if (!project || !project.logs || project.logs.length === 0) return;
-            project.status = 'stopped';
-            const lastLog = project.logs[project.logs.length - 1];
-            if (lastLog && !lastLog.end) lastLog.end = Date.now();
-        }
-
-        function stopAllProjects() {
-            state.projects.forEach(p => {
-                if (p.status === 'running') stopProject(p);
-            });
-        }
-
-        function toggleFavorite(id, e) {
-            e.stopPropagation();
-            const p = state.projects.find(x => x.id === id);
-            if (p) {
-                p.isFavorite = !p.isFavorite;
-                // Also update child projects
-                getChildProjects(id).forEach(child => {
-                    child.isFavorite = p.isFavorite;
-                });
-                saveData();
-                updateUI();
-            }
-        }
-
-        function setCategory(id, category, e) {
-            e.stopPropagation();
-            const p = state.projects.find(x => x.id === id);
-            if (p) {
-                const oldCategory = p.category;
-                p.category = category;
-                if (category === 'archive') {
-                    p.isFavorite = false;
-                    p.color = ARCHIVE_COLOR;
-                } else if (oldCategory === 'archive' && category === 'active') {
-                    p.color = getDistinctColor();
-                }
-                // Also update child projects
-                getChildProjects(id).forEach(child => {
-                    child.category = category;
-                    if (category === 'archive') {
-                        child.isFavorite = false;
-                        child.color = ARCHIVE_COLOR;
-                    } else if (oldCategory === 'archive' && category === 'active') {
-                        child.color = p.color; // Inherit parent's new color
-                    }
-                });
-                saveData();
-                updateUI();
-            }
-        }
-
-        async function deleteProject(id, e) {
-            e.stopPropagation();
-            const p = state.projects.find(x => x.id === id);
-            const children = getChildProjects(id);
-            const name = p ? p.name : '';
-            const msg = children.length > 0
-                ? `„${name}" und ${children.length} Unterprojekt${children.length > 1 ? 'e' : ''} werden unwiderruflich gelöscht.`
-                : `„${name}" wird unwiderruflich gelöscht.`;
-            const ok = await showConfirm(msg, { title: 'Projekt löschen?', icon: 'delete', okText: 'Löschen', danger: true });
-            if (!ok) return;
-            // Undo: snapshot before delete
-            const deletedProjects = state.projects.filter(x => x.id === id || x.parentId === id);
-            pushUndo({ type: 'deleteProject', data: JSON.parse(JSON.stringify(deletedProjects)), timestamp: Date.now(), label: `Projekt "${name}" gelöscht` });
-            // Delete project and all its children
-            state.projects = state.projects.filter(p => p.id !== id && p.parentId !== id);
-            saveData();
-            updateUI();
-            showUndoToast(`Projekt "${name}" gelöscht`);
-        }
-
-        // --- PAUSE ---
-        function toggleManualPause() {
-            const now = Date.now();
-            if (state.manualPauseActive) {
-                const pauseEntry = state.pauses.find(p => p.active);
-                if (pauseEntry) {
-                    pauseEntry.active = false;
-                    pauseEntry.endTs = now;
-                }
-                state.manualPauseActive = false;
-            } else {
-                state.pauses.unshift({
-                    id: crypto.randomUUID(),
-                    startTs: now,
-                    endTs: null,
-                    type: 'manual',
-                    label: 'Pause',
-                    active: true
-                });
-                state.manualPauseActive = true;
-            }
-            saveData();
-            updateUI();
-        }
-
-        function deletePause(id) {
-            const pause = state.pauses.find(p => p.id === id);
-            if(!pause) return;
-
-            // If deleting an active pause, reset status
-            if(pause.active) {
-                state.manualPauseActive = false;
-            }
-
-            state.pauses = state.pauses.filter(p => p.id !== id);
-            saveData();
-            updateUI();
-        }
-
-        async function deleteAutoPauseFromTimesheet(pauseId) {
-            const pause = state.pauses.find(p => p.id === pauseId);
-            if (!pause || pause.type !== 'auto') return;
-            const ok = await showConfirm(
-                `Automatische Pause „${pause.label}" für heute löschen?`,
-                { title: 'Autopause löschen', icon: 'delete', okText: 'Löschen', danger: true }
-            );
-            if (!ok) return;
-            if (!state.settings.skippedAutoPauses) state.settings.skippedAutoPauses = [];
-            state.settings.skippedAutoPauses.push({ startTs: pause.startTs });
-            state.pauses = state.pauses.filter(p => p.id !== pauseId);
-            saveData();
-            updateUI();
-        }
-
-        function endAutoPauseNow() {
-            const now = Date.now();
-            const pause = state.pauses.find(p =>
-                p.type === 'auto' && now >= p.startTs && now < p.endTs
-            );
-            if (!pause) return;
-            pause.endTs = now;
-            saveData();
-            updateUI();
-        }
-
-        function updatePauseTime(id, type, value) {
-            const pause = state.pauses.find(p => p.id === id);
-            if (!pause) return;
-            const todayStr = new Date(pause.startTs).toISOString().split('T')[0];
-            const newTs = new Date(todayStr + 'T' + value).getTime();
-            if (isNaN(newTs)) return;
-            if (type === 'start' && pause.endTs && newTs >= pause.endTs) return;
-            if (type === 'end' && newTs <= pause.startTs) return;
-            if (type === 'start') pause.startTs = newTs;
-            if (type === 'end') pause.endTs = newTs;
-            saveData();
-            updateUI();
-        }
+        // toggleManualPause, deletePause, deleteAutoPauseFromTimesheet,
+        // endAutoPauseNow, updatePauseTime → src/pauses.js
 
         // Pause status text (runtime only, rendered in Aktivitätsbereich)
         let activePauseText = null;
@@ -1358,6 +1106,9 @@
             }
         }
 
+        // stateChanged-Event: Domain-Module (projects, pauses etc.) rufen updateUI()
+        // nicht direkt auf (Kreisabhängigkeit), sondern feuern dieses Event.
+        document.addEventListener('stateChanged', () => updateUI());
 
         function renderActiveProjectCard() {
             const container = document.getElementById('activeProjectDisplay');
@@ -1501,15 +1252,7 @@
             updateUI();
         }
 
-        function stopProjectById(id) {
-            const p = state.projects.find(x => x.id === id);
-            if(p) {
-                stopProject(p);
-                startProject('general');
-                saveData();
-                updateUI();
-            }
-        }
+        // stopProjectById → src/projects.js
 
         function renderList(elementId, items) {
             const el = document.getElementById(elementId);
@@ -1879,94 +1622,8 @@
         }
 
         // --- PROJECT EDIT ---
-        function openProjectEdit(projectId, e) {
-            if (e) e.stopPropagation();
-            const p = state.projects.find(x => x.id === projectId);
-            if (!p) return;
-            editingProjectId = projectId;
-            document.getElementById('editProjectNum').value = p.number || '';
-            document.getElementById('editProjectName').value = p.name || '';
-            document.getElementById('editProjectBudget').value = p.budgetHours != null ? p.budgetHours : '';
-            openModal('projectEditModal');
-        }
-
-        function saveProjectEdit() {
-            if (!editingProjectId) return;
-            const p = state.projects.find(x => x.id === editingProjectId);
-            if (!p) return;
-            const num = document.getElementById('editProjectNum').value.trim();
-            const name = document.getElementById('editProjectName').value.trim();
-            const budgetRaw = document.getElementById('editProjectBudget').value.trim();
-            if (!name) return;
-            p.number = num || p.number;
-            p.name = name;
-            p.budgetHours = budgetRaw !== '' ? parseFloat(budgetRaw) : null;
-            saveData();
-            closeModal('projectEditModal');
-            updateUI();
-        }
-
-        function calculateProjectTotalMs(project) {
-            // Summe aller Logs über die gesamte Projektlaufzeit (ohne Pausenabzug, da historisch)
-            const now = Date.now();
-            return (project.logs || []).reduce((sum, log) => {
-                return sum + Math.max(0, (log.end || now) - log.start);
-            }, 0);
-        }
-
-        // --- SUB-PROJECTS ---
-        function openSubProjectModal(parentId, e) {
-            if (e) e.stopPropagation();
-            const parent = state.projects.find(x => x.id === parentId);
-            if (!parent) return;
-            editingProjectId = parentId; // Store parent ID
-            document.getElementById('subProjectParentTitle').innerText = `Übergeordnet: ${parent.number || ''} ${parent.name}`;
-            document.getElementById('subProjectName').value = '';
-            openModal('subProjectModal');
-            setTimeout(() => document.getElementById('subProjectName').focus(), 100);
-        }
-
-        function saveSubProject() {
-            if (!editingProjectId) return;
-            const parent = state.projects.find(x => x.id === editingProjectId);
-            if (!parent) return;
-            const name = document.getElementById('subProjectName').value.trim();
-            if (!name) return;
-
-            const subProject = {
-                id: crypto.randomUUID(),
-                number: parent.number || '-',
-                name: name,
-                category: parent.category,
-                isFavorite: parent.isFavorite,
-                color: parent.color,
-                status: 'stopped',
-                logs: [],
-                tagIds: [],
-                parentId: parent.id,
-                dailyNotes: {}
-            };
-
-            // Insert sub-project right after parent (and any existing sub-projects of this parent)
-            const parentIdx = state.projects.indexOf(parent);
-            let insertIdx = parentIdx + 1;
-            while (insertIdx < state.projects.length && state.projects[insertIdx].parentId === parent.id) {
-                insertIdx++;
-            }
-            state.projects.splice(insertIdx, 0, subProject);
-
-            saveData();
-            closeModal('subProjectModal');
-            updateUI();
-        }
-
-        function getChildProjects(parentId) {
-            return state.projects.filter(p => p.parentId === parentId);
-        }
-
-        function isParentProject(projectId) {
-            return state.projects.some(p => p.parentId === projectId);
-        }
+        // openProjectEdit, saveProjectEdit, calculateProjectTotalMs,
+        // openSubProjectModal, saveSubProject, getChildProjects, isParentProject → src/projects.js
 
         // --- TIME EDIT ---
         function openTimeEdit(projectId, e) {
@@ -3410,15 +3067,11 @@
             container.insertBefore(warningDiv, container.firstChild);
         }
 
-        // 9.2 Undo Mechanism
-        function pushUndo(entry) {
-            undoStack.push(entry);
-            if (undoStack.length > 5) undoStack.shift();
-        }
+        // pushUndo, popUndo, hasUndo → src/undo.js
 
         function undo() {
-            if (undoStack.length === 0) return;
-            const entry = undoStack.pop();
+            if (!hasUndo()) return;
+            const entry = popUndo();
 
             if (entry.type === 'deleteProject') {
                 // Re-add deleted projects
@@ -3438,23 +3091,7 @@
             hideUndoToast();
         }
 
-        function showUndoToast(label) {
-            const toast = document.getElementById('undoToast');
-            const text = document.getElementById('undoToastText');
-            if (!toast || !text) return;
-            text.textContent = label;
-            toast.classList.remove('hidden');
-            if (undoToastTimeout) clearTimeout(undoToastTimeout);
-            undoToastTimeout = setTimeout(() => {
-                hideUndoToast();
-            }, 8000);
-        }
-
-        function hideUndoToast() {
-            const toast = document.getElementById('undoToast');
-            if (toast) toast.classList.add('hidden');
-            if (undoToastTimeout) clearTimeout(undoToastTimeout);
-        }
+        // showUndoToast, hideUndoToast → src/undo.js
 
         // saveData, saveDataImmediate, migrateState, loadData → src/storage.js
 

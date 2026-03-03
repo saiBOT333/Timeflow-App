@@ -91,5 +91,9 @@ export const uiState = {
     weeklyDecimal:       false,
 
     // Offenes Projekt-Kontextmenü (project-id|null)
-    openMenuProjectId:   null
+    openMenuProjectId:   null,
+
+    // Aktuell im Modal bearbeitetes Projekt (project-id|null)
+    // Wird von openProjectEdit, openSubProjectModal, openTimeEdit, openTagAssign gesetzt.
+    editingProjectId:    null
 };
