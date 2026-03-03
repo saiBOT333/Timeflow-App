@@ -7,6 +7,8 @@
         import { pushUndo, popUndo, hasUndo, showUndoToast, hideUndoToast } from './src/undo.js';
         import { toggleManualPause, deletePause, deleteAutoPauseFromTimesheet, endAutoPauseNow, updatePauseTime } from './src/pauses.js';
         import { getDistinctColor, startProject, stopProject, stopAllProjects, addProject, switchProject, stopProjectById, toggleFavorite, setCategory, deleteProject, openProjectEdit, saveProjectEdit, openSubProjectModal, saveSubProject, getChildProjects, isParentProject, calculateProjectTotalMs } from './src/projects.js';
+        import { addTag, deleteTag, renderTagList, renderTagFilter, setTagFilter, openTagAssign, toggleProjectTag } from './src/tags.js';
+        import { setupPWA, showUpdateToast } from './src/pwa.js';
 
         // --- LAUFZEIT-ZÄHLER (kein Config-Wert) ---
         let _versionClickCount = 0;
@@ -1630,7 +1632,7 @@
             if (e) e.stopPropagation();
             const p = state.projects.find(x => x.id === projectId);
             if (!p) return;
-            editingProjectId = projectId;
+            uiState.editingProjectId = projectId;
             document.getElementById('timeEditProjectTitle').innerText = (p.number || '') + ' ' + p.name;
             renderTimeEditLogs(p);
             openModal('timeEditModal');
@@ -1754,98 +1756,8 @@
         }
 
         // --- TAGS ---
-        function addTag() {
-            const name = document.getElementById('newTagName').value.trim();
-            const color = document.getElementById('newTagColor').value;
-            if (!name) return;
-            state.tags.push({ id: crypto.randomUUID(), name, color });
-            document.getElementById('newTagName').value = '';
-            saveData();
-            renderTagList();
-            updateUI();
-        }
-
-        function deleteTag(tagId) {
-            state.tags = state.tags.filter(t => t.id !== tagId);
-            state.projects.forEach(p => {
-                p.tagIds = (p.tagIds || []).filter(id => id !== tagId);
-            });
-            if (uiState.filterTagId === tagId) uiState.filterTagId = null;
-            saveData();
-            renderTagList();
-            updateUI();
-        }
-
-        function renderTagList() {
-            const container = document.getElementById('tagListContainer');
-            if (!container) return;
-            if (state.tags.length === 0) {
-                container.innerHTML = '<div class="fs-13-variant" style="padding:16px; text-align:center; font-style:italic;">Noch keine Tags erstellt.</div>';
-                return;
-            }
-            container.innerHTML = state.tags.map(t => `
-                <div style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--md-sys-color-surface-container-high); border-radius:8px;">
-                    <span style="width:16px; height:16px; border-radius:4px; background:${t.color}; flex-shrink:0;"></span>
-                    <span class="fs-14" style="flex:1;">${t.name}</span>
-                    <button class="icon-btn icon-btn-28 text-error" onclick="deleteTag('${t.id}')">
-                        <span class="material-symbols-rounded fs-18">delete</span>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function renderTagFilter() {
-            const container = document.getElementById('tagFilterBar');
-            if (!container) return;
-            if (state.tags.length === 0) { container.innerHTML = ''; return; }
-            let html = '<span class="material-symbols-rounded fs-18 text-variant">filter_alt</span>';
-            html += state.tags.map(t => {
-                const active = uiState.filterTagId === t.id;
-                return '<button onclick="setTagFilter(\'' + t.id + '\')" style="font-size:12px; padding:4px 10px; border-radius:16px; border:1px solid ' + t.color + '; background:' + (active ? t.color + '30' : 'transparent') + '; color:' + t.color + '; cursor:pointer; font-family:var(--font-stack); font-weight:' + (active ? '700' : '400') + ';">' + t.name + '</button>';
-            }).join(' ');
-            container.innerHTML = html;
-        }
-
-        function setTagFilter(tagId) {
-            uiState.filterTagId = uiState.filterTagId === tagId ? null : tagId;
-            updateUI();
-        }
-
-        function openTagAssign(projectId, e) {
-            if (e) e.stopPropagation();
-            const p = state.projects.find(x => x.id === projectId);
-            if (!p) return;
-            editingProjectId = projectId;
-            document.getElementById('tagAssignProjectTitle').innerText = (p.number || '') + ' ' + p.name;
-
-            const container = document.getElementById('tagAssignList');
-            if (state.tags.length === 0) {
-                container.innerHTML = '<div class="fs-13-variant" style="padding:16px; text-align:center;">Erstelle zuerst Tags über das Label-Icon im Header.</div>';
-            } else {
-                container.innerHTML = state.tags.map(t => {
-                    const checked = (p.tagIds || []).includes(t.id);
-                    return '<label style="display:flex; align-items:center; gap:12px; padding:10px; background:var(--md-sys-color-surface-container-high); border-radius:8px; cursor:pointer;">' +
-                        '<input type="checkbox" ' + (checked ? 'checked' : '') + ' onchange="toggleProjectTag(\'' + projectId + '\', \'' + t.id + '\')" style="width:18px; height:18px; accent-color:' + t.color + ';">' +
-                        '<span style="width:12px; height:12px; border-radius:3px; background:' + t.color + ';"></span>' +
-                        '<span class="fs-14">' + t.name + '</span>' +
-                    '</label>';
-                }).join('');
-            }
-            openModal('tagAssignModal');
-        }
-
-        function toggleProjectTag(projectId, tagId) {
-            const p = state.projects.find(x => x.id === projectId);
-            if (!p) return;
-            if (!p.tagIds) p.tagIds = [];
-            const idx = p.tagIds.indexOf(tagId);
-            if (idx >= 0) p.tagIds.splice(idx, 1);
-            else p.tagIds.push(tagId);
-            saveData();
-            // Re-render the assign modal checkboxes
-            openTagAssign(projectId);
-            updateUI();
-        }
+        // addTag, deleteTag, renderTagList, renderTagFilter, setTagFilter,
+        // openTagAssign, toggleProjectTag -> src/tags.js
 
         // --- WEEKLY OVERVIEW ---
         function getWeekDates(refDate) {
@@ -3099,59 +3011,7 @@
         // manifest.json und Service Worker (sw.js) liegen als statische Dateien im
         // Stammverzeichnis. Kein Blob-Workaround mehr nötig.
 
-        function showUpdateToast() {
-            if (document.getElementById('update-toast')) return;
-            const toast = document.createElement('div');
-            toast.id = 'update-toast';
-            toast.className = 'update-toast';
-            toast.innerHTML = `
-                <span class="material-symbols-rounded fs-20 text-primary" style="flex-shrink:0;">new_releases</span>
-                <span style="flex:1;">Neue Version verfügbar</span>
-                <button class="text-btn fw-600 text-primary" style="white-space:nowrap;" onclick="window.location.reload()">Aktualisieren</button>
-                <button class="icon-btn" title="Schließen" onclick="document.getElementById('update-toast').remove()">
-                    <span class="material-symbols-rounded fs-18">close</span>
-                </button>`;
-            document.body.appendChild(toast);
-        }
-
-        function setupPWA() {
-            // Service Worker registrieren (nur unter HTTP/HTTPS möglich)
-            if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-                navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.info('[PWA] Service Worker registriert:', reg.scope);
-                    // Bei jedem App-Start sofort auf neue SW-Version prüfen (umgeht 24h-HTTP-Cache)
-                    reg.update();
-                    // Neu installierter SW wartet auf Aktivierung → skipWaiting auslösen
-                    reg.addEventListener('updatefound', () => {
-                        const newWorker = reg.installing;
-                        if (!newWorker) return;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // Neuer SW ist bereit – sofort übernehmen
-                                newWorker.postMessage({ type: 'SKIP_WAITING' });
-                            }
-                        });
-                    });
-                }).catch(err => {
-                    console.warn('[PWA] Service Worker Registrierung fehlgeschlagen:', err.message);
-                });
-                // Wenn ein neuer SW die Kontrolle übernimmt → Update-Toast anzeigen
-                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    showUpdateToast();
-                });
-            } else if (location.protocol === 'file:') {
-                console.info('[PWA] file://-Protokoll erkannt. Für vollständige PWA-Unterstützung per HTTP starten:');
-                console.info('  → npx serve .   oder   python -m http.server 8080');
-                console.info('  → Dann http://localhost:8080/index.html öffnen');
-                console.info('  → Alternativ: Chrome/Edge ⋮ → Verknüpfung erstellen → Als Fenster öffnen');
-            }
-
-            // Install-Prompt für "Zur Startseite hinzufügen" abfangen
-            window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
-                window.deferredPWAPrompt = e;
-            });
-        }
+        // showUpdateToast, setupPWA -> src/pwa.js
 
         // init() ist async — unbehandelte Fehler hier würden die App lautlos brechen.
         init().catch(err => {
