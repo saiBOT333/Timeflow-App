@@ -89,3 +89,37 @@ export function getContrastTextColor(hexColor) {
 export function escapeHtml(str) {
     return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+// --- DATUM/WOCHE ---
+
+/**
+ * Gibt ein Array mit 7 ISO-Datumsstrings (Mo–So) für die Woche zurück,
+ * die das übergebene Datum enthält.
+ * @param {string} refDate – ISO-Datumsstring (z. B. "2026-03-03")
+ * @returns {string[]} 7 Datumsstrings
+ */
+export function getWeekDates(refDate) {
+    const d = new Date(refDate + 'T12:00:00');
+    const day = d.getDay();
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - ((day + 6) % 7));
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+        const dd = new Date(monday);
+        dd.setDate(monday.getDate() + i);
+        dates.push(dd.toISOString().split('T')[0]);
+    }
+    return dates;
+}
+
+/**
+ * ISO-Wochennummer (1–53) für ein gegebenes Datum
+ * @param {string} dateStr – ISO-Datumsstring (z. B. "2026-03-03")
+ * @returns {number}
+ */
+export function getISOWeekNumber(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00');
+    d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+    const yearStart = new Date(d.getFullYear(), 0, 4);
+    return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+}
