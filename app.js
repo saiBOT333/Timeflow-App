@@ -19,6 +19,8 @@
         import { renderList, getReadableChipColor, closeAllProjectMenus, filterArchiveList } from './src/ui/projectList.js';
         import { renderWeeklyOverview } from './src/ui/weeklyOverview.js';
         import { renderTimesheetCard, adjustAdjacentLogs } from './src/ui/timesheet.js';
+        import { renderAutoPausesDisplay, updateAutoPause, addAutoPause, removeAutoPause, toggleAutoPausesPanel, isAutoPausesPanelOpen, getLocalDateStr } from './src/ui/autoPauses.js';
+        import { openTimeEdit, renderTimeEditLogs, updateLogTime, deleteLog } from './src/ui/timeEdit.js';
 
         // editingProjectId → uiState.editingProjectId (src/state.js)
         // _versionClickCount, pendingSettings, LINK_ICON_OPTIONS → src/settings.js
@@ -40,8 +42,7 @@
         // Day start time (for progress bar)
         let dayStartTime = null;
 
-        // Auto-Pauses-Panel offen/geschlossen (runtime only — ersetzt DOM-Class-Abfrage)
-        let autoPausesPanelOpen = false;
+        // autoPausesPanelOpen → src/ui/autoPauses.js
 
         // Pause status text (runtime only, rendered in Aktivitätsbereich)
         let activePauseText = null;
@@ -96,157 +97,12 @@
         window.applyPreset = applyPreset;
         window.saveProjectEdit = saveProjectEdit;
         window.saveSubProject = saveSubProject;
+        // updateAutoPause, addAutoPause, removeAutoPause, toggleAutoPausesPanel → window-Assigns in src/ui/autoPauses.js
+        // openTimeEdit, updateLogTime, deleteLog → window-Assigns in src/ui/timeEdit.js
 
         // StorageManager, saveData, saveDataImmediate, migrateState, loadData → src/storage.js
-
-        // --- AUTO PAUSES HELPER ---
-        function getAutoPauses() {
-            return state.settings.autoPauses || [];
-        }
-
-        function getLocalDateStr(date) {
-            const d = date || new Date();
-            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        }
-
-        function calcActiveFrom(startTime) {
-            const now = new Date();
-            const todayStr = getLocalDateStr(now);
-            const startDt = new Date(todayStr + 'T' + startTime);
-            if (Date.now() >= startDt.getTime()) {
-                const tomorrow = new Date(now);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                return getLocalDateStr(tomorrow);
-            }
-            return todayStr;
-        }
-
-        function timeSelectHtml(value, index, field) {
-            const [vh, vm] = (value || '12:00').split(':');
-            let opts = '';
-            const valMin = parseInt(vm, 10);
-            const hasCustomMin = valMin % 5 !== 0;
-            for (let h = 0; h < 24; h++) {
-                for (let m = 0; m < 60; m += 5) {
-                    if (hasCustomMin && h === parseInt(vh, 10) && m > valMin && (m - 5) < valMin) {
-                        const cv = vh + ':' + vm;
-                        opts += `<option value="${cv}" selected>${cv}</option>`;
-                    }
-                    const v = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
-                    const sel = v === value ? 'selected' : '';
-                    opts += `<option value="${v}" ${sel}>${v}</option>`;
-                }
-            }
-            const title = field === 'start' ? 'Startzeit' : 'Endzeit';
-            return `<select class="auto-pause-time-select" onchange="updateAutoPause(${index}, '${field}', this.value)" title="${title}">${opts}</select>`;
-        }
-
-        function renderAutoPausesDisplay() {
-            const container = document.getElementById('autoPausesDisplay');
-            if (!container) return;
-            const pauses = getAutoPauses();
-            const isHO = state.settings.homeOffice;
-
-            const toggleLabel = document.getElementById('autoPausesToggleLabel');
-            if (toggleLabel) {
-                const count = pauses.length;
-                const hoHint = isHO ? ' (deaktiviert)' : '';
-                toggleLabel.textContent = count > 0
-                    ? `Auto-Pausen (${count})${hoHint}`
-                    : 'Auto-Pausen konfigurieren';
-            }
-
-            if (pauses.length === 0) {
-                container.innerHTML = `<div class="auto-pause-empty">
-                    <span class="material-symbols-rounded fs-16 op-50">schedule_off</span>
-                    <span>Keine automatischen Pausen konfiguriert.</span>
-                    <button class="auto-pause-add-btn" onclick="addAutoPause()">
-                        <span class="material-symbols-rounded fs-14">add</span> Hinzufügen
-                    </button>
-                </div>`;
-                return;
-            }
-
-            let html = '<div class="auto-pause-list">';
-            html += isHO ? `<div class="fs-11 text-error op-80 mb-6" style="display:flex; align-items:center; gap:4px;">
-                <span class="material-symbols-rounded fs-14">info</span> Home Office aktiv — automatische Pausen werden heute nicht ausgelöst
-            </div>` : '';
-
-            const todayStr = getLocalDateStr();
-            pauses.forEach((ap, i) => {
-                const isDelayed = ap.activeFrom && todayStr < ap.activeFrom;
-                html += `<div class="auto-pause-row ${isHO ? 'disabled' : ''}">
-                    ${timeSelectHtml(ap.start, i, 'start')}
-                    <span class="op-40">–</span>
-                    ${timeSelectHtml(ap.end, i, 'end')}
-                    <input type="text" class="auto-pause-label-input" value="${escapeHtml(ap.label)}"
-                        onchange="updateAutoPause(${i}, 'label', this.value)" placeholder="Bezeichnung">
-                    ${isDelayed ? `<span class="auto-pause-delayed-badge" title="Startzeit lag bereits in der Vergangenheit">ab morgen</span>` : ''}
-                    <button class="icon-btn icon-btn-24 text-error op-50"
-                        onclick="removeAutoPause(${i})" title="Automatische Pause entfernen">
-                        <span class="material-symbols-rounded fs-16">close</span>
-                    </button>
-                </div>`;
-            });
-
-            html += `<button class="auto-pause-add-btn" onclick="addAutoPause()">
-                <span class="material-symbols-rounded fs-14">add</span> Pause hinzufügen
-            </button>`;
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        function updateAutoPause(index, field, value) {
-            const pauses = getAutoPauses();
-            if (!pauses[index]) return;
-            if (field === 'start' || field === 'end') {
-                if (!/^\d{2}:\d{2}$/.test(value)) return;
-            }
-            pauses[index][field] = value.trim();
-            if (field === 'start') {
-                pauses[index].activeFrom = calcActiveFrom(value.trim());
-            }
-            state.settings.autoPauses = pauses;
-            saveData();
-            updateUI();
-        }
-
-        function addAutoPause() {
-            const pauses = getAutoPauses();
-            const startTime = '12:00';
-            pauses.push({ start: startTime, end: '12:30', label: 'Pause', activeFrom: calcActiveFrom(startTime) });
-            state.settings.autoPauses = pauses;
-            saveData();
-            updateUI();
-        }
-
-        async function removeAutoPause(index) {
-            const pauses = getAutoPauses();
-            if (!pauses[index]) return;
-            const ok = await showConfirm(`Automatische Pause „${pauses[index].label}" entfernen?`, {
-                title: 'Pause entfernen', icon: 'delete', okText: 'Entfernen', danger: true
-            });
-            if (!ok) return;
-            pauses.splice(index, 1);
-            state.settings.autoPauses = pauses;
-            saveData();
-            updateUI();
-        }
-
-        function toggleAutoPausesPanel() {
-            autoPausesPanelOpen = !autoPausesPanelOpen;
-            const panel = document.getElementById('autoPausesDisplay');
-            const btn = document.querySelector('.auto-pause-toggle-btn');
-            panel.hidden = !autoPausesPanelOpen;
-            if (btn) btn.classList.toggle('open', autoPausesPanelOpen);
-            if (autoPausesPanelOpen) renderAutoPausesDisplay();
-            layoutMasonry();
-        }
-
-        window.updateAutoPause = updateAutoPause;
-        window.addAutoPause = addAutoPause;
-        window.removeAutoPause = removeAutoPause;
-        window.toggleAutoPausesPanel = toggleAutoPausesPanel;
+        // getLocalDateStr, renderAutoPausesDisplay, updateAutoPause, addAutoPause,
+        // removeAutoPause, toggleAutoPausesPanel, isAutoPausesPanelOpen → src/ui/autoPauses.js
 
         // --- THEME ---
         function toggleTheme() {
@@ -497,7 +353,7 @@
                 const todayStr = getLocalDateStr();
 
                 if (!state.settings.homeOffice) {
-                    const autoPauses = getAutoPauses();
+                    const autoPauses = state.settings.autoPauses || [];
                     autoPauses.forEach(ap => {
                         if (!ap.start || !ap.end || !ap.label) return;
                         if (ap.activeFrom && todayStr < ap.activeFrom) return;
@@ -811,7 +667,7 @@
                 }
 
                 renderPauses();
-                if (autoPausesPanelOpen) renderAutoPausesDisplay();
+                if (isAutoPausesPanelOpen()) renderAutoPausesDisplay();
                 renderWeeklyOverview();
                 renderExternalLinksCard();
                 renderTimesheetCard();
@@ -983,107 +839,7 @@
         // openSubProjectModal, saveSubProject, getChildProjects, isParentProject → src/projects.js
 
         // --- TIME EDIT ---
-        function openTimeEdit(projectId, e) {
-            if (e) e.stopPropagation();
-            const p = state.projects.find(x => x.id === projectId);
-            if (!p) return;
-            uiState.editingProjectId = projectId;
-            document.getElementById('timeEditProjectTitle').innerText = (p.number || '') + ' ' + p.name;
-            renderTimeEditLogs(p);
-            openModal('timeEditModal');
-        }
-
-        function renderTimeEditLogs(project) {
-            const container = document.getElementById('timeEditLogList');
-            const viewDate = uiState.viewDate;
-            const dayStart = new Date(viewDate + 'T00:00:00').getTime();
-            const dayEnd = dayStart + 86400000;
-
-            const relevantLogs = [];
-            (project.logs || []).forEach((log, idx) => {
-                const logEnd = log.end || Date.now();
-                if (logEnd > dayStart && log.start < dayEnd) {
-                    relevantLogs.push({ ...log, originalIndex: idx });
-                }
-            });
-
-            if (relevantLogs.length === 0) {
-                container.innerHTML = '<div class="fs-13-variant" style="padding:16px; text-align:center; font-style:italic;">Keine Eintr\u00e4ge f\u00fcr diesen Tag.</div>';
-                return;
-            }
-
-            container.innerHTML = relevantLogs.map((log, i) => {
-                const startDate = new Date(log.start);
-                const endDate = log.end ? new Date(log.end) : null;
-                const startTime = startDate.getHours().toString().padStart(2, '0') + ':' + startDate.getMinutes().toString().padStart(2, '0');
-                const endTime = endDate ? endDate.getHours().toString().padStart(2, '0') + ':' + endDate.getMinutes().toString().padStart(2, '0') : 'l\u00e4uft...';
-                const durationMs = (log.end || Date.now()) - log.start;
-                const isActive = !log.end;
-
-                return '<div style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:var(--md-sys-color-surface-container-high); border-radius:8px;' + (isActive ? ' border:1px solid var(--md-sys-color-primary);' : '') + '">' +
-                    '<span class="material-symbols-rounded fs-18 text-variant">schedule</span>' +
-                    '<input type="text" value="' + startTime + '" ' +
-                        'onchange="updateLogTime(\'' + project.id + '\', ' + log.originalIndex + ', \'start\', this.value)" ' +
-                        'class="fs-14 text-on-surface" style="background:transparent; border:none; width:50px; text-align:center; font-family:monospace;">' +
-                    '<span class="op-50">\u2192</span>' +
-                    (isActive ?
-                        '<span class="fs-14 text-primary" style="font-family:monospace;">l\u00e4uft...</span>' :
-                        '<input type="text" value="' + endTime + '" ' +
-                            'onchange="updateLogTime(\'' + project.id + '\', ' + log.originalIndex + ', \'end\', this.value)" ' +
-                            'class="fs-14 text-on-surface" style="background:transparent; border:none; width:50px; text-align:center; font-family:monospace;">') +
-                    '<span class="fs-12-variant" style="flex:1; text-align:right; font-family:monospace;">' + formatMs(durationMs, false) + '</span>' +
-                    (!isActive ? '<button class="icon-btn icon-btn-24 text-error" onclick="deleteLog(\'' + project.id + '\', ' + log.originalIndex + ')" title="Eintrag l\u00f6schen"><span class="material-symbols-rounded fs-18">delete</span></button>' : '') +
-                '</div>';
-            }).join('');
-        }
-
-        function updateLogTime(projectId, logIndex, type, value) {
-            const p = state.projects.find(x => x.id === projectId);
-            if (!p || !p.logs[logIndex]) return;
-            const log = p.logs[logIndex];
-            const refDate = new Date(log.start);
-            const dateStr = refDate.getFullYear() + '-' + String(refDate.getMonth() + 1).padStart(2, '0') + '-' + String(refDate.getDate()).padStart(2, '0');
-            const newTs = new Date(dateStr + 'T' + value + ':00').getTime();
-            if (isNaN(newTs)) return;
-
-            if (type === 'start' && log.end && newTs >= log.end) {
-                showAlert('Startzeit muss vor der Endzeit liegen.', { title: 'Ungültige Zeit', icon: 'error' });
-                renderTimeEditLogs(p);
-                return;
-            }
-            if (type === 'end' && newTs <= log.start) {
-                showAlert('Endzeit muss nach der Startzeit liegen.', { title: 'Ungültige Zeit', icon: 'error' });
-                renderTimeEditLogs(p);
-                return;
-            }
-
-            if (type === 'start') {
-                const oldStart = log.start;
-                log.start = newTs;
-                adjustAdjacentLogs(oldStart, newTs, 'end');
-            } else {
-                const oldEnd = log.end;
-                log.end = newTs;
-                adjustAdjacentLogs(oldEnd, newTs, 'start');
-            }
-            saveData();
-            renderTimeEditLogs(p);
-            updateUI();
-        }
-
-        function deleteLog(projectId, logIndex) {
-            const p = state.projects.find(x => x.id === projectId);
-            if (!p || !p.logs[logIndex]) return;
-            if (p.logs[logIndex].end === null) return;
-            p.logs.splice(logIndex, 1);
-            saveData();
-            renderTimeEditLogs(p);
-            updateUI();
-        }
-
-        window.openTimeEdit = openTimeEdit;
-        window.updateLogTime = updateLogTime;
-        window.deleteLog = deleteLog;
+        // openTimeEdit, renderTimeEditLogs, updateLogTime, deleteLog → src/ui/timeEdit.js
 
         // --- TAGS ---
         // addTag, deleteTag, renderTagList, renderTagFilter, setTagFilter,
