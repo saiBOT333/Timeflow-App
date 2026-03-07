@@ -1,4 +1,5 @@
 import { state, uiState } from '../state.js';
+import { notifyStateChanged } from '../stateManager.js';
 import { ARCHIVE_COLOR } from '../config.js';
 import { escapeHtml, getContrastTextColor } from '../utils.js';
 import { isParentProject, getChildProjects, calculateProjectTotalMs,
@@ -182,7 +183,7 @@ export function toggleCollapseChildren(parentId, e) {
     } else {
         uiState.collapsedParents.add(parentId);
     }
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    notifyStateChanged();
 }
 
 export function filterArchiveList(query, skipNoMsg) {

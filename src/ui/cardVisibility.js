@@ -1,5 +1,5 @@
 import { state } from '../state.js';
-import { saveData } from '../storage.js';
+import { persistState } from '../stateManager.js';
 import { escapeHtml } from '../utils.js';
 import { layoutMasonry } from './masonry.js';
 
@@ -80,7 +80,7 @@ export function toggleCardVisibility(cardId) {
     }
     applyCardVisibility();
     renderCardVisibilityMenu();
-    saveData();
+    persistState();
     layoutMasonry();
 }
 
@@ -108,7 +108,7 @@ export function applyCardVisibility() {
 export function toggleCompactMode() {
     state.settings.compactMode = !state.settings.compactMode;
     applyCompactMode();
-    saveData();
+    persistState();
     renderCardVisibilityMenu();
     layoutMasonry();
 }
@@ -125,7 +125,7 @@ export function applyPreset(name) {
     } else if (name === 'all') {
         state.settings.hiddenCards = [];
     }
-    saveData();
+    persistState();
     applyCardVisibility();
     renderCardVisibilityMenu();
     layoutMasonry();

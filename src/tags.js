@@ -1,13 +1,9 @@
 import { state, uiState } from './state.js';
-import { saveData } from './storage.js';
+import { commitState, notifyStateChanged } from './stateManager.js';
 
 // =============================================================================
 // tags.js – Tag-Verwaltung
 // =============================================================================
-
-function notifyStateChanged() {
-    document.dispatchEvent(new CustomEvent('stateChanged'));
-}
 
 export function addTag() {
     const name = document.getElementById('newTagName').value.trim();
@@ -15,9 +11,8 @@ export function addTag() {
     if (!name) return;
     state.tags.push({ id: crypto.randomUUID(), name, color });
     document.getElementById('newTagName').value = '';
-    saveData();
+    commitState();
     renderTagList();
-    notifyStateChanged();
 }
 
 export function deleteTag(tagId) {
@@ -26,9 +21,8 @@ export function deleteTag(tagId) {
         p.tagIds = (p.tagIds || []).filter(id => id !== tagId);
     });
     if (uiState.filterTagId === tagId) uiState.filterTagId = null;
-    saveData();
+    commitState();
     renderTagList();
-    notifyStateChanged();
 }
 
 export function renderTagList() {
@@ -96,8 +90,7 @@ export function toggleProjectTag(projectId, tagId) {
     const idx = p.tagIds.indexOf(tagId);
     if (idx >= 0) p.tagIds.splice(idx, 1);
     else p.tagIds.push(tagId);
-    saveData();
+    commitState();
     // Re-render the assign modal checkboxes
     openTagAssign(projectId);
-    notifyStateChanged();
 }

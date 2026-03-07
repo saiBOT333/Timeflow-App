@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { APP_VERSION } from './config.js';
-import { saveData } from './storage.js';
+import { commitState, persistState } from './stateManager.js';
 import { escapeHtml } from './utils.js';
 import { showConfirm } from './ui/dialogs.js';
 
@@ -31,10 +31,6 @@ const LINK_ICON_OPTIONS = [
     { icon: 'work',           label: 'Arbeit'       },
     { icon: 'open_in_new',    label: 'Extern'       }
 ];
-
-function notifyStateChanged() {
-    document.dispatchEvent(new CustomEvent('stateChanged'));
-}
 
 // Privater Helfer: Settings-Modal schliessen + Zustand zurücksetzen
 function closeSettingsModal() {
@@ -110,9 +106,8 @@ export function saveSettings() {
     // Externe Links: nur vollständige Einträge (label + url) übernehmen
     state.settings.externalLinks   = (pendingSettings.externalLinks || []).filter(l => l.label && l.url);
 
-    saveData();
+    commitState();
     closeSettingsModal();
-    notifyStateChanged();
 }
 
 export function onVersionLabelClick() {
@@ -246,7 +241,7 @@ export function addReminderFromSettings() {
     }
     state.settings.reminders.push(reminder);
     state.settings.reminders.sort((a, b) => a.time.localeCompare(b.time));
-    saveData();
+    persistState();
     timeEl.value = '';
     textEl.value = '';
     recurringEl.checked = false;
@@ -257,7 +252,7 @@ export function addReminderFromSettings() {
 export function removeReminder(index) {
     if (!state.settings.reminders) return;
     state.settings.reminders.splice(index, 1);
-    saveData();
+    persistState();
     renderReminderListSettings();
 }
 

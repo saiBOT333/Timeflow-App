@@ -1,7 +1,7 @@
 import { state } from '../state.js';
 import { formatMs, escapeHtml } from '../utils.js';
 import { getRoundedMs, calculateNetDurationForDate } from '../calculations.js';
-import { saveData } from '../storage.js';
+import { commitState, persistState, notifyStateChanged } from '../stateManager.js';
 import { showAlert, showConfirm } from './dialogs.js';
 import { deletePause, deleteAutoPauseFromTimesheet } from '../pauses.js';
 
@@ -22,12 +22,12 @@ export function navigateTimesheetDay(dir) {
     const d = new Date(getTimesheetDate() + 'T12:00:00');
     d.setDate(d.getDate() + dir);
     timesheetDate = d.toISOString().split('T')[0];
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    notifyStateChanged();
 }
 
 export function goToTimesheetToday() {
     timesheetDate = new Date().toISOString().split('T')[0];
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    notifyStateChanged();
 }
 
 // Passt benachbarte Log-Einträge anderer Projekte an, wenn eine Zeitgrenze verschoben wird
@@ -265,15 +265,14 @@ export function updateTimesheetLogTime(projectId, logIndex, type, value, dateStr
         log.end = newTs;
         adjustAdjacentLogs(oldEnd, newTs, 'start');
     }
-    saveData();
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    commitState();
 }
 
 export function saveTimesheetNote(projectId, logIndex, value) {
     const p = state.projects.find(x => x.id === projectId);
     if (!p || !p.logs || !p.logs[logIndex]) return;
     p.logs[logIndex].note = value.trim();
-    saveData();
+    persistState();
 }
 
 export async function deleteTimesheetLog(projectId, logIndex) {
@@ -283,8 +282,7 @@ export async function deleteTimesheetLog(projectId, logIndex) {
     const ok = await showConfirm('Diesen Zeiteintrag l\u00f6schen?', { title: 'Eintrag l\u00f6schen', icon: 'delete', okText: 'L\u00f6schen', danger: true });
     if (!ok) return;
     p.logs.splice(logIndex, 1);
-    saveData();
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    commitState();
 }
 
 function checkTimeOverlaps() {

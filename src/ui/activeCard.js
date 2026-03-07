@@ -1,7 +1,7 @@
 import { state } from '../state.js';
 import { formatMs, getContrastTextColor } from '../utils.js';
 import { calculateNetDuration } from '../calculations.js';
-import { saveData } from '../storage.js';
+import { persistState, notifyStateChanged } from '../stateManager.js';
 import { layoutMasonry } from './masonry.js';
 
 // -----------------------------------------------------------------------
@@ -161,12 +161,12 @@ export function dismissReminder() {
         const r = state.settings.reminders[activeReminderIndex];
         if (r && !r.recurring && !r.intervalMin) {
             state.settings.reminders.splice(activeReminderIndex, 1);
-            saveData();
+            persistState();
         }
     }
     activeReminder = null;
     activeReminderIndex = -1;
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    notifyStateChanged();
 }
 
 window.dismissReminder = dismissReminder;

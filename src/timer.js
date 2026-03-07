@@ -1,7 +1,7 @@
 import { state } from './state.js';
 import { incrementTime } from './utils.js';
 import { getLocalDateStr } from './ui/autoPauses.js';
-import { saveData } from './storage.js';
+import { persistState, commitState } from './stateManager.js';
 import { stopAllProjects } from './projects.js';
 import { renderPauses } from './ui/pauseList.js';
 import { updateTimeBadges } from './ui/timeBadges.js';
@@ -40,7 +40,7 @@ export function tick() {
                         label: ap.label,
                         active: false
                     });
-                    saveData();
+                    persistState();
                     renderPauses();
                 }
             });
@@ -84,8 +84,7 @@ export function checkAutoStop() {
         ).then(confirmed => {
             if (confirmed) {
                 stopAllProjects();
-                saveData();
-                document.dispatchEvent(new CustomEvent('stateChanged'));
+                commitState();
             }
         });
     }

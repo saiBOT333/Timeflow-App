@@ -1,6 +1,6 @@
 import { state, uiState } from './state.js';
 import { MATERIAL_PALETTE, ARCHIVE_COLOR } from './config.js';
-import { saveData } from './storage.js';
+import { commitState, persistState, notifyStateChanged } from './stateManager.js';
 import { toggleManualPause } from './pauses.js';
 import { showConfirm, showAlert } from './ui/dialogs.js';
 import { pushUndo, showUndoToast } from './undo.js';
@@ -11,10 +11,6 @@ import { pushUndo, showUndoToast } from './undo.js';
 // Alle Funktionen feuern nach State-Änderungen ein 'stateChanged'-Event,
 // damit app.js updateUI() aufrufen kann, ohne eine Kreisabhängigkeit zu erzeugen.
 // =============================================================================
-
-function notifyStateChanged() {
-    document.dispatchEvent(new CustomEvent('stateChanged'));
-}
 
 // --- FARBE ---
 
@@ -80,8 +76,7 @@ export function addProject() {
     numInput.value = '';
     nameInput.value = '';
     numInput.focus();
-    saveData();
-    notifyStateChanged();
+    commitState();
 }
 
 export function switchProject(id) {
@@ -95,8 +90,7 @@ export function switchProject(id) {
         stopAllProjects();
         startProject(id);
     }
-    saveData();
-    notifyStateChanged();
+    commitState();
 }
 
 export function stopProjectById(id) {
@@ -104,8 +98,7 @@ export function stopProjectById(id) {
     if (p) {
         stopProject(p);
         startProject('general');
-        saveData();
-        notifyStateChanged();
+        commitState();
     }
 }
 
@@ -118,8 +111,7 @@ export function toggleFavorite(id, e) {
         getChildProjects(id).forEach(child => {
             child.isFavorite = p.isFavorite;
         });
-        saveData();
-        notifyStateChanged();
+        commitState();
     }
 }
 
@@ -145,8 +137,7 @@ export function setCategory(id, category, e) {
                 child.color = p.color; // Inherit parent's new color
             }
         });
-        saveData();
-        notifyStateChanged();
+        commitState();
     }
 }
 
@@ -165,8 +156,7 @@ export async function deleteProject(id, e) {
     pushUndo({ type: 'deleteProject', data: JSON.parse(JSON.stringify(deletedProjects)), timestamp: Date.now(), label: `Projekt "${name}" gelöscht` });
     // Delete project and all its children
     state.projects = state.projects.filter(p => p.id !== id && p.parentId !== id);
-    saveData();
-    notifyStateChanged();
+    commitState();
     showUndoToast(`Projekt "${name}" gelöscht`);
 }
 
@@ -194,7 +184,7 @@ export function saveProjectEdit() {
     p.number = num || p.number;
     p.name = name;
     p.budgetHours = budgetRaw !== '' ? parseFloat(budgetRaw) : null;
-    saveData();
+    persistState();
     document.getElementById('projectEditModal').classList.remove('open');
     uiState.editingProjectId = null;
     notifyStateChanged();
@@ -242,7 +232,7 @@ export function saveSubProject() {
     }
     state.projects.splice(insertIdx, 0, subProject);
 
-    saveData();
+    persistState();
     document.getElementById('subProjectModal').classList.remove('open');
     uiState.editingProjectId = null;
     notifyStateChanged();
