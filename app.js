@@ -1,10 +1,10 @@
-        import { APP_VERSION, MATERIAL_PALETTE, ARCHIVE_COLOR, CHANGELOG } from './src/config.js';
+        import { APP_VERSION, MATERIAL_PALETTE } from './src/config.js';
         import { state, uiState } from './src/state.js';
         import { formatMs, formatMsDecimal, formatTimeInput, incrementTime, isSameDay, hexToRgba, getContrastTextColor, escapeHtml, getWeekDates, getISOWeekNumber } from './src/utils.js';
         import { getRoundedMs, getOverlap, mergeIntervals, calculateNetDuration, calculateNetDurationForDate, calculateNetDurationForRange } from './src/calculations.js';
         import { StorageManager, saveData, saveDataImmediate, migrateState, loadData } from './src/storage.js';
         import { showConfirm, showAlert, resolveConfirmModal } from './src/ui/dialogs.js';
-        import { popUndo, hasUndo, hideUndoToast } from './src/undo.js';
+        // undo → src/undo.js (window.undo wird dort gesetzt; geladen via quickActions.js)
         import { toggleManualPause, deletePause, deleteAutoPauseFromTimesheet, endAutoPauseNow, updatePauseTime } from './src/pauses.js';
         import { getDistinctColor, stopProject, addProject, switchProject, stopProjectById, toggleFavorite, setCategory, deleteProject, openProjectEdit, saveProjectEdit, openSubProjectModal, saveSubProject, getChildProjects, isParentProject, calculateProjectTotalMs } from './src/projects.js';
         import { addTag, deleteTag, renderTagList, renderTagFilter, setTagFilter, openTagAssign, toggleProjectTag } from './src/tags.js';
@@ -21,10 +21,12 @@
         import { renderTimesheetCard, adjustAdjacentLogs } from './src/ui/timesheet.js';
         import { renderAutoPausesDisplay, updateAutoPause, addAutoPause, removeAutoPause, toggleAutoPausesPanel, isAutoPausesPanelOpen, getLocalDateStr } from './src/ui/autoPauses.js';
         import { openTimeEdit, renderTimeEditLogs, updateLogTime, deleteLog } from './src/ui/timeEdit.js';
-        import { renderActiveProjectCard, showGreeting, isGreetingRunning, isGreetingShown, setFeierabendActive } from './src/ui/activeCard.js';
+        import { showGreeting, isGreetingShown } from './src/ui/activeCard.js';
         import { tick } from './src/timer.js';
         import { updateUI, applyAriaLabels } from './src/ui/render.js';
         import { onGoodMorning, onFeierabend, toggleHomeOffice, updateHomeOfficeBtn } from './src/quickActions.js';
+        import { showOnboarding, checkAndShowChangelog } from './src/onboarding.js';
+        import { updateDateDisplay } from './src/ui/dateNav.js';
 
         // editingProjectId → uiState.editingProjectId (src/state.js)
         // _versionClickCount, pendingSettings, LINK_ICON_OPTIONS → src/settings.js
@@ -201,75 +203,7 @@
             applyAriaLabels();
         }
 
-        // --- PAKET 6.2: Onboarding ---
-        let onboardingStep = 0;
-        const onboardingSteps = [
-            { icon: 'waving_hand', title: 'Willkommen bei TimeFlow!', text: 'TimeFlow erfasst deine Arbeitszeit automatisch. Das Projekt \u00ABAllgemein\u00BB l\u00E4uft bereits.', btn: 'Weiter' },
-            { icon: 'add_circle', title: 'Projekte anlegen', text: 'Lege oben neue Projekte an. Klicke auf ein Projekt um es zu starten. Das aktive Projekt wird im Aktivit\u00E4tsbereich angezeigt.', btn: 'Weiter' },
-            { icon: 'tune', title: 'Alles konfigurierbar', text: 'In den Einstellungen kannst du Pausen, Erinnerungen, Links und vieles mehr anpassen. Viel Spa\u00DF!', btn: 'Los geht\u2019s' }
-        ];
-
-        function showOnboarding() {
-            onboardingStep = 0;
-            updateOnboardingUI();
-            document.getElementById('onboardingOverlay').classList.remove('hidden');
-        }
-
-        function updateOnboardingUI() {
-            const step = onboardingSteps[onboardingStep];
-            document.getElementById('onboardingIcon').textContent = step.icon;
-            document.getElementById('onboardingTitle').textContent = step.title;
-            document.getElementById('onboardingText').textContent = step.text;
-            document.getElementById('onboardingBtn').textContent = step.btn;
-            for (let i = 0; i < 3; i++) {
-                document.getElementById('onbDot' + i).classList.toggle('active', i === onboardingStep);
-            }
-        }
-
-        function advanceOnboarding() {
-            onboardingStep++;
-            if (onboardingStep >= onboardingSteps.length) {
-                localStorage.setItem('tf_onboarded', 'true');
-                document.getElementById('onboardingOverlay').classList.add('hidden');
-                return;
-            }
-            updateOnboardingUI();
-        }
-
-        window.advanceOnboarding = advanceOnboarding;
-
-        // --- CHANGELOG POPUP ---
-        function checkAndShowChangelog() {
-            const lastSeen = localStorage.getItem('tf_version_seen');
-            if (lastSeen === APP_VERSION) return;
-            const entry = CHANGELOG[APP_VERSION];
-            if (!entry) {
-                localStorage.setItem('tf_version_seen', APP_VERSION);
-                return;
-            }
-            showChangelogModal(entry);
-        }
-
-        function showChangelogModal(entry) {
-            document.getElementById('changelogTitle').textContent = entry.title;
-            document.getElementById('changelogSubtitle').textContent = entry.subtitle || '';
-            const list = document.getElementById('changelogList');
-            list.innerHTML = entry.changes.map(c =>
-                `<div style="display:flex; align-items:flex-start; gap:12px;">
-                    <span class="material-symbols-rounded fs-20 text-primary" style="flex-shrink:0; margin-top:1px;">${c.icon}</span>
-                    <span class="fs-14-variant" style="line-height:1.5;">${c.text}</span>
-                </div>`
-            ).join('');
-            openModal('changelogModal');
-        }
-
-        function dismissChangelog() {
-            localStorage.setItem('tf_version_seen', APP_VERSION);
-            closeModal('changelogModal');
-        }
-
-        window.dismissChangelog = dismissChangelog;
-
+        // showOnboarding, checkAndShowChangelog, advanceOnboarding, dismissChangelog → src/onboarding.js
         // applyAriaLabels → src/ui/render.js
 
         function applyTitles() {
@@ -377,51 +311,7 @@
         // renderTimesheetCard, updateTimesheetLogTime, saveTimesheetNote,
         // deleteTimesheetLog, adjustAdjacentLogs → src/ui/timesheet.js
 
-        // --- UTILS ---
-        function updateDateDisplay() {
-            const d = new Date(uiState.viewDate + 'T12:00:00');
-            const options = { weekday: 'short', day: 'numeric', month: 'long' };
-            const formatted = d.toLocaleDateString('de-DE', options);
-            const isToday = uiState.viewDate === new Date().toISOString().split('T')[0];
-            const el = document.getElementById('dateDisplay');
-            el.innerText = formatted;
-            el.classList.toggle('is-today', isToday);
-        }
-
-        function navigateDate(offset) {
-            const d = new Date(uiState.viewDate + 'T12:00:00');
-            d.setDate(d.getDate() + offset);
-            uiState.viewDate = d.toISOString().split('T')[0];
-            updateDateDisplay();
-            updateUI();
-        }
-
-        function goToToday() {
-            uiState.viewDate = new Date().toISOString().split('T')[0];
-            updateDateDisplay();
-            updateUI();
-        }
-
-        function toggleCard(btn) {
-            const card = btn.closest('.md-card');
-            const cardId = card.id;
-            if (uiState.collapsedCards.has(cardId)) {
-                uiState.collapsedCards.delete(cardId);
-            } else {
-                uiState.collapsedCards.add(cardId);
-            }
-            const isCollapsed = uiState.collapsedCards.has(cardId);
-            card.classList.toggle('collapsed', isCollapsed);
-            btn.setAttribute('data-tooltip', isCollapsed ? 'Karte aufklappen' : 'Karte einklappen');
-            if (cardId === 'card-timesheet' && !isCollapsed) {
-                renderTimesheetCard();
-            }
-            layoutMasonry();
-        }
-
-        window.navigateDate = navigateDate;
-        window.goToToday = goToToday;
-        window.toggleCard = toggleCard;
+        // updateDateDisplay, navigateDate, goToToday, toggleCard → src/ui/dateNav.js
 
         // --- EXPORT/IMPORT ---
         // getFileName, downloadCSV, downloadBackup → src/export.js
@@ -457,35 +347,8 @@
 
         window.restoreBackup = restoreBackup;
 
-        // --- PAKET 9: Datenqualität & Schutz ---
         // checkTimeOverlaps, showOverlapWarning → src/ui/timesheet.js
-
-        // pushUndo, popUndo, hasUndo → src/undo.js
-
-        function undo() {
-            if (!hasUndo()) return;
-            const entry = popUndo();
-
-            if (entry.type === 'deleteProject') {
-                entry.data.forEach(p => {
-                    if (!state.projects.find(x => x.id === p.id)) {
-                        state.projects.push(p);
-                    }
-                });
-            } else if (entry.type === 'feierabend') {
-                state.projects = entry.data;
-                state.pauses = entry.pauses;
-                setFeierabendActive(false);
-            }
-
-            saveData();
-            updateUI();
-            hideUndoToast();
-        }
-
-        window.undo = undo;
-
-        // showUndoToast, hideUndoToast → src/undo.js
+        // undo, pushUndo, popUndo, hasUndo, showUndoToast, hideUndoToast → src/undo.js
         // saveData, saveDataImmediate, migrateState, loadData → src/storage.js
 
         // --- PWA ---
