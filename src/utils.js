@@ -120,6 +120,6 @@ export function getWeekDates(refDate) {
 export function getISOWeekNumber(dateStr) {
     const d = new Date(dateStr + 'T12:00:00');
     d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
-    const yearStart = new Date(d.getFullYear(), 0, 4);
-    return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+    const yearStart = new Date(d.getFullYear(), 0, 4, 12, 0, 0); // noon wie d → saubere ganzzahlige Tagesdifferenz
+    return Math.round((d - yearStart) / (86400000 * 7)) + 1;
 }
