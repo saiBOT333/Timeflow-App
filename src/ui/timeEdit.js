@@ -1,6 +1,6 @@
 import { state, uiState } from '../state.js';
 import { formatMs } from '../utils.js';
-import { saveData } from '../storage.js';
+import { persistState, notifyStateChanged } from '../stateManager.js';
 import { showAlert } from './dialogs.js';
 import { adjustAdjacentLogs } from './timesheet.js';
 
@@ -91,9 +91,9 @@ export function updateLogTime(projectId, logIndex, type, value) {
         log.end = newTs;
         adjustAdjacentLogs(oldEnd, newTs, 'start');
     }
-    saveData();
+    persistState();
     renderTimeEditLogs(p);
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    notifyStateChanged();
 }
 
 export function deleteLog(projectId, logIndex) {
@@ -101,9 +101,9 @@ export function deleteLog(projectId, logIndex) {
     if (!p || !p.logs[logIndex]) return;
     if (p.logs[logIndex].end === null) return;
     p.logs.splice(logIndex, 1);
-    saveData();
+    persistState();
     renderTimeEditLogs(p);
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    notifyStateChanged();
 }
 
 // onclick-Handler für inline HTML verfügbar machen

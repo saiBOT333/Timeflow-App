@@ -1,6 +1,6 @@
 import { state } from '../state.js';
 import { escapeHtml } from '../utils.js';
-import { saveData } from '../storage.js';
+import { commitState } from '../stateManager.js';
 import { showConfirm } from './dialogs.js';
 import { layoutMasonry } from './masonry.js';
 
@@ -121,8 +121,7 @@ export function updateAutoPause(index, field, value) {
         pauses[index].activeFrom = calcActiveFrom(value.trim());
     }
     state.settings.autoPauses = pauses;
-    saveData();
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    commitState();
 }
 
 export function addAutoPause() {
@@ -130,8 +129,7 @@ export function addAutoPause() {
     const startTime = '12:00';
     pauses.push({ start: startTime, end: '12:30', label: 'Pause', activeFrom: calcActiveFrom(startTime) });
     state.settings.autoPauses = pauses;
-    saveData();
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    commitState();
 }
 
 export async function removeAutoPause(index) {
@@ -143,8 +141,7 @@ export async function removeAutoPause(index) {
     if (!ok) return;
     pauses.splice(index, 1);
     state.settings.autoPauses = pauses;
-    saveData();
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    commitState();
 }
 
 export function toggleAutoPausesPanel() {

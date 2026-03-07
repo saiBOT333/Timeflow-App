@@ -11,7 +11,7 @@
 
 import { state } from './state.js';
 import { setFeierabendActive } from './ui/activeCard.js';
-import { saveData } from './storage.js';
+import { persistState } from './stateManager.js';
 import { updateUI } from './ui/render.js';
 
 let undoStack = [];
@@ -64,7 +64,7 @@ export function undo() {
         setFeierabendActive(false);
     }
 
-    saveData();
+    persistState();
     updateUI();
     hideUndoToast();
 }

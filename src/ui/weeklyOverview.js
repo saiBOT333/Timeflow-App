@@ -1,7 +1,7 @@
 import { state, uiState } from '../state.js';
 import { formatMs, formatMsDecimal, getWeekDates, getISOWeekNumber, escapeHtml } from '../utils.js';
 import { calculateNetDurationForDate } from '../calculations.js';
-import { saveData } from '../storage.js';
+import { commitState, notifyStateChanged } from '../stateManager.js';
 
 // =============================================================================
 // ui/weeklyOverview.js – Wochenübersicht
@@ -11,19 +11,18 @@ export function navigateWeek(offset) {
     const d = new Date(uiState.viewWeekStart + 'T12:00:00');
     d.setDate(d.getDate() + offset * 7);
     uiState.viewWeekStart = d.toISOString().split('T')[0];
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    notifyStateChanged();
 }
 
 export function goToCurrentWeek() {
     const todayStr = new Date().toISOString().split('T')[0];
     uiState.viewWeekStart = getWeekDates(todayStr)[0];
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    notifyStateChanged();
 }
 
 export function toggleWeekend() {
     state.settings.showWeekend = !state.settings.showWeekend;
-    saveData();
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    commitState();
 }
 
 export function toggleWeeklyDecimal() {
@@ -37,7 +36,7 @@ export function toggleWeeklyCollapse(parentId) {
     } else {
         uiState.collapsedWeeklyParents.add(parentId);
     }
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    notifyStateChanged();
 }
 
 export function toggleWeeklyRowMark(event, projectId) {

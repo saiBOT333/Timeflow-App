@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { saveData } from './storage.js';
+import { commitState } from './stateManager.js';
 import { showConfirm } from './ui/dialogs.js';
 
 // =============================================================================
@@ -8,10 +8,6 @@ import { showConfirm } from './ui/dialogs.js';
 // Alle Funktionen feuern nach State-Änderungen ein 'stateChanged'-Event,
 // damit app.js updateUI() aufrufen kann, ohne eine Kreisabhängigkeit zu erzeugen.
 // =============================================================================
-
-function notifyStateChanged() {
-    document.dispatchEvent(new CustomEvent('stateChanged'));
-}
 
 export function toggleManualPause() {
     const now = Date.now();
@@ -33,8 +29,7 @@ export function toggleManualPause() {
         });
         state.manualPauseActive = true;
     }
-    saveData();
-    notifyStateChanged();
+    commitState();
 }
 
 export function deletePause(id) {
@@ -47,8 +42,7 @@ export function deletePause(id) {
     }
 
     state.pauses = state.pauses.filter(p => p.id !== id);
-    saveData();
-    notifyStateChanged();
+    commitState();
 }
 
 export async function deleteAutoPauseFromTimesheet(pauseId) {
@@ -62,8 +56,7 @@ export async function deleteAutoPauseFromTimesheet(pauseId) {
     if (!state.settings.skippedAutoPauses) state.settings.skippedAutoPauses = [];
     state.settings.skippedAutoPauses.push({ startTs: pause.startTs });
     state.pauses = state.pauses.filter(p => p.id !== pauseId);
-    saveData();
-    notifyStateChanged();
+    commitState();
 }
 
 export function endAutoPauseNow() {
@@ -73,8 +66,7 @@ export function endAutoPauseNow() {
     );
     if (!pause) return;
     pause.endTs = now;
-    saveData();
-    notifyStateChanged();
+    commitState();
 }
 
 export function updatePauseTime(id, type, value) {
@@ -87,6 +79,5 @@ export function updatePauseTime(id, type, value) {
     if (type === 'end' && newTs <= pause.startTs) return;
     if (type === 'start') pause.startTs = newTs;
     if (type === 'end') pause.endTs = newTs;
-    saveData();
-    notifyStateChanged();
+    commitState();
 }

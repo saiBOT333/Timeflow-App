@@ -3,7 +3,7 @@ import { showAlert, showConfirm } from './ui/dialogs.js';
 import { toggleManualPause } from './pauses.js';
 import { startProject, stopAllProjects } from './projects.js';
 import { setFeierabendActive } from './ui/activeCard.js';
-import { saveData, saveDataImmediate } from './storage.js';
+import { persistState, persistStateImmediate } from './stateManager.js';
 import { downloadBackup } from './export.js';
 import { pushUndo, showUndoToast } from './undo.js';
 import { updateUI } from './ui/render.js';
@@ -19,7 +19,7 @@ function onGoodMorning() {
         toggleManualPause();
     }
     startProject('general');
-    saveData();
+    persistState();
     updateUI();
 }
 
@@ -32,7 +32,7 @@ async function onFeierabend() {
             toggleManualPause();
         }
         setFeierabendActive(true);
-        saveDataImmediate();
+        persistStateImmediate();
         updateUI();
         downloadBackup();
         showUndoToast('Feierabend rückgängig');
@@ -58,7 +58,7 @@ function toggleHomeOffice() {
             return pDate !== todayStr;
         });
     }
-    saveData();
+    persistState();
     updateHomeOfficeBtn();
     updateUI();
 }

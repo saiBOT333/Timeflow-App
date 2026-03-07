@@ -1,5 +1,5 @@
 import { state } from '../state.js';
-import { saveData } from '../storage.js';
+import { persistState, commitState } from '../stateManager.js';
 
 // =============================================================================
 // ui/masonry.js – Grid-Layout (Masonry) + Drag-and-Drop
@@ -93,9 +93,7 @@ export function toggleGridWidth(btn) {
     }
     // DOM aus State aktualisieren
     card.classList.toggle('grid-wide', !!(state.settings.cardLayout || []).find(x => x.id === card.id)?.wide);
-    saveData();
-    // updateUI() via stateChanged → renderActiveProjectCard() + layoutMasonry()
-    document.dispatchEvent(new CustomEvent('stateChanged'));
+    commitState();
 }
 
 /**
@@ -123,7 +121,7 @@ export function applyCardOrder() {
 /**
  * Liest die aktuelle DOM-Reihenfolge nach einem Drag-and-Drop aus
  * und schreibt sie in state.settings.cardLayout (State ← DOM, einmalig nach User-Interaktion).
- * Danach persistiert saveData() den neuen State.
+ * Danach persistiert persistState() den neuen State.
  */
 export function saveGridLayout() {
     const cards = [...document.querySelectorAll('#cardGrid .md-card')];
@@ -133,7 +131,7 @@ export function saveGridLayout() {
         const existing = currentLayout.find(x => x.id === c.id);
         return { id: c.id, wide: existing ? !!existing.wide : false };
     });
-    saveData();
+    persistState();
 }
 
 export function setupDragAndDrop() {

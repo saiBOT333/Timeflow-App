@@ -2,7 +2,8 @@
         import { state, uiState } from './src/state.js';
         import { formatMs, formatMsDecimal, formatTimeInput, incrementTime, isSameDay, hexToRgba, getContrastTextColor, escapeHtml, getWeekDates, getISOWeekNumber } from './src/utils.js';
         import { getRoundedMs, getOverlap, mergeIntervals, calculateNetDuration, calculateNetDurationForDate, calculateNetDurationForRange } from './src/calculations.js';
-        import { StorageManager, saveData, saveDataImmediate, migrateState, loadData } from './src/storage.js';
+        import { StorageManager, saveDataImmediate, migrateState, loadData } from './src/storage.js';
+        import { persistState } from './src/stateManager.js';
         import { showConfirm, showAlert, resolveConfirmModal } from './src/ui/dialogs.js';
         // undo → src/undo.js (window.undo wird dort gesetzt; geladen via quickActions.js)
         import { toggleManualPause, deletePause, deleteAutoPauseFromTimesheet, endAutoPauseNow, updatePauseTime } from './src/pauses.js';
@@ -103,7 +104,7 @@
         function toggleTheme() {
             state.settings.theme = state.settings.theme === 'dark' ? 'light' : 'dark';
             applyTheme();
-            saveData();
+            persistState();
             updateUI();
         }
 
@@ -217,7 +218,7 @@
             const newText = el.innerText.trim();
             if(newText) {
                 state.customTitles[key] = newText;
-                saveData();
+                persistState();
             } else {
                 el.innerText = state.customTitles[key];
             }
