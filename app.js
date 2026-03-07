@@ -21,31 +21,22 @@
         import { renderTimesheetCard, adjustAdjacentLogs } from './src/ui/timesheet.js';
         import { renderAutoPausesDisplay, updateAutoPause, addAutoPause, removeAutoPause, toggleAutoPausesPanel, isAutoPausesPanelOpen, getLocalDateStr } from './src/ui/autoPauses.js';
         import { openTimeEdit, renderTimeEditLogs, updateLogTime, deleteLog } from './src/ui/timeEdit.js';
+        import { renderActiveProjectCard, showGreeting, isGreetingRunning, isGreetingShown, setFeierabendActive } from './src/ui/activeCard.js';
+        import { tick } from './src/timer.js';
 
         // editingProjectId → uiState.editingProjectId (src/state.js)
         // _versionClickCount, pendingSettings, LINK_ICON_OPTIONS → src/settings.js
 
-        // Greeting animation state (runtime only)
-        let greetingShown = false;
-        let greetingAnimationRunning = false;
-
-        // Reminder state (runtime only - tracks which reminders fired today)
-        let firedRemindersToday = {};  // key: "HH:MM-text" → true
-        let activeReminder = null;     // currently displayed reminder
-        let activeReminderIndex = -1;  // index of the currently displayed reminder (for one-time deletion)
-
-        // Feierabend state
-        let feierabendActive = false;
+        // greetingShown, greetingAnimationRunning → src/ui/activeCard.js
+        // firedRemindersToday → src/timer.js
+        // activeReminder, activeReminderIndex → src/ui/activeCard.js
+        // feierabendActive → src/ui/activeCard.js
+        // activePauseText → src/ui/activeCard.js
 
         // undoStack, undoToastTimeout → src/undo.js
 
         // Day start time (for progress bar)
         let dayStartTime = null;
-
-        // autoPausesPanelOpen → src/ui/autoPauses.js
-
-        // Pause status text (runtime only, rendered in Aktivitätsbereich)
-        let activePauseText = null;
 
         // =============================================================================
         // GLOBALE ONCLICK-HANDLER
@@ -182,7 +173,7 @@
             updateHomeOfficeBtn();
             updateUI();
             renderAutoPausesDisplay();
-            if (!greetingShown) {
+            if (!isGreetingShown()) {
                 showGreeting();
             }
             setupDragAndDrop();
@@ -347,133 +338,14 @@
         window.openCardHelp = openCardHelp;
 
         // --- CORE LOGIC ---
-        function tick() {
-            try {
-                const now = Date.now();
-                const todayStr = getLocalDateStr();
-
-                if (!state.settings.homeOffice) {
-                    const autoPauses = state.settings.autoPauses || [];
-                    autoPauses.forEach(ap => {
-                        if (!ap.start || !ap.end || !ap.label) return;
-                        if (ap.activeFrom && todayStr < ap.activeFrom) return;
-                        const startDt = new Date(todayStr + 'T' + ap.start);
-                        const endDt = new Date(todayStr + 'T' + ap.end);
-                        const exists = state.pauses.find(p => p.type === 'auto' && p.startTs === startDt.getTime());
-                        const skipped = (state.settings.skippedAutoPauses || []).some(s => s.startTs === startDt.getTime());
-
-                        if (!exists && !skipped && now >= startDt.getTime()) {
-                            state.pauses.push({
-                                id: crypto.randomUUID(),
-                                startTs: startDt.getTime(),
-                                endTs: endDt.getTime(),
-                                type: 'auto',
-                                label: ap.label,
-                                active: false
-                            });
-                            saveData();
-                            renderPauses();
-                        }
-                    });
-                }
-
-                updateTimeBadges();
-                checkPauseStatus();
-                checkReminders();
-                checkAutoStop();
-                updateDayProgress();
-            } catch (err) {
-                console.error('tick error:', err);
-            }
-        }
-
-        // --- AUTO STOP CHECK ---
-        function checkAutoStop() {
-            const autoStopTime = state.settings.autoStopTime;
-            if (!autoStopTime) return;
-            const hasRunning = state.projects.some(p => p.status === 'running');
-            if (!hasRunning) return;
-
-            const now = new Date();
-            const todayDate = now.toISOString().split('T')[0];
-            const currentHHMM = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-
-            if (firedRemindersToday._date !== todayDate) {
-                firedRemindersToday = { _date: todayDate };
-            }
-
-            const autoStopKey = 'autoStop_' + autoStopTime;
-            if (firedRemindersToday[autoStopKey]) return;
-
-            if (currentHHMM >= autoStopTime) {
-                firedRemindersToday[autoStopKey] = true;
-                showConfirm(
-                    'Automatischer Tagesabschluss um ' + autoStopTime + ' Uhr – alle laufenden Timer jetzt stoppen?',
-                    { title: 'Tagesabschluss', icon: 'bedtime', okText: 'Stoppen', cancelText: 'Weiter arbeiten' }
-                ).then(confirmed => {
-                    if (confirmed) {
-                        stopAllProjects();
-                        saveData();
-                        updateUI();
-                    }
-                });
-            }
-        }
-
-        // --- REMINDERS CHECK ---
-        function checkReminders() {
-            const reminders = state.settings.reminders;
-            if (!reminders || reminders.length === 0) return;
-            const now = new Date();
-            const todayDate = now.toISOString().split('T')[0];
-            const currentHHMM = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-
-            if (firedRemindersToday._date !== todayDate) {
-                firedRemindersToday = { _date: todayDate };
-            }
-
-            reminders.forEach((r, idx) => {
-                const key = r.time + '-' + r.text;
-                if (firedRemindersToday[key]) return;
-
-                if (r.intervalMin && r.intervalMin > 0) {
-                    const intervalKey = 'interval_' + idx;
-                    const lastFired = firedRemindersToday[intervalKey] || 0;
-                    const nowMs = Date.now();
-                    if (lastFired === 0) {
-                        if (currentHHMM >= r.time) {
-                            firedRemindersToday[intervalKey] = nowMs;
-                            activeReminder = r.text;
-                            activeReminderIndex = idx;
-                            if (!greetingAnimationRunning) { renderActiveProjectCard(); layoutMasonry(); }
-                        }
-                    } else if (nowMs - lastFired >= r.intervalMin * 60000) {
-                        firedRemindersToday[intervalKey] = nowMs;
-                        activeReminder = r.text;
-                        activeReminderIndex = idx;
-                        if (!greetingAnimationRunning) { renderActiveProjectCard(); layoutMasonry(); }
-                    }
-                    return;
-                }
-
-                if (currentHHMM >= r.time && currentHHMM < incrementTime(r.time, 1)) {
-                    firedRemindersToday[key] = true;
-                    activeReminder = r.text;
-                    activeReminderIndex = idx;
-                    if (!greetingAnimationRunning) {
-                        renderActiveProjectCard();
-                        layoutMasonry();
-                    }
-                }
-            });
-        }
+        // tick, checkAutoStop, checkReminders → src/timer.js
 
         // renderProgressCard, updateDayProgress → src/ui/progressCard.js
         // getDistinctColor → src/projects.js
 
         // --- QUICK ACTIONS ---
         function onGoodMorning() {
-            feierabendActive = false;
+            setFeierabendActive(false);
             const running = state.projects.find(p => p.status === 'running');
             if (running) {
                 showAlert("Ein Projekt läuft bereits!", { title: 'Start nicht möglich', icon: 'info' });
@@ -495,7 +367,7 @@
                 if (state.manualPauseActive) {
                    toggleManualPause();
                 }
-                feierabendActive = true;
+                setFeierabendActive(true);
                 saveDataImmediate();
                 updateUI();
                 downloadBackup();
@@ -537,112 +409,15 @@
         // toggleManualPause, deletePause, deleteAutoPauseFromTimesheet,
         // endAutoPauseNow, updatePauseTime → src/pauses.js
 
-        function checkPauseStatus() {
-            const now = Date.now();
-            const isHO = state.settings.homeOffice;
+        // checkPauseStatus → src/ui/activeCard.js
+        // showGreeting → src/ui/activeCard.js
 
-            const inManualPause = state.pauses.some(p => {
-                if (p.type === 'auto' && isHO) return false;
-                const end = p.active ? now + 1000 : p.endTs;
-                return now >= p.startTs && now < end && p.type === 'manual';
-            });
-            const inAutoPause = !isHO && state.pauses.some(p => {
-                if (p.type !== 'auto') return false;
-                const end = p.endTs;
-                return now >= p.startTs && now < end;
-            });
-
-            let newPauseText = null;
-            if (state.manualPauseActive) {
-                newPauseText = 'Manuelle Pause';
-            } else if (inAutoPause) {
-                newPauseText = 'Automatische Pause';
-            } else if (inManualPause) {
-                newPauseText = 'Manuelle Pause';
-            }
-
-            if (newPauseText !== activePauseText) {
-                activePauseText = newPauseText;
-                if (!greetingAnimationRunning) {
-                    renderActiveProjectCard();
-                    layoutMasonry();
-                }
-            }
-        }
-
-        // --- GREETING ---
-        function showGreeting() {
-            const text = (state.settings.greeting || '').trim();
-            if (!text) {
-                greetingShown = true;
-                renderActiveProjectCard();
-                return;
-            }
-
-            greetingAnimationRunning = true;
-            const container = document.getElementById('activeProjectDisplay');
-
-            const hour = new Date().getHours();
-            let icon = 'wb_sunny';
-            if (hour >= 6 && hour < 10) icon = 'wb_sunny';
-            else if (hour >= 10 && hour < 18) icon = 'light_mode';
-            else if (hour >= 18 && hour < 21) icon = 'wb_twilight';
-            else icon = 'clear_night';
-
-            container.innerHTML = `
-                <div class="greeting-container">
-                    <span class="material-symbols-rounded greeting-icon">${icon}</span>
-                    <div class="greeting-text">
-                        <span id="greetingTyped"></span><span class="greeting-cursor" id="greetingCursor"></span>
-                    </div>
-                </div>
-            `;
-
-            const typedEl = document.getElementById('greetingTyped');
-            let charIndex = 0;
-            const baseSpeed = 45;
-
-            function typeNext() {
-                if (charIndex < text.length) {
-                    typedEl.textContent += text[charIndex];
-                    charIndex++;
-                    let delay = baseSpeed + Math.random() * 30;
-                    const lastChar = text[charIndex - 1];
-                    if (lastChar === '!' || lastChar === '?' || lastChar === '.') delay += 200;
-                    else if (lastChar === ',') delay += 100;
-                    setTimeout(typeNext, delay);
-                } else {
-                    setTimeout(() => {
-                        const cursor = document.getElementById('greetingCursor');
-                        if (cursor) cursor.hidden = true;
-                        const greetContainer = container.querySelector('.greeting-container');
-                        if (greetContainer) {
-                            greetContainer.classList.add('greeting-fade-out');
-                            greetContainer.addEventListener('animationend', () => {
-                                greetingShown = true;
-                                greetingAnimationRunning = false;
-                                renderActiveProjectCard();
-                                layoutMasonry();
-                            }, { once: true });
-                        } else {
-                            greetingShown = true;
-                            greetingAnimationRunning = false;
-                            renderActiveProjectCard();
-                            layoutMasonry();
-                        }
-                    }, 1500);
-                }
-            }
-
-            setTimeout(typeNext, 600);
-        }
-
-        // --- RENDERERS ---
+                // --- RENDERERS ---
 
         // --- updateUI: Zentraler Render-Entry-Point (Single Source of Truth → DOM) ---
         function updateUI() {
             try {
-                if (!greetingAnimationRunning) {
+                if (!isGreetingRunning()) {
                     renderActiveProjectCard();
                 }
 
@@ -688,144 +463,7 @@
         // nicht direkt auf (Kreisabhängigkeit), sondern feuern dieses Event.
         document.addEventListener('stateChanged', () => updateUI());
 
-        function renderActiveProjectCard() {
-            const container = document.getElementById('activeProjectDisplay');
-
-            if (feierabendActive) {
-                container.innerHTML = `
-                    <div class="feierabend-display">
-                        <div class="feierabend-icon">🎉</div>
-                        <div class="feierabend-text">Feierabend!</div>
-                        <div class="fs-14-variant mt-8">Schönen Abend! Bis morgen.</div>
-                    </div>
-                `;
-                return;
-            }
-
-            const runningProject = state.projects.find(p => p.status === 'running');
-            const displayProject = runningProject || state.projects.find(p => p.id === 'general');
-
-            if (!displayProject) {
-                 container.innerHTML = '<div class="op-50" style="text-align:center;">Kein aktives Projekt</div>';
-                 return;
-            }
-
-            const bgColor = displayProject.color || 'var(--md-sys-color-primary-container)';
-            const textColor = getContrastTextColor(bgColor);
-            const isLightText = textColor === '#FFFBFE';
-            const numberBgOpacity = isLightText ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.1)';
-            const stopBtnBg = isLightText ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.12)';
-
-            const totalAllTime = calculateNetDuration(displayProject);
-
-            const isBanner = !!(state.settings.cardLayout || []).find(x => x.id === 'card-active')?.wide;
-
-            const isAutoPause = activePauseText === 'Automatische Pause';
-            const pauseHtml = activePauseText
-                ? `<div class="pause-banner visible">
-                       <span class="material-symbols-rounded">pause_circle</span>
-                       <span class="fw-500">${activePauseText}</span>
-                       ${isAutoPause ? `<button class="pause-banner-end-btn" onclick="endAutoPauseNow()">
-                           <span class="material-symbols-rounded fs-16">skip_next</span>
-                           Jetzt beenden
-                       </button>` : ''}
-                   </div>`
-                : '';
-
-            let reminderHtml = '';
-            if (activeReminder) {
-                reminderHtml = isBanner
-                    ? `<div class="reminder-banner reminder-banner-wide" onclick="dismissReminder()">
-                           <span class="material-symbols-rounded reminder-banner-icon">notifications_active</span>
-                           <span class="reminder-banner-text">${activeReminder}</span>
-                           <span class="reminder-banner-close">
-                               <span class="material-symbols-rounded fs-16">close</span>
-                               Schließen
-                           </span>
-                       </div>`
-                    : `<div class="reminder-banner" onclick="dismissReminder()">
-                           <span class="material-symbols-rounded reminder-banner-icon">notifications_active</span>
-                           <span class="reminder-banner-text">${activeReminder}</span>
-                           <span class="reminder-banner-close">
-                               <span class="material-symbols-rounded fs-16">close</span>
-                               Schließen
-                           </span>
-                       </div>`;
-            }
-            const parentName = displayProject.parentId
-                ? (state.projects.find(pp => pp.id === displayProject.parentId) || {}).name || ''
-                : '';
-            const parentHtml = displayProject.parentId
-                ? `<div class="fs-12 op-60" style="color:inherit;">
-                       <span class="material-symbols-rounded fs-14" style="vertical-align:middle;">account_tree</span>
-                       ${parentName}
-                   </div>`
-                : '';
-            const pauseBtn = state.manualPauseActive
-                ? `<button class="md-btn" onclick="toggleManualPause()" style="background:${stopBtnBg}; color:inherit;">
-                       <span class="material-symbols-rounded">play_arrow</span> Weiter
-                   </button>`
-                : `<button class="md-btn" onclick="toggleManualPause()" style="background:${stopBtnBg}; color:inherit;">
-                       <span class="material-symbols-rounded">coffee</span> Pause
-                   </button>`;
-            const stopBtn = displayProject.id !== 'general'
-                ? `<button class="md-btn" onclick="stopProjectById('${displayProject.id}')" style="background:${stopBtnBg}; color:inherit;">
-                       <span class="material-symbols-rounded">stop</span> Stoppen
-                   </button>`
-                : '';
-            const totalHtml = `<div class="op-75" style="display:flex; align-items:center; gap:6px;">
-                <span class="material-symbols-rounded fs-16" style="color:inherit;">history</span>
-                <span class="active-project-total fs-14" data-pid="${displayProject.id}" style="font-family:'Roboto Mono', monospace; color:inherit;">${formatMs(totalAllTime, false)}</span>
-                <span class="fs-11" style="color:inherit;">Gesamt</span>
-            </div>`;
-
-            const cardInner = isBanner
-                ? `<div class="active-project-card active-banner-mode" style="background-color:${bgColor}; color:${textColor};">
-                       <div class="banner-section-left">
-                           <div class="active-project-number" style="background:${numberBgOpacity}">#${displayProject.number || '-'}</div>
-                           ${parentHtml}
-                           <div class="active-project-name">${displayProject.name}</div>
-                       </div>
-                       <div class="banner-section-center">
-                           <div class="active-project-time" data-pid="${displayProject.id}">00:00:00</div>
-                           <div class="fs-12 op-65" style="color:inherit; margin-top:2px;">Heute</div>
-                       </div>
-                       <div class="banner-section-right">
-                           ${totalHtml}
-                           <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                               ${pauseBtn}${stopBtn}
-                           </div>
-                       </div>
-                   </div>`
-                : `<div class="active-project-card" style="background-color:${bgColor}; color:${textColor};">
-                       <div class="active-project-number" style="background:${numberBgOpacity}">#${displayProject.number || '-'}</div>
-                       ${parentHtml}
-                       <div class="active-project-name">${displayProject.name}</div>
-                       <div class="active-project-time" data-pid="${displayProject.id}">00:00:00</div>
-                       <div class="fs-12 op-70" style="color:inherit;">Heute</div>
-                       ${totalHtml}
-                       <div style="display:flex; gap:8px; margin-top:4px; flex-wrap:wrap;">
-                           ${pauseBtn}${stopBtn}
-                       </div>
-                   </div>`;
-
-            container.innerHTML = `${pauseHtml}${reminderHtml}${cardInner}`;
-        }
-
-        function dismissReminder() {
-            if (activeReminderIndex >= 0 && state.settings.reminders) {
-                const r = state.settings.reminders[activeReminderIndex];
-                if (r && !r.recurring && !r.intervalMin) {
-                    state.settings.reminders.splice(activeReminderIndex, 1);
-                    saveData();
-                }
-            }
-            activeReminder = null;
-            activeReminderIndex = -1;
-            updateUI();
-        }
-
-        window.dismissReminder = dismissReminder;
+        // renderActiveProjectCard, dismissReminder → src/ui/activeCard.js
 
         // stopProjectById → src/projects.js
         // renderList, getReadableChipColor, closeAllProjectMenus,
@@ -953,7 +591,7 @@
             } else if (entry.type === 'feierabend') {
                 state.projects = entry.data;
                 state.pauses = entry.pauses;
-                feierabendActive = false;
+                setFeierabendActive(false);
             }
 
             saveData();
