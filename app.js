@@ -4,9 +4,9 @@
         import { getRoundedMs, getOverlap, mergeIntervals, calculateNetDuration, calculateNetDurationForDate, calculateNetDurationForRange } from './src/calculations.js';
         import { StorageManager, saveData, saveDataImmediate, migrateState, loadData } from './src/storage.js';
         import { showConfirm, showAlert, resolveConfirmModal } from './src/ui/dialogs.js';
-        import { pushUndo, popUndo, hasUndo, showUndoToast, hideUndoToast } from './src/undo.js';
+        import { popUndo, hasUndo, hideUndoToast } from './src/undo.js';
         import { toggleManualPause, deletePause, deleteAutoPauseFromTimesheet, endAutoPauseNow, updatePauseTime } from './src/pauses.js';
-        import { getDistinctColor, startProject, stopProject, stopAllProjects, addProject, switchProject, stopProjectById, toggleFavorite, setCategory, deleteProject, openProjectEdit, saveProjectEdit, openSubProjectModal, saveSubProject, getChildProjects, isParentProject, calculateProjectTotalMs } from './src/projects.js';
+        import { getDistinctColor, stopProject, addProject, switchProject, stopProjectById, toggleFavorite, setCategory, deleteProject, openProjectEdit, saveProjectEdit, openSubProjectModal, saveSubProject, getChildProjects, isParentProject, calculateProjectTotalMs } from './src/projects.js';
         import { addTag, deleteTag, renderTagList, renderTagFilter, setTagFilter, openTagAssign, toggleProjectTag } from './src/tags.js';
         import { setupPWA, showUpdateToast } from './src/pwa.js';
         import { openSettingsModal, resetSettingsModalState, saveSettings, onVersionLabelClick, resetApp, updateTimerModePreview, switchSettingsTab, updateProgressPreview, renderReminderListSettings, addReminderFromSettings, removeReminder, openRemindersSettings, getIconPickerOptions, toggleIconPicker, selectLinkIcon, renderExternalLinksSettings, addExternalLinkSetting, removeExternalLink, renderExternalLinksCard, openExternalLink } from './src/settings.js';
@@ -23,6 +23,8 @@
         import { openTimeEdit, renderTimeEditLogs, updateLogTime, deleteLog } from './src/ui/timeEdit.js';
         import { renderActiveProjectCard, showGreeting, isGreetingRunning, isGreetingShown, setFeierabendActive } from './src/ui/activeCard.js';
         import { tick } from './src/timer.js';
+        import { updateUI, applyAriaLabels } from './src/ui/render.js';
+        import { onGoodMorning, onFeierabend, toggleHomeOffice, updateHomeOfficeBtn } from './src/quickActions.js';
 
         // editingProjectId → uiState.editingProjectId (src/state.js)
         // _versionClickCount, pendingSettings, LINK_ICON_OPTIONS → src/settings.js
@@ -268,19 +270,7 @@
 
         window.dismissChangelog = dismissChangelog;
 
-        // --- PAKET 11: ARIA Labels ---
-        function applyAriaLabels() {
-            document.querySelectorAll('[data-tooltip]').forEach(el => {
-                if (!el.getAttribute('aria-label')) {
-                    el.setAttribute('aria-label', el.getAttribute('data-tooltip'));
-                }
-            });
-            document.querySelectorAll('button[title]:not([aria-label])').forEach(el => {
-                el.setAttribute('aria-label', el.getAttribute('title'));
-            });
-            const pauseBtn = document.getElementById('manualPauseBtn');
-            if (pauseBtn) pauseBtn.setAttribute('aria-label', 'Manuelle Pause');
-        }
+        // applyAriaLabels → src/ui/render.js
 
         function applyTitles() {
             for (const [key, value] of Object.entries(state.customTitles)) {
@@ -343,65 +333,7 @@
         // renderProgressCard, updateDayProgress → src/ui/progressCard.js
         // getDistinctColor → src/projects.js
 
-        // --- QUICK ACTIONS ---
-        function onGoodMorning() {
-            setFeierabendActive(false);
-            const running = state.projects.find(p => p.status === 'running');
-            if (running) {
-                showAlert("Ein Projekt läuft bereits!", { title: 'Start nicht möglich', icon: 'info' });
-                return;
-            }
-            if (state.manualPauseActive) {
-                toggleManualPause();
-            }
-            startProject('general');
-            saveData();
-            updateUI();
-        }
-
-        async function onFeierabend() {
-            const ok = await showConfirm("Alle Timer werden gestoppt und ein Backup erstellt.", { title: 'Feierabend?', icon: 'bedtime', okText: 'Feierabend!', cancelText: 'Abbrechen' });
-            if (ok) {
-                pushUndo({ type: 'feierabend', data: JSON.parse(JSON.stringify(state.projects)), pauses: JSON.parse(JSON.stringify(state.pauses)), timestamp: Date.now(), label: 'Feierabend rückgängig' });
-                stopAllProjects();
-                if (state.manualPauseActive) {
-                   toggleManualPause();
-                }
-                setFeierabendActive(true);
-                saveDataImmediate();
-                updateUI();
-                downloadBackup();
-                showUndoToast('Feierabend rückgängig');
-            }
-        }
-
-        function toggleHomeOffice() {
-            state.settings.homeOffice = !state.settings.homeOffice;
-            if (state.settings.homeOffice) {
-                const todayStr = new Date().toISOString().split('T')[0];
-                state.pauses = state.pauses.filter(p => {
-                    if (p.type !== 'auto') return true;
-                    const pDate = new Date(p.startTs).toISOString().split('T')[0];
-                    return pDate !== todayStr;
-                });
-            }
-            saveData();
-            updateHomeOfficeBtn();
-            updateUI();
-        }
-
-        function updateHomeOfficeBtn() {
-            const btn = document.getElementById('homeOfficeBtn');
-            if (!btn) return;
-            const active = state.settings.homeOffice;
-            btn.classList.toggle('is-active', active);
-            const label = document.getElementById('homeOfficeBtnLabel');
-            if (label) label.textContent = active ? 'Home Office ✓' : 'Home Office';
-        }
-
-        window.onGoodMorning = onGoodMorning;
-        window.onFeierabend = onFeierabend;
-        window.toggleHomeOffice = toggleHomeOffice;
+        // onGoodMorning, onFeierabend, toggleHomeOffice, updateHomeOfficeBtn → src/quickActions.js
 
         // addProject, switchProject, startProject, stopProject, stopAllProjects,
         // toggleFavorite, setCategory, deleteProject → src/projects.js
@@ -412,56 +344,8 @@
         // checkPauseStatus → src/ui/activeCard.js
         // showGreeting → src/ui/activeCard.js
 
-                // --- RENDERERS ---
-
-        // --- updateUI: Zentraler Render-Entry-Point (Single Source of Truth → DOM) ---
-        function updateUI() {
-            try {
-                if (!isGreetingRunning()) {
-                    renderActiveProjectCard();
-                }
-
-                let favorites = state.projects.filter(p => p.category === 'active' && p.isFavorite);
-                let others = state.projects.filter(p => p.category === 'active' && !p.isFavorite);
-                if (uiState.filterTagId) {
-                    favorites = favorites.filter(p => (p.tagIds || []).includes(uiState.filterTagId));
-                    others = others.filter(p => (p.tagIds || []).includes(uiState.filterTagId));
-                }
-                renderList('favoriteProjectsList', favorites);
-                document.getElementById('noFavsMsg').hidden = favorites.length !== 0;
-                renderList('otherProjectsList', others);
-                document.getElementById('noOthersMsg').hidden = others.length !== 0;
-
-                const archiveItems = state.projects.filter(p => p.category === 'archive');
-                renderList('archiveProjectsList', archiveItems);
-                const archiveSearchInput = document.getElementById('archiveSearchInput');
-                const archiveQuery = archiveSearchInput ? archiveSearchInput.value : '';
-                filterArchiveList(archiveQuery, true);
-                if (!archiveQuery) {
-                    document.getElementById('noArchiveMsg').hidden = archiveItems.length !== 0;
-                }
-
-                renderPauses();
-                if (isAutoPausesPanelOpen()) renderAutoPausesDisplay();
-                renderWeeklyOverview();
-                renderExternalLinksCard();
-                renderTimesheetCard();
-                renderProgressCard();
-                renderTagFilter();
-                applyCardVisibility();
-                applyCardOrder();
-                renderCardVisibilityMenu();
-                updateTimeBadges();
-                layoutMasonry();
-                applyAriaLabels();
-            } catch (err) {
-                console.error('updateUI error:', err);
-            }
-        }
-
-        // stateChanged-Event: Domain-Module (projects, pauses etc.) rufen updateUI()
-        // nicht direkt auf (Kreisabhängigkeit), sondern feuern dieses Event.
-        document.addEventListener('stateChanged', () => updateUI());
+        // updateUI, applyAriaLabels → src/ui/render.js
+        // stateChanged-Listener → in src/ui/render.js registriert
 
         // renderActiveProjectCard, dismissReminder → src/ui/activeCard.js
 
