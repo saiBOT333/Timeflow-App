@@ -57,6 +57,7 @@
         // Daher die window-Assigns direkt bei den Funktions-Definitionen.
 
         // --- Importierte Funktionen aus Domain-Modulen ---
+        window.handleNewProject = function(e) { if (e.key === 'Enter') addProject(); };
         window.addProject = addProject;
         window.switchProject = switchProject;
         window.stopProjectById = stopProjectById;
