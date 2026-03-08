@@ -7,14 +7,14 @@
  *   - Alles andere:                                  Network-First mit Cache-Fallback
  */
 
-const CACHE_VERSION = 'timeflow-v3.4.1';
+const CACHE_VERSION = 'timeflow-v3.5.0';
 
 // Core-Assets die immer gecacht werden (relativ zur SW-Scope-URL)
+// Im Vite-Build werden app.js + style.css gehasht (z.B. assets/app-Bx7F3k2d.js)
+// → nur stabile Pfade precachen; JS/CSS werden über isCoreAsset() dynamisch erkannt
 const CORE_ASSETS = [
     './',
-    './index.html',
-    './style.css',
-    './app.js'
+    './index.html'
 ];
 
 // Externe Hosts die Cache-First behandelt werden (Fonts, Icons)
@@ -161,8 +161,8 @@ function isCoreAsset(url) {
     return (
         path.endsWith('/') ||
         path.endsWith('/index.html') ||
-        path.endsWith('/style.css') ||
-        path.endsWith('/app.js')
+        path.endsWith('.js') ||
+        path.endsWith('.css')
     );
 }
 

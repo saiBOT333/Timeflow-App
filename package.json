@@ -4,6 +4,9 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -21,6 +24,7 @@
   "homepage": "https://github.com/saiBOT333/Timeflow-App#readme",
   "devDependencies": {
     "jsdom": "^28.1.0",
+    "vite": "^7.3.1",
     "vitest": "^4.0.18"
   }
 }
