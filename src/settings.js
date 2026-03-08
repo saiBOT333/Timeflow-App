@@ -56,6 +56,7 @@ export function openSettingsModal(options) {
         timerMode:       state.settings.timerMode || 'standard',
         externalLinks:   JSON.parse(JSON.stringify(state.settings.externalLinks || []))
     };
+    window.pendingSettings = pendingSettings;
 
     // 2. DOM-Formular aus pendingSettings initialisieren (DOM nur schreiben, nie lesen)
     document.getElementById('settingsPrefix').value = pendingSettings.filePrefix;
