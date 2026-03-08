@@ -8,7 +8,8 @@ import { renderExternalLinksCard } from '../settings.js';
 import { renderTimesheetCard } from './timesheet.js';
 import { renderProgressCard } from './progressCard.js';
 import { renderTagFilter } from '../tags.js';
-import { applyCardVisibility, applyCardOrder, renderCardVisibilityMenu } from './cardVisibility.js';
+import { applyCardVisibility, renderCardVisibilityMenu } from './cardVisibility.js';
+import { applyCardOrder } from './masonry.js';
 import { updateTimeBadges } from './timeBadges.js';
 import { layoutMasonry } from './masonry.js';
 
