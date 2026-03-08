@@ -47,8 +47,8 @@ export function setupPWA() {
         });
     } else if (location.protocol === 'file:') {
         console.info('[PWA] file://-Protokoll erkannt. Für vollständige PWA-Unterstützung per HTTP starten:');
-        console.info('  → npx serve .   oder   python -m http.server 8080');
-        console.info('  → Dann http://localhost:8080/index.html öffnen');
+        console.info('  → npm run dev   (Vite Dev-Server mit HMR)');
+        console.info('  → Dann http://localhost:5500/index.html öffnen');
         console.info('  → Alternativ: Chrome/Edge ⋮ → Verknüpfung erstellen → Als Fenster öffnen');
     }
 
