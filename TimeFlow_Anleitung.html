@@ -353,7 +353,7 @@
 <div class="feature-grid">
     <div class="feature-item">
         <span class="material-symbols-rounded">wb_sunny</span>
-        <span><strong>Start</strong><br>Startet den Arbeitstag. Das Allgemein-Projekt l&auml;uft automatisch los.</span>
+        <span><strong>Start</strong><br>Nimmt den Arbeitstag wieder auf, wenn alle Timer gestoppt wurden.</span>
     </div>
     <div class="feature-item">
         <span class="material-symbols-rounded">bedtime</span>
@@ -370,7 +370,7 @@
 <table>
     <tr><th>Karte</th><th>Beschreibung</th></tr>
     <tr><td><strong>Neues Projekt</strong></td><td>Projekte anlegen</td></tr>
-    <tr><td><strong>Aktivit&auml;tsbereich</strong></td><td>Aktives Projekt, Timer, Fortschritt, Pausen-Banner, Erinnerungen</td></tr>
+    <tr><td><strong>Aktivit&auml;tsbereich</strong></td><td>Aktives Projekt, laufender Timer, Pause-Button, Pausen-Banner, Erinnerungen</td></tr>
     <tr><td><strong>Favoriten</strong></td><td>Bevorzugte Projekte mit ausgef&uuml;lltem Stern-Icon <span class="material-symbols-rounded icon-inline" style="color:var(--md-custom-color-warning);">star</span></td></tr>
     <tr><td><strong>Andere Kostenstellen</strong></td><td>Nicht-Favorit-Projekte</td></tr>
     <tr><td><strong>Pausen</strong></td><td>Manuelle &amp; automatische Pausen</td></tr>
@@ -433,6 +433,10 @@
 
 <h3>Projekt starten / stoppen</h3>
 <p>Klicke einfach auf ein Projekt in der Favoritenliste &ndash; es wird sofort aktiv und alle anderen Timer stoppen. Klickst du ein laufendes Projekt erneut, stoppt es und &bdquo;Allgemein&ldquo; l&auml;uft weiter.</p>
+
+<div class="tip"><strong>Timer-Darstellung:</strong> Die Zeit im Aktivit&auml;tsbereich kann auf zwei Arten dargestellt werden &ndash; einstellbar unter <span class="material-symbols-rounded icon-inline">settings</span> Einstellungen &rarr; Tab &bdquo;Allgemein&ldquo;:<br>
+&bull; <strong>Standard</strong> &ndash; laufende Sekundenanzeige (01:23:45)<br>
+&bull; <strong>Puls</strong> &ndash; keine Sekunden, stattdessen eine sanfte Atem-Animation zeigt, dass der Timer l&auml;uft. Ruhiger und weniger ablenkenend.</div>
 <div class="tip"><strong>Tipp:</strong> Es l&auml;uft immer genau ein Projekt. Stoppst du eines, springt der Timer automatisch auf &bdquo;Allgemein (SYS)&ldquo; zur&uuml;ck.</div>
 
 <h3>Aktions-Buttons erkl&auml;rt</h3>
@@ -704,7 +708,7 @@
 
 <!-- SVG: Wochenübersicht Tabelle -->
 <div class="illustration">
-<svg viewBox="0 0 700 206" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#1E2227;">
+<svg viewBox="0 0 700 236" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#1E2227;">
   <!-- Card Header -->
   <rect x="0" y="0" width="700" height="36" fill="#1E2227"/>
   <text x="14" y="23" font-family="Roboto,sans-serif" font-weight="500" font-size="14" fill="#E2E2E6">Wochenübersicht</text>
@@ -720,57 +724,74 @@
   <!-- Weekend btn -->
   <rect x="480" y="6" width="24" height="24" rx="6" fill="#282A2F"/>
   <text x="486" y="23" font-family="Material Symbols Rounded" font-size="14" fill="#C4C7C5">&#xe80c;</text>
-  <!-- Dezimal btn -->
+  <!-- Dezimal btn (aktiv) -->
   <rect x="510" y="6" width="24" height="24" rx="6" fill="#004A77" stroke="#A8C7FA" stroke-width="1"/>
   <text x="515" y="22" font-family="Roboto,sans-serif" font-size="9" font-weight="700" fill="#A8C7FA">1,5</text>
-  <text x="496" y="38" font-family="Roboto,sans-serif" font-size="8" fill="#A8C7FA" text-anchor="middle">Dezimal</text>
   <!-- Collapse btn -->
   <rect x="540" y="6" width="24" height="24" rx="6" fill="#282A2F"/>
   <text x="546" y="23" font-family="Material Symbols Rounded" font-size="14" fill="#C4C7C5">&#xe5cf;</text>
   <line x1="0" y1="36" x2="700" y2="36" stroke="#44474F" stroke-width="1"/>
 
+  <!-- Week summary bar -->
+  <rect x="0" y="36" width="700" height="28" fill="#1A1C21"/>
+  <text x="14" y="55" font-family="Material Symbols Rounded" font-size="16" fill="#8E9199">&#xe916;</text>
+  <text x="36" y="55" font-family="Roboto,sans-serif" font-size="12" fill="#E2E2E6" font-weight="500">21:40</text>
+  <text x="78" y="55" font-family="Roboto,sans-serif" font-size="12" fill="#8E9199">/ 50 Std</text>
+  <text x="140" y="55" font-family="Roboto,sans-serif" font-size="11" fill="#A8C7FA">43%</text>
+  <rect x="175" y="50" width="490" height="4" rx="2" fill="#282A2F"/>
+  <rect x="175" y="50" width="211" height="4" rx="2" fill="#A8C7FA"/>
+  <line x1="0" y1="64" x2="700" y2="64" stroke="#44474F" stroke-width="1"/>
+
   <!-- Table header -->
-  <rect x="0" y="36" width="700" height="32" fill="#282A2F"/>
-  <text x="10" y="57" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">Projekt</text>
-  <text x="152" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Mo 10.02</text>
-  <text x="252" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Di 11.02</text>
-  <text x="352" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Mi 12.02</text>
-  <text x="452" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#C4C7C5" text-anchor="middle">Do 13.02</text>
-  <text x="552" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#C4C7C5" text-anchor="middle">Fr 14.02</text>
-  <text x="650" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#8E9199" text-anchor="middle">Gesamt</text>
-  <line x1="0" y1="68" x2="700" y2="68" stroke="#44474F" stroke-width="1"/>
+  <rect x="0" y="64" width="700" height="32" fill="#282A2F"/>
+  <text x="22" y="85" font-family="Roboto,sans-serif" font-size="10" fill="#8E9199" text-anchor="middle">#</text>
+  <text x="50" y="85" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">Projekt</text>
+  <text x="222" y="85" font-family="Roboto,sans-serif" font-weight="500" font-size="11" fill="#A8C7FA" text-anchor="middle">Mo 10.02</text>
+  <text x="305" y="85" font-family="Roboto,sans-serif" font-weight="500" font-size="11" fill="#A8C7FA" text-anchor="middle">Di 11.02</text>
+  <text x="388" y="85" font-family="Roboto,sans-serif" font-weight="500" font-size="11" fill="#A8C7FA" text-anchor="middle">Mi 12.02</text>
+  <text x="471" y="85" font-family="Roboto,sans-serif" font-weight="500" font-size="11" fill="#C4C7C5" text-anchor="middle">Do 13.02</text>
+  <text x="554" y="85" font-family="Roboto,sans-serif" font-weight="500" font-size="11" fill="#C4C7C5" text-anchor="middle">Fr 14.02</text>
+  <text x="645" y="85" font-family="Roboto,sans-serif" font-weight="500" font-size="11" fill="#8E9199" text-anchor="middle">Summe</text>
+  <line x1="0" y1="96" x2="700" y2="96" stroke="#44474F" stroke-width="1"/>
 
   <!-- Row 1 -->
-  <rect x="100" y="68" width="100" height="40" fill="rgba(168,199,250,0.05)"/>
-  <text x="10" y="90" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">4711 · Projekt A</text>
-  <text x="152" y="84" font-family="Roboto,sans-serif" font-weight="500" font-size="13" fill="#E2E2E6" text-anchor="middle">03:20</text>
-  <text x="152" y="99" font-family="Roboto,sans-serif" font-size="10" fill="#8E9199" text-anchor="middle" font-style="italic">Meeting...</text>
-  <text x="252" y="90" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">01:45</text>
-  <text x="352" y="90" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">02:10</text>
-  <text x="452" y="90" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">–</text>
-  <text x="552" y="90" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">–</text>
-  <text x="650" y="90" font-family="Roboto,sans-serif" font-weight="500" font-size="13" fill="#A8C7FA" text-anchor="middle">07:15</text>
-  <line x1="0" y1="108" x2="700" y2="108" stroke="rgba(68,71,79,0.5)" stroke-width="1"/>
+  <text x="22" y="118" font-family="Roboto Mono,monospace" font-size="10" fill="#8E9199" text-anchor="middle">4711</text>
+  <circle cx="50" cy="116" r="5" fill="#66BB6A"/>
+  <text x="60" y="120" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">Projekt A</text>
+  <rect x="180" y="100" width="84" height="30" rx="4" fill="rgba(168,199,250,0.08)"/>
+  <text x="205" y="118" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#E2E2E6" text-anchor="middle">03:20</text>
+  <text x="238" y="114" font-family="sans-serif" font-size="11">📝</text>
+  <text x="305" y="118" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">01:45</text>
+  <text x="388" y="118" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">02:10</text>
+  <text x="471" y="118" font-family="Roboto,sans-serif" font-size="12" fill="#8E9199" text-anchor="middle">—</text>
+  <text x="554" y="118" font-family="Roboto,sans-serif" font-size="12" fill="#8E9199" text-anchor="middle">—</text>
+  <text x="645" y="118" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">07:15</text>
+  <line x1="0" y1="134" x2="700" y2="134" stroke="rgba(68,71,79,0.5)" stroke-width="1"/>
 
   <!-- Row 2 (subproject) -->
-  <text x="20" y="130" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">↳ Besprechung</text>
-  <text x="152" y="130" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">01:00</text>
-  <text x="252" y="130" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">–</text>
-  <text x="352" y="130" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">–</text>
-  <line x1="0" y1="148" x2="700" y2="148" stroke="rgba(68,71,79,0.5)" stroke-width="1"/>
+  <text x="50" y="155" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">↳ Besprechung</text>
+  <text x="222" y="155" font-family="Roboto,sans-serif" font-size="11" fill="#C4C7C5" text-anchor="middle">01:00</text>
+  <text x="305" y="155" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199" text-anchor="middle">—</text>
+  <text x="388" y="155" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199" text-anchor="middle">—</text>
+  <line x1="0" y1="168" x2="700" y2="168" stroke="rgba(68,71,79,0.5)" stroke-width="1"/>
 
   <!-- Row 3 -->
-  <text x="10" y="170" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">SYS · Allgemein</text>
-  <text x="152" y="170" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">00:30</text>
-  <text x="252" y="170" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">01:10</text>
-  <line x1="0" y1="188" x2="700" y2="188" stroke="#44474F" stroke-width="1"/>
+  <text x="22" y="188" font-family="Roboto Mono,monospace" font-size="10" fill="#8E9199" text-anchor="middle">SYS</text>
+  <circle cx="50" cy="186" r="5" fill="#757575"/>
+  <text x="60" y="190" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">Allgemein</text>
+  <text x="222" y="188" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">00:30</text>
+  <text x="305" y="188" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">01:10</text>
+  <line x1="0" y1="200" x2="700" y2="200" stroke="#44474F" stroke-width="1"/>
 
   <!-- Total row -->
-  <text x="10" y="202" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA">Gesamt</text>
-  <text x="152" y="202" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">04:50</text>
-  <text x="252" y="202" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">02:55</text>
+  <rect x="0" y="200" width="700" height="36" fill="#282A2F"/>
+  <text x="50" y="222" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA">Gesamt</text>
+  <text x="222" y="222" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">04:50</text>
+  <text x="305" y="222" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">02:55</text>
+  <text x="388" y="222" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">02:10</text>
+  <text x="645" y="222" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">21:40</text>
 </svg>
-<div class="illustration-caption">Wochen&uuml;bersicht: Projekte als Zeilen, Tage als Spalten &mdash; mit Notizfeldern und Gesamtzeiten</div>
+<div class="illustration-caption">Wochen&uuml;bersicht: Fortschrittsbalken oben, darunter Tabelle mit # &bull; Projekt &bull; Tage &bull; Summe &mdash; 📝 = Tagesnotiz vorhanden</div>
 </div>
 
 <h3>Navigation &amp; Optionen</h3>
@@ -871,6 +892,7 @@
 <h4>Tab: Allgemein</h4>
 <table>
     <tr><th>Einstellung</th><th>Beschreibung</th></tr>
+    <tr><td><strong>Timer-Darstellung</strong></td><td><strong>Standard:</strong> laufende Sekundenanzeige &bull; <strong>Puls:</strong> keine Sekunden, sanfte Atem-Animation zeigt: Timer l&auml;uft</td></tr>
     <tr><td><strong>Export-Dateiname (Prefix)</strong></td><td>Pr&auml;fix f&uuml;r CSV- und Backup-Dateien (z.B. &bdquo;TimeFlow_Export&ldquo;)</td></tr>
     <tr><td><strong>Zeiten runden (CSV)</strong></td><td>Rundung der Export-Zeiten: Exakt / 1 Min / 5 Min / 15 Min / 30 Min</td></tr>
     <tr><td><strong>Begr&uuml;&szlig;ungstext</strong></td><td>Animierter Text beim App-Start im Aktivit&auml;tsbereich (leer = deaktiviert)</td></tr>
