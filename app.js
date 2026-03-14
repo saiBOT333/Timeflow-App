@@ -196,8 +196,8 @@
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
-                    const modals = document.querySelectorAll('.modal-overlay:not(.hidden)');
-                    if (modals.length > 0) modals[modals.length - 1].classList.add('hidden');
+                    const openModals = document.querySelectorAll('.modal-overlay.open');
+                    if (openModals.length > 0) closeModal(openModals[openModals.length - 1].id);
                     closeAllProjectMenus();
                 }
             });
@@ -233,7 +233,9 @@
                 openSettingsModal(options);
                 return;
             }
-            document.getElementById(id).classList.add('open');
+            const el = document.getElementById(id);
+            el.classList.remove('hidden');
+            el.classList.add('open');
         }
 
         function closeModal(id) {

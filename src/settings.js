@@ -79,7 +79,9 @@ export function openSettingsModal(options) {
     if (tabBtn) switchSettingsTab(tab, tabBtn);
     setTimeout(updateProgressPreview, 50);
 
-    document.getElementById('settingsModal').classList.add('open');
+    const settingsModalEl = document.getElementById('settingsModal');
+    settingsModalEl.classList.remove('hidden');
+    settingsModalEl.classList.add('open');
 }
 
 // Wird von app.js's closeModal('settingsModal') aufgerufen
