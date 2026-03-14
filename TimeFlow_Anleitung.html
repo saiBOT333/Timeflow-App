@@ -247,12 +247,12 @@
 <p>TimeFlow ist eine Zeiterfassungs-App, die komplett im Browser l&auml;uft &ndash; ohne Installation, ohne Server, ohne Account. Alle Daten werden ausschlie&szlig;lich lokal in deinem Browser (localStorage) gespeichert.</p>
 
 <h3>App starten</h3>
-<p>Rufe TimeFlow &uuml;ber den Browser auf &ndash; entweder &uuml;ber die <strong>GitHub-Pages-URL</strong> (<span class="key">saibot333.github.io/Timeflow-App</span>) oder lokal per <span class="key">npm run dev</span> auf Port 5500. Chrome oder Edge werden empfohlen.</p>
+<p>Rufe TimeFlow &uuml;ber die <strong>GitHub-Pages-URL</strong> im Browser auf: <span class="key">saibot333.github.io/Timeflow-App</span> &ndash; Chrome oder Edge werden empfohlen.</p>
 <p>Beim allerersten Start erscheint kurz ein <strong>Onboarding-Dialog</strong>, der dich in 3 kurzen Schritten durch die Grundfunktionen f&uuml;hrt.</p>
 
 <h3>Dein erster Arbeitstag &ndash; Schritt f&uuml;r Schritt</h3>
 <ol class="steps">
-    <li>Klicke auf <strong>Start</strong> <span class="material-symbols-rounded icon-inline">wb_sunny</span> &ndash; der Arbeitstag beginnt, das Allgemein-Projekt l&auml;uft automatisch.</li>
+    <li>Die App <strong>startet automatisch</strong> &ndash; das Allgemein-Projekt l&auml;uft sofort beim &Ouml;ffnen. Der <strong>Start</strong>-Button <span class="material-symbols-rounded icon-inline">wb_sunny</span> dient zum <em>Wiederaufnehmen</em>, wenn alle Timer manuell gestoppt wurden.</li>
     <li>Gib in der Karte &bdquo;Neues Projekt&ldquo; eine <strong>Projektnummer</strong> und einen <strong>Namen</strong> ein und dr&uuml;cke <span class="key">Enter</span>.</li>
     <li>Klicke auf dein neues Projekt in der <strong>Favoritenliste</strong> &ndash; der Timer wechselt sofort dorthin.</li>
     <li>Wechsle jederzeit das aktive Projekt durch einfachen Klick &ndash; immer l&auml;uft genau eines.</li>
@@ -371,7 +371,7 @@
     <tr><th>Karte</th><th>Beschreibung</th></tr>
     <tr><td><strong>Neues Projekt</strong></td><td>Projekte anlegen</td></tr>
     <tr><td><strong>Aktivit&auml;tsbereich</strong></td><td>Aktives Projekt, Timer, Fortschritt, Pausen-Banner, Erinnerungen</td></tr>
-    <tr><td><strong>Favoriten</strong></td><td>Bevorzugte Projekte mit farbigem Rahmen</td></tr>
+    <tr><td><strong>Favoriten</strong></td><td>Bevorzugte Projekte mit ausgef&uuml;lltem Stern-Icon <span class="material-symbols-rounded icon-inline" style="color:var(--md-custom-color-warning);">star</span></td></tr>
     <tr><td><strong>Andere Kostenstellen</strong></td><td>Nicht-Favorit-Projekte</td></tr>
     <tr><td><strong>Pausen</strong></td><td>Manuelle &amp; automatische Pausen</td></tr>
     <tr><td><strong>Wochen&uuml;bersicht</strong></td><td>Tabellarische Wochenansicht mit Notizen</td></tr>
@@ -394,9 +394,9 @@
 
 <!-- SVG: Projekt-Listeneintrag mit Aktions-Buttons -->
 <div class="illustration">
-<svg viewBox="0 0 760 72" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#1E2227;">
+<svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#1E2227;">
   <!-- Project Row -->
-  <rect x="8" y="8" width="744" height="56" rx="12" fill="#282A2F" stroke="#66BB6A" stroke-width="2"/>
+  <rect x="8" y="8" width="744" height="56" rx="12" fill="#282A2F"/>
 
   <!-- Color indicator -->
   <rect x="16" y="16" width="4" height="40" rx="2" fill="#66BB6A"/>
@@ -405,45 +405,30 @@
   <text x="30" y="35" font-family="Roboto,sans-serif" font-weight="500" font-size="14" fill="#E2E2E6">4711 – Mein Projekt</text>
   <text x="30" y="52" font-family="Roboto,sans-serif" font-size="12" fill="#8E9199">01:23 heute  |  Σ 04:17</text>
 
-  <!-- Action Buttons (right side, labeled) -->
-  <!-- star -->
-  <rect x="420" y="18" width="32" height="32" rx="8" fill="#33353A"/>
-  <text x="427" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#FFCA28">&#xe838;</text>
+  <!-- Star button (always visible, filled = Favorit) -->
+  <rect x="660" y="18" width="32" height="32" rx="8" fill="#33353A"/>
+  <text x="667" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#FFCA28">&#xe838;</text>
 
-  <!-- account_tree (subproject) -->
-  <rect x="458" y="18" width="32" height="32" rx="8" fill="#33353A"/>
-  <text x="465" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#C4C7C5">&#xe97a;</text>
-
-  <!-- edit -->
-  <rect x="496" y="18" width="32" height="32" rx="8" fill="#33353A"/>
-  <text x="503" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#C4C7C5">&#xe3c9;</text>
-
-  <!-- schedule -->
-  <rect x="534" y="18" width="32" height="32" rx="8" fill="#33353A"/>
-  <text x="541" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#C4C7C5">&#xe8b5;</text>
-
-  <!-- label -->
-  <rect x="572" y="18" width="32" height="32" rx="8" fill="#33353A"/>
-  <text x="579" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#C4C7C5">&#xe892;</text>
-
-  <!-- archive -->
-  <rect x="610" y="18" width="32" height="32" rx="8" fill="#33353A"/>
-  <text x="617" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#C4C7C5">&#xe149;</text>
-
-  <!-- delete -->
-  <rect x="648" y="18" width="32" height="32" rx="8" fill="#33353A"/>
-  <text x="655" y="40" font-family="Material Symbols Rounded" font-size="18" fill="#FFB4AB">&#xe872;</text>
+  <!-- Overflow menu button (⋮) -->
+  <rect x="700" y="18" width="32" height="32" rx="8" fill="#33353A"/>
+  <text x="708" y="40" font-family="Roboto,sans-serif" font-size="18" fill="#C4C7C5">⋮</text>
 
   <!-- Labels under buttons -->
-  <text x="436" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Favorit</text>
-  <text x="474" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Unter-P.</text>
-  <text x="512" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Bearb.</text>
-  <text x="550" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Zeiten</text>
-  <text x="588" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Tags</text>
-  <text x="626" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Archiv</text>
-  <text x="664" y="68" font-family="Roboto,sans-serif" font-size="9" fill="#FFB4AB" text-anchor="middle">Löschen</text>
+  <text x="676" y="66" font-family="Roboto,sans-serif" font-size="9" fill="#FFCA28" text-anchor="middle">Favorit</text>
+  <text x="716" y="66" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Menü</text>
+
+  <!-- Dropdown menu (open state of ⋮) -->
+  <rect x="560" y="72" width="180" height="72" rx="8" fill="#2E3036" stroke="#44474F" stroke-width="1"/>
+  <text x="578" y="92" font-family="Material Symbols Rounded" font-size="14" fill="#C4C7C5">&#xe3c9;</text>
+  <text x="598" y="92" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">Bearbeiten</text>
+  <text x="578" y="112" font-family="Material Symbols Rounded" font-size="14" fill="#C4C7C5">&#xe97a;</text>
+  <text x="598" y="112" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">Unterprojekt</text>
+  <text x="578" y="132" font-family="Material Symbols Rounded" font-size="14" fill="#C4C7C5">&#xe149;</text>
+  <text x="598" y="132" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">Archivieren / Löschen</text>
+  <!-- Dropdown arrow hint -->
+  <line x1="716" y1="70" x2="716" y2="72" stroke="#44474F" stroke-width="1"/>
 </svg>
-<div class="illustration-caption">Projektzeile: Links Zeitanzeige, rechts Aktions-Buttons</div>
+<div class="illustration-caption">Projektzeile: Stern-Button immer sichtbar, weitere Aktionen im ⋮-Menü</div>
 </div>
 
 <h3>Projekt starten / stoppen</h3>
@@ -451,15 +436,15 @@
 <div class="tip"><strong>Tipp:</strong> Es l&auml;uft immer genau ein Projekt. Stoppst du eines, springt der Timer automatisch auf &bdquo;Allgemein (SYS)&ldquo; zur&uuml;ck.</div>
 
 <h3>Aktions-Buttons erkl&auml;rt</h3>
+<p>Jede Projektzeile hat einen immer sichtbaren <strong>Stern-Button</strong> sowie ein <strong>⋮-Men&uuml;</strong> mit weiteren Aktionen:</p>
 <table>
     <tr><th>Icon</th><th>Aktion</th><th>Beschreibung</th></tr>
-    <tr><td><span class="material-symbols-rounded icon-inline" style="color:var(--md-custom-color-warning);">star</span></td><td>Favorit</td><td>Verschiebt das Projekt zwischen Favoriten und &bdquo;Andere Kostenstellen&ldquo;</td></tr>
-    <tr><td><span class="material-symbols-rounded icon-inline">account_tree</span></td><td>Unterprojekt</td><td>Legt ein Unterprojekt an (Abschnitt 4)</td></tr>
-    <tr><td><span class="material-symbols-rounded icon-inline">edit</span></td><td>Bearbeiten</td><td>&Auml;ndert Projektnummer und Name</td></tr>
-    <tr><td><span class="material-symbols-rounded icon-inline">schedule</span></td><td>Zeiten</td><td>&Ouml;ffnet die Zeitbearbeitung f&uuml;r diesen Tag</td></tr>
-    <tr><td><span class="material-symbols-rounded icon-inline">label</span></td><td>Tags</td><td>Ordnet dem Projekt Tags zu (erscheint nur wenn Tags existieren)</td></tr>
-    <tr><td><span class="material-symbols-rounded icon-inline">archive</span></td><td>Archivieren</td><td>Verschiebt in den Archiv-Bereich (jederzeit r&uuml;ckholbar)</td></tr>
-    <tr><td><span class="material-symbols-rounded icon-inline" style="color:var(--md-sys-color-error);">delete</span></td><td>L&ouml;schen</td><td>L&ouml;scht das Projekt und alle seine Zeiten unwiderruflich</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline" style="color:var(--md-custom-color-warning);">star</span></td><td>Favorit <em>(direkt)</em></td><td>Verschiebt das Projekt zwischen Favoriten und &bdquo;Andere Kostenstellen&ldquo;</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">edit</span></td><td>Bearbeiten <em>(⋮)</em></td><td>&Auml;ndert Projektnummer und Name</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">account_tree</span></td><td>Unterprojekt <em>(⋮)</em></td><td>Legt ein Unterprojekt an (Abschnitt 4)</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">label</span></td><td>Tags <em>(⋮)</em></td><td>Ordnet dem Projekt Tags zu (erscheint nur wenn Tags existieren)</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline">archive</span></td><td>Archivieren <em>(⋮)</em></td><td>Verschiebt in den Archiv-Bereich (jederzeit r&uuml;ckholbar)</td></tr>
+    <tr><td><span class="material-symbols-rounded icon-inline" style="color:var(--md-sys-color-error);">delete</span></td><td>L&ouml;schen <em>(⋮)</em></td><td>L&ouml;scht das Projekt und alle seine Zeiten unwiderruflich</td></tr>
 </table>
 
 <h3>Zeitanzeige pro Projekt</h3>
@@ -473,7 +458,7 @@
 
 <h3>Unterprojekt anlegen</h3>
 <ol class="steps">
-    <li>Klicke auf den <span class="material-symbols-rounded icon-inline">account_tree</span> Button am gew&uuml;nschten Hauptprojekt.</li>
+    <li>Klicke auf das <strong>⋮-Men&uuml;</strong> am gew&uuml;nschten Hauptprojekt und w&auml;hle <span class="material-symbols-rounded icon-inline">account_tree</span> <strong>Unterprojekt anlegen</strong>.</li>
     <li>Gib einen Namen ein (z.B. &bdquo;Besprechung allgemein&ldquo;).</li>
     <li>Klicke auf &bdquo;Anlegen&ldquo; oder dr&uuml;cke <span class="key">Enter</span>.</li>
 </ol>
@@ -502,17 +487,17 @@
 <p>Jedes Projekt hat eine Liste von Zeiteintr&auml;gen (Logs). Wenn du ein Projekt startest, wird ein neuer Eintrag mit der aktuellen Uhrzeit als Startzeit angelegt. Beim Stoppen wird die Endzeit gesetzt. Pausen werden automatisch von der Nettoproduktivzeit abgezogen.</p>
 
 <h3>Zeiten manuell korrigieren</h3>
+<p>Zeitkorrekturen werden ausschlie&szlig;lich im <strong>Timesheet</strong> (Abschnitt&nbsp;6) vorgenommen &ndash; direkt am Projekt ist das nicht mehr m&ouml;glich.</p>
 <ol class="steps">
-    <li>Klicke auf den <span class="material-symbols-rounded icon-inline">schedule</span> Button am gew&uuml;nschten Projekt.</li>
-    <li>Ein Dialog zeigt alle Zeiteintr&auml;ge f&uuml;r den ausgew&auml;hlten Tag.</li>
-    <li>Klicke in eine Start- oder Endzeit und &auml;ndere sie (Format: HH:MM).</li>
+    <li>Wechsle zur <strong>Timesheet-Karte</strong>.</li>
+    <li>Klicke in eine Start- oder Endzeit des gew&uuml;nschten Eintrags und &auml;ndere sie (Format: HH:MM).</li>
     <li>Die &Auml;nderung wird sofort gespeichert &ndash; ohne Klick auf &bdquo;Speichern&ldquo;.</li>
 </ol>
 
 <div class="tip"><strong>Automatische Kettenanpassung:</strong> &Auml;nderst du das Ende von Projekt A auf 10:30 und Projekt B hat exakt um 10:00 begonnen, wird der Start von B automatisch auf 10:30 korrigiert. So entstehen keine L&uuml;cken oder &Uuml;berlappungen im Tagesprotokoll.</div>
 
 <h3>Zeiteintr&auml;ge l&ouml;schen</h3>
-<p>Im Zeitbearbeitungs-Dialog kannst du abgeschlossene Eintr&auml;ge &uuml;ber den roten <span class="material-symbols-rounded icon-inline" style="color:var(--md-sys-color-error);">delete</span> Button l&ouml;schen. Aktive (noch laufende) Eintr&auml;ge k&ouml;nnen nicht gel&ouml;scht werden.</p>
+<p>Im Timesheet kannst du abgeschlossene Eintr&auml;ge &uuml;ber den roten <span class="material-symbols-rounded icon-inline" style="color:var(--md-sys-color-error);">delete</span> Button l&ouml;schen. Aktive (noch laufende) Eintr&auml;ge k&ouml;nnen nicht gel&ouml;scht werden.</p>
 
 
 <!-- ████  6. TIMESHEET  ████ -->
@@ -597,10 +582,9 @@
 
 <h3>Manuelle Pause</h3>
 <ol class="steps">
-    <li>&Ouml;ffne die Pausen-Karte (ggf. aufklappen).</li>
-    <li>Klicke auf den <span class="material-symbols-rounded icon-inline">coffee</span> Button im Karten-Header.</li>
+    <li>Klicke im <strong>Aktivit&auml;tsbereich</strong> auf den <span class="material-symbols-rounded icon-inline">coffee</span> <strong>Pause</strong>-Button.</li>
     <li>Im Aktivit&auml;tsbereich erscheint ein pulsierendes Banner &bdquo;Manuelle Pause&ldquo;.</li>
-    <li>Klicke den Button erneut (jetzt <span class="material-symbols-rounded icon-inline">play_arrow</span>), um die Pause zu beenden.</li>
+    <li>Klicke den Button erneut (jetzt <span class="material-symbols-rounded icon-inline">play_arrow</span> <strong>Weiter</strong>), um die Pause zu beenden.</li>
 </ol>
 
 <div class="tip"><strong>Pausen-Banner:</strong> Sobald eine Pause aktiv ist, erscheint im Aktivit&auml;tsbereich ein animiertes Banner &bdquo;Automatische Pause&ldquo; oder &bdquo;Manuelle Pause&ldquo;. Es ist gut sichtbar und kann nicht &uuml;bersehen werden.</div>
