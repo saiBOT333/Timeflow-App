@@ -207,6 +207,7 @@
         <span class="badge"><span class="material-symbols-rounded">storage</span>Daten bleiben lokal</span>
         <span class="badge"><span class="material-symbols-rounded">install_desktop</span>Als PWA installierbar</span>
         <span class="badge"><span class="material-symbols-rounded">palette</span>Dark &amp; Light Mode</span>
+        <span class="badge"><span class="material-symbols-rounded">tag</span>Version 3.4.1</span>
     </div>
 </div>
 
@@ -246,7 +247,8 @@
 <p>TimeFlow ist eine Zeiterfassungs-App, die komplett im Browser l&auml;uft &ndash; ohne Installation, ohne Server, ohne Account. Alle Daten werden ausschlie&szlig;lich lokal in deinem Browser (localStorage) gespeichert.</p>
 
 <h3>App starten</h3>
-<p>&Ouml;ffne <span class="key">index.html</span> in Chrome oder Edge (empfohlen). Beim allerersten Start erscheint kurz ein <strong>Onboarding-Dialog</strong>, der dich in 3 kurzen Schritten durch die Grundfunktionen f&uuml;hrt.</p>
+<p>Rufe TimeFlow &uuml;ber den Browser auf &ndash; entweder &uuml;ber die <strong>GitHub-Pages-URL</strong> (<span class="key">saibot333.github.io/Timeflow-App</span>) oder lokal per <span class="key">npm run dev</span> auf Port 5500. Chrome oder Edge werden empfohlen.</p>
+<p>Beim allerersten Start erscheint kurz ein <strong>Onboarding-Dialog</strong>, der dich in 3 kurzen Schritten durch die Grundfunktionen f&uuml;hrt.</p>
 
 <h3>Dein erster Arbeitstag &ndash; Schritt f&uuml;r Schritt</h3>
 <ol class="steps">
@@ -281,24 +283,27 @@
 
   <!-- Header Buttons (right side) -->
   <!-- label icon button -->
-  <rect x="632" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
-  <text x="641" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xe892;</text>
+  <rect x="590" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
+  <text x="599" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xe892;</text>
   <!-- theme button -->
-  <rect x="674" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
-  <text x="683" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xe518;</text>
+  <rect x="632" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
+  <text x="641" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xe518;</text>
   <!-- dashboard_customize button -->
-  <rect x="716" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
-  <text x="723" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xf006;</text>
+  <rect x="674" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
+  <text x="681" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xf006;</text>
   <!-- settings button -->
-  <rect x="716" y="12" width="36" height="36" rx="8" fill="transparent"/>
+  <rect x="716" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
+  <text x="724" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xe8b8;</text>
+  <!-- help button -->
   <rect x="758" y="12" width="36" height="36" rx="8" fill="#282A2F"/>
-  <text x="766" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xe8b8;</text>
+  <text x="766" y="36" font-family="Material Symbols Rounded" font-size="20" fill="#C4C7C5">&#xe887;</text>
 
   <!-- Button Labels -->
-  <text x="638" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Tags</text>
-  <text x="692" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Theme</text>
-  <text x="734" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Karten</text>
-  <text x="776" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Einst.</text>
+  <text x="608" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Tags</text>
+  <text x="650" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Theme</text>
+  <text x="692" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Karten</text>
+  <text x="734" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Einst.</text>
+  <text x="776" y="55" font-family="Roboto,sans-serif" font-size="9" fill="#8E9199" text-anchor="middle">Hilfe</text>
 
   <!-- Quick Actions -->
   <rect x="0" y="70" width="800" height="56" fill="#1A1D22"/>
@@ -511,7 +516,7 @@
 
 
 <!-- ████  6. TIMESHEET  ████ -->
-<h2 id="timesheet"><span class="material-symbols-rounded">receipt_long</span>6. Timesheet <span class="new-badge">Neu</span></h2>
+<h2 id="timesheet"><span class="material-symbols-rounded">receipt_long</span>6. Timesheet</h2>
 
 <p>Das Timesheet zeigt alle Zeiteintr&auml;ge eines Tages <strong>chronologisch als Timeline</strong> &ndash; &auml;hnlich einem Tageskalender. So hast du jederzeit einen vollst&auml;ndigen &Uuml;berblick &uuml;ber den Verlauf deines Arbeitstages.</p>
 
@@ -563,6 +568,8 @@
     <li><strong>Chronologische Eintr&auml;ge:</strong> Jeder Eintrag zeigt Startzeit, Endzeit (oder &bdquo;l&auml;uft...&ldquo;), Projektname und Dauer</li>
     <li><strong>Unterprojekte:</strong> Als &bdquo;Hauptprojekt &rarr; Unterprojekt&ldquo; dargestellt</li>
     <li><strong>Aktiver Eintrag:</strong> Mit gr&uuml;nem Indikator hervorgehoben</li>
+    <li><strong>Notizfeld:</strong> Unter jedem Eintrag kann eine kurze Notiz hinterlegt werden (z.B. was in dieser Zeit gemacht wurde)</li>
+    <li><strong>&Uuml;berlappungswarnung:</strong> Wenn sich zwei Eintr&auml;ge zeitlich &uuml;berschneiden, erscheint ein farbiger Hinweis direkt im Eintrag</li>
 </ul>
 
 <div class="tip"><strong>Unterschied zur Wochen&uuml;bersicht:</strong> Das Timesheet zeigt <em>einzelne Zeitabschnitte</em> in zeitlicher Reihenfolge. Die Wochen&uuml;bersicht zeigt <em>aggregierte Tageszeiten</em> pro Projekt. Beide Ansichten erg&auml;nzen sich.</div>
@@ -713,56 +720,82 @@
 
 <!-- SVG: Wochenübersicht Tabelle -->
 <div class="illustration">
-<svg viewBox="0 0 700 170" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#1E2227;">
+<svg viewBox="0 0 700 206" xmlns="http://www.w3.org/2000/svg" style="width:100%; display:block; background:#1E2227;">
+  <!-- Card Header -->
+  <rect x="0" y="0" width="700" height="36" fill="#1E2227"/>
+  <text x="14" y="23" font-family="Roboto,sans-serif" font-weight="500" font-size="14" fill="#E2E2E6">Wochenübersicht</text>
+  <!-- KW nav -->
+  <rect x="350" y="6" width="24" height="24" rx="6" fill="#282A2F"/>
+  <text x="356" y="23" font-family="sans-serif" font-size="12" fill="#8E9199">‹</text>
+  <text x="380" y="22" font-family="Roboto,sans-serif" font-size="11" fill="#C4C7C5">KW 10</text>
+  <rect x="420" y="6" width="24" height="24" rx="6" fill="#282A2F"/>
+  <text x="426" y="23" font-family="sans-serif" font-size="12" fill="#8E9199">›</text>
+  <!-- Heute btn -->
+  <rect x="450" y="6" width="24" height="24" rx="6" fill="#282A2F"/>
+  <text x="456" y="23" font-family="Material Symbols Rounded" font-size="14" fill="#C4C7C5">&#xe8df;</text>
+  <!-- Weekend btn -->
+  <rect x="480" y="6" width="24" height="24" rx="6" fill="#282A2F"/>
+  <text x="486" y="23" font-family="Material Symbols Rounded" font-size="14" fill="#C4C7C5">&#xe80c;</text>
+  <!-- Dezimal btn -->
+  <rect x="510" y="6" width="24" height="24" rx="6" fill="#004A77" stroke="#A8C7FA" stroke-width="1"/>
+  <text x="515" y="22" font-family="Roboto,sans-serif" font-size="9" font-weight="700" fill="#A8C7FA">1,5</text>
+  <text x="496" y="38" font-family="Roboto,sans-serif" font-size="8" fill="#A8C7FA" text-anchor="middle">Dezimal</text>
+  <!-- Collapse btn -->
+  <rect x="540" y="6" width="24" height="24" rx="6" fill="#282A2F"/>
+  <text x="546" y="23" font-family="Material Symbols Rounded" font-size="14" fill="#C4C7C5">&#xe5cf;</text>
+  <line x1="0" y1="36" x2="700" y2="36" stroke="#44474F" stroke-width="1"/>
+
   <!-- Table header -->
-  <rect x="0" y="0" width="700" height="32" fill="#282A2F"/>
-  <text x="10" y="21" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">Projekt</text>
-  <text x="152" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Mo 10.02</text>
-  <text x="252" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Di 11.02</text>
-  <text x="352" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Mi 12.02</text>
-  <text x="452" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#C4C7C5" text-anchor="middle">Do 13.02</text>
-  <text x="552" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#C4C7C5" text-anchor="middle">Fr 14.02</text>
-  <text x="650" y="21" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#8E9199" text-anchor="middle">Gesamt</text>
-  <line x1="0" y1="32" x2="700" y2="32" stroke="#44474F" stroke-width="1"/>
+  <rect x="0" y="36" width="700" height="32" fill="#282A2F"/>
+  <text x="10" y="57" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">Projekt</text>
+  <text x="152" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Mo 10.02</text>
+  <text x="252" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Di 11.02</text>
+  <text x="352" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">Mi 12.02</text>
+  <text x="452" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#C4C7C5" text-anchor="middle">Do 13.02</text>
+  <text x="552" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#C4C7C5" text-anchor="middle">Fr 14.02</text>
+  <text x="650" y="57" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#8E9199" text-anchor="middle">Gesamt</text>
+  <line x1="0" y1="68" x2="700" y2="68" stroke="#44474F" stroke-width="1"/>
 
   <!-- Row 1 -->
-  <rect x="100" y="32" width="100" height="40" fill="rgba(168,199,250,0.05)"/>
-  <text x="10" y="54" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">4711 · Projekt A</text>
-  <text x="152" y="48" font-family="Roboto,sans-serif" font-weight="500" font-size="13" fill="#E2E2E6" text-anchor="middle">03:20</text>
-  <text x="152" y="63" font-family="Roboto,sans-serif" font-size="10" fill="#8E9199" text-anchor="middle" font-style="italic">Meeting...</text>
-  <text x="252" y="54" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">01:45</text>
-  <text x="352" y="54" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">02:10</text>
-  <text x="452" y="54" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">–</text>
-  <text x="552" y="54" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">–</text>
-  <text x="650" y="54" font-family="Roboto,sans-serif" font-weight="500" font-size="13" fill="#A8C7FA" text-anchor="middle">07:15</text>
-  <line x1="0" y1="72" x2="700" y2="72" stroke="rgba(68,71,79,0.5)" stroke-width="1"/>
+  <rect x="100" y="68" width="100" height="40" fill="rgba(168,199,250,0.05)"/>
+  <text x="10" y="90" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">4711 · Projekt A</text>
+  <text x="152" y="84" font-family="Roboto,sans-serif" font-weight="500" font-size="13" fill="#E2E2E6" text-anchor="middle">03:20</text>
+  <text x="152" y="99" font-family="Roboto,sans-serif" font-size="10" fill="#8E9199" text-anchor="middle" font-style="italic">Meeting...</text>
+  <text x="252" y="90" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">01:45</text>
+  <text x="352" y="90" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">02:10</text>
+  <text x="452" y="90" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">–</text>
+  <text x="552" y="90" font-family="Roboto,sans-serif" font-size="13" fill="#C4C7C5" text-anchor="middle">–</text>
+  <text x="650" y="90" font-family="Roboto,sans-serif" font-weight="500" font-size="13" fill="#A8C7FA" text-anchor="middle">07:15</text>
+  <line x1="0" y1="108" x2="700" y2="108" stroke="rgba(68,71,79,0.5)" stroke-width="1"/>
 
   <!-- Row 2 (subproject) -->
-  <text x="20" y="94" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">↳ Besprechung</text>
-  <text x="152" y="94" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">01:00</text>
-  <text x="252" y="94" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">–</text>
-  <text x="352" y="94" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">–</text>
-  <line x1="0" y1="112" x2="700" y2="112" stroke="rgba(68,71,79,0.5)" stroke-width="1"/>
+  <text x="20" y="130" font-family="Roboto,sans-serif" font-size="11" fill="#8E9199">↳ Besprechung</text>
+  <text x="152" y="130" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">01:00</text>
+  <text x="252" y="130" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">–</text>
+  <text x="352" y="130" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">–</text>
+  <line x1="0" y1="148" x2="700" y2="148" stroke="rgba(68,71,79,0.5)" stroke-width="1"/>
 
   <!-- Row 3 -->
-  <text x="10" y="134" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">SYS · Allgemein</text>
-  <text x="152" y="134" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">00:30</text>
-  <text x="252" y="134" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">01:10</text>
-  <line x1="0" y1="152" x2="700" y2="152" stroke="#44474F" stroke-width="1"/>
+  <text x="10" y="170" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5">SYS · Allgemein</text>
+  <text x="152" y="170" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">00:30</text>
+  <text x="252" y="170" font-family="Roboto,sans-serif" font-size="12" fill="#C4C7C5" text-anchor="middle">01:10</text>
+  <line x1="0" y1="188" x2="700" y2="188" stroke="#44474F" stroke-width="1"/>
 
   <!-- Total row -->
-  <text x="10" y="168" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA">Gesamt</text>
-  <text x="152" y="168" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">04:50</text>
-  <text x="252" y="168" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">02:55</text>
+  <text x="10" y="202" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA">Gesamt</text>
+  <text x="152" y="202" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">04:50</text>
+  <text x="252" y="202" font-family="Roboto,sans-serif" font-weight="500" font-size="12" fill="#A8C7FA" text-anchor="middle">02:55</text>
 </svg>
 <div class="illustration-caption">Wochen&uuml;bersicht: Projekte als Zeilen, Tage als Spalten &mdash; mit Notizfeldern und Gesamtzeiten</div>
 </div>
 
 <h3>Navigation &amp; Optionen</h3>
 <ul>
-    <li><strong>KW-Navigation:</strong> Pfeile im Karten-Header bl&auml;ttern durch Kalenderwochen</li>
+    <li><strong>KW-Navigation:</strong> Pfeile im Karten-Header bl&auml;ttern durch Kalenderwochen. Der <span class="material-symbols-rounded icon-inline">today</span> Button springt zur aktuellen Woche.</li>
     <li><strong>Wochenende:</strong> <span class="material-symbols-rounded icon-inline">weekend</span> Button zeigt/versteckt Samstag &amp; Sonntag</li>
-    <li><strong>Tagesnotizen:</strong> Unter jeder Zeitangabe befindet sich ein Notizfeld f&uuml;r projektbezogene Tagesnotizen</li>
+    <li><strong>Dezimal-Modus:</strong> <span class="material-symbols-rounded icon-inline">decimal_increase</span> Button wechselt das Zeitformat zwischen HH:MM (z.B. &bdquo;01:30&ldquo;) und Dezimalstunden (z.B. &bdquo;1,50&ldquo;) &ndash; praktisch f&uuml;r die manuelle &Uuml;bertragung in andere Systeme</li>
+    <li><strong>Tagesnotizen:</strong> Unter jeder Zeitangabe befindet sich ein Notizfeld f&uuml;r projektbezogene Tagesnotizen (Klick auf das Feld &ouml;ffnet ein Popup)</li>
+    <li><strong>Unterprojekte ein-/ausklappen:</strong> Klick auf den Pfeil-Button neben einem Elternprojekt blendet dessen Unterprojektzeilen aus &ndash; n&uuml;tzlich bei vielen Projekten</li>
     <li><strong>Unterprojekte:</strong> Erscheinen einger&uuml;ckt mit &#8627; Symbol unter dem Hauptprojekt</li>
 </ul>
 
@@ -798,7 +831,7 @@
 
 
 <!-- ████  13. EXTERNE LINKS  ████ -->
-<h2 id="links"><span class="material-symbols-rounded">link</span>13. Externe Links <span class="new-badge">Neu</span></h2>
+<h2 id="links"><span class="material-symbols-rounded">link</span>13. Externe Links</h2>
 
 <p>Die Karte &bdquo;Externe Links&ldquo; erm&ouml;glicht es, Buttons f&uuml;r h&auml;ufig verwendete Webanwendungen direkt in TimeFlow einzubinden &ndash; z.B. das Firmen-Intranet, ein Ticketsystem oder einen Kalender.</p>
 
@@ -960,27 +993,26 @@
 
 <p>TimeFlow kann als <strong>Progressive Web App (PWA)</strong> installiert werden und verh&auml;lt sich dann wie eine native Desktop-App &ndash; mit eigenem Fenster und App-Icon.</p>
 
-<h3>Installation &uuml;ber HTTP(S) (empfohlen)</h3>
+<h3>Installation &uuml;ber GitHub Pages (empfohlen)</h3>
 <ol class="steps">
-    <li>Rufe TimeFlow &uuml;ber einen Webserver auf (HTTP oder HTTPS).</li>
+    <li>Rufe TimeFlow unter <span class="key">saibot333.github.io/Timeflow-App</span> in Chrome oder Edge auf.</li>
     <li>In der Adresszeile erscheint ein <strong>Installations-Icon</strong> (Bildschirm mit Plus-Zeichen).</li>
     <li>Klicke darauf und best&auml;tige &bdquo;Installieren&ldquo;.</li>
-    <li>TimeFlow &ouml;ffnet sich fortan als eigenes App-Fenster.</li>
+    <li>TimeFlow &ouml;ffnet sich fortan als eigenes App-Fenster &ndash; auch ohne Browser.</li>
 </ol>
 
-<h3>Lokale Nutzung (file://)</h3>
-<p>Wenn du die HTML-Datei direkt &ouml;ffnest, ist die PWA-Installation nicht m&ouml;glich. Du kannst aber eine Desktop-Verkn&uuml;pfung erstellen:</p>
+<h3>Installation &uuml;ber lokalen Dev-Server</h3>
+<p>Mit <span class="key">npm run dev</span> l&auml;uft TimeFlow auf <span class="key">localhost:5500</span>. Auch dort ist eine PWA-Installation m&ouml;glich:</p>
 <ol class="steps">
-    <li>&Ouml;ffne die Datei in <strong>Chrome</strong> oder <strong>Edge</strong>.</li>
-    <li>Klicke auf das <strong>Men&uuml;</strong> (&vellip;) oben rechts.</li>
-    <li><strong>Chrome:</strong> W&auml;hle &bdquo;Speichern und Freigeben &rarr; Verkn&uuml;pfung erstellen...&ldquo; und aktiviere &bdquo;Als Fenster &ouml;ffnen&ldquo;.</li>
-    <li><strong>Edge:</strong> W&auml;hle &bdquo;Apps &rarr; Diese Seite als App installieren&ldquo;.</li>
+    <li>Starte den Dev-Server und &ouml;ffne <span class="key">http://localhost:5500</span> in Chrome oder Edge.</li>
+    <li>Das Installations-Icon erscheint in der Adresszeile.</li>
+    <li>Klicke darauf und best&auml;tige &bdquo;Installieren&ldquo;.</li>
 </ol>
-<div class="tip"><strong>Offline-Betrieb:</strong> Der enthaltene Service Worker (sw.js) sorgt daf&uuml;r, dass TimeFlow auch ohne Internetverbindung funktioniert &ndash; nach der ersten Installation.</div>
+<div class="tip"><strong>Offline-Betrieb:</strong> Der enthaltene Service Worker sorgt daf&uuml;r, dass TimeFlow nach dem ersten Laden auch ohne Internetverbindung funktioniert.</div>
 
 
 <!-- ████  19. UNDO  ████ -->
-<h2 id="undo"><span class="material-symbols-rounded">undo</span>19. R&uuml;ckg&auml;ngig (Undo) <span class="new-badge">Neu</span></h2>
+<h2 id="undo"><span class="material-symbols-rounded">undo</span>19. R&uuml;ckg&auml;ngig (Undo)</h2>
 
 <p>TimeFlow unterst&uuml;tzt einen <strong>Undo-Mechanismus</strong> f&uuml;r kritische Aktionen. Nach dem L&ouml;schen eines Projekts oder dem Klicken auf &bdquo;Feierabend&ldquo; erscheint f&uuml;r einige Sekunden ein Toast-Banner am unteren Bildschirmrand.</p>
 
@@ -1049,7 +1081,7 @@
 </div><!-- /container -->
 
 <footer>
-    TimeFlow &mdash; Benutzerhandbuch &mdash; Alle Daten werden lokal in deinem Browser gespeichert.
+    TimeFlow &mdash; Benutzerhandbuch &mdash; Version 3.4.1 &mdash; Stand: M&auml;rz 2026 &mdash; Alle Daten werden lokal in deinem Browser gespeichert.
 </footer>
 
 </body>
