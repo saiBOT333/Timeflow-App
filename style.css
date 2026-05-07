@@ -2190,3 +2190,76 @@ textarea.input-field {
 .gap-8 { gap: 8px; }
 .fw-500 { font-weight: 500; }
 .fw-600 { font-weight: 600; }
+
+/* === Timesheet: klickbarer Projektname + Picker === */
+.ts-entry-project-btn {
+    background: transparent;
+    border: none;
+    padding: 2px 4px;
+    margin: -2px -4px;
+    border-radius: 4px;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ts-entry-project-btn:hover {
+    background: var(--md-sys-color-surface-container-high);
+}
+.ts-entry-project-btn .material-symbols-rounded {
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+.ts-project-picker {
+    position: absolute;
+    z-index: 100;
+    margin-top: 4px;
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    padding: 4px;
+    max-height: 280px;
+    overflow-y: auto;
+    min-width: 200px;
+    max-width: 320px;
+}
+.ts-project-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--md-sys-color-on-surface);
+    font-size: 13px;
+}
+.ts-project-picker-item:hover {
+    background: var(--md-sys-color-surface-container-highest);
+}
+.ts-project-picker-item.is-current {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+.ts-project-picker-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.ts-project-picker-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ts-entry-content { position: relative; }

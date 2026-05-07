@@ -200,7 +200,13 @@ export function renderTimesheetCard() {
             <div class="ts-entry-content">
                 <div class="ts-entry-header">
                     <div class="ts-entry-project-info">
-                        <span class="ts-entry-project" style="color:${pColor};" title="${escapeHtml(projectLabel)}">${escapeHtml(projectLabel)}</span>
+                        <button type="button" class="ts-entry-project ts-entry-project-btn"
+                            style="color:${pColor};"
+                            title="Projekt wechseln"
+                            onclick="toggleProjectPicker('${p.id}', ${entry.logIdx}, this)">
+                            ${escapeHtml(projectLabel)}
+                            <span class="material-symbols-rounded fs-14">expand_more</span>
+                        </button>
                         ${projectNum ? `<span class="ts-entry-num">${projectNum}</span>` : ''}
                     </div>
                     <span class="ts-entry-duration">${durationStr}</span>
@@ -405,6 +411,74 @@ export function changeLogProject(oldProjectId, logIdx, newProjectId) {
     return true;
 }
 
+// =============================================================================
+// Projekt-Picker (Dropdown beim Klick auf Projektname)
+// =============================================================================
+let openPickerEl = null;
+
+function getActiveProjectsForPicker() {
+    return state.projects
+        .filter(p => !p.archived)
+        .map(p => {
+            const parent = p.parentId ? state.projects.find(pp => pp.id === p.parentId) : null;
+            const label = parent ? parent.name + ' → ' + p.name : p.name;
+            return { id: p.id, label, color: p.color || '#757575', sortKey: (parent ? parent.name : p.name) + ' ' + p.name };
+        })
+        .sort((a, b) => a.sortKey.localeCompare(b.sortKey, 'de'));
+}
+
+function closeProjectPicker() {
+    if (openPickerEl) {
+        openPickerEl.remove();
+        openPickerEl = null;
+        document.removeEventListener('click', onPickerOutsideClick, true);
+        document.removeEventListener('keydown', onPickerKeydown, true);
+    }
+}
+
+function onPickerOutsideClick(ev) {
+    if (openPickerEl && !openPickerEl.contains(ev.target) && !ev.target.closest('.ts-entry-project-btn')) {
+        closeProjectPicker();
+    }
+}
+
+function onPickerKeydown(ev) {
+    if (ev.key === 'Escape') closeProjectPicker();
+}
+
+export function toggleProjectPicker(projectId, logIdx, anchorBtn) {
+    if (openPickerEl) {
+        closeProjectPicker();
+        return;
+    }
+    const list = getActiveProjectsForPicker();
+    if (list.length === 0) return;
+    const picker = document.createElement('div');
+    picker.className = 'ts-project-picker';
+    picker.innerHTML = list.map(p =>
+        `<button type="button" class="ts-project-picker-item${p.id === projectId ? ' is-current' : ''}"
+            onclick="pickProjectForLog('${projectId}', ${logIdx}, '${p.id}')">
+            <span class="ts-project-picker-dot" style="background:${p.color};"></span>
+            <span class="ts-project-picker-label">${escapeHtml(p.label)}</span>
+        </button>`
+    ).join('');
+
+    const entryContent = anchorBtn.closest('.ts-entry-content');
+    if (!entryContent) return;
+    entryContent.appendChild(picker);
+    openPickerEl = picker;
+
+    setTimeout(() => {
+        document.addEventListener('click', onPickerOutsideClick, true);
+        document.addEventListener('keydown', onPickerKeydown, true);
+    }, 0);
+}
+
+export function pickProjectForLog(oldProjectId, logIdx, newProjectId) {
+    closeProjectPicker();
+    changeLogProject(oldProjectId, logIdx, newProjectId);
+}
+
 // onclick-Handler für inline HTML verfügbar machen
 if (typeof window !== 'undefined') {
     window.navigateTimesheetDay = navigateTimesheetDay;
@@ -414,4 +488,6 @@ if (typeof window !== 'undefined') {
     window.deleteTimesheetLog = deleteTimesheetLog;
     window.deleteAutoPauseFromTimesheet = deleteAutoPauseFromTimesheet;
     window.deletePause = deletePause;
+    window.toggleProjectPicker = toggleProjectPicker;
+    window.pickProjectForLog = pickProjectForLog;
 }
