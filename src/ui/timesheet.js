@@ -4,6 +4,7 @@ import { getRoundedMs, calculateNetDurationForDate } from '../calculations.js';
 import { commitState, persistState, notifyStateChanged } from '../stateManager.js';
 import { showAlert, showConfirm } from './dialogs.js';
 import { deletePause, deleteAutoPauseFromTimesheet } from '../pauses.js';
+import { switchProject } from '../projects.js';
 
 // =============================================================================
 // ui/timesheet.js – Stundenzettel (tägliche Zeiteinträge)
@@ -136,6 +137,28 @@ export function renderTimesheetCard() {
         </div>
     </div>`;
 
+    const hasProjects = state.projects.some(p => !p.archived);
+    html += `<div class="ts-manual-row">
+    <button type="button" class="ts-manual-btn" onclick="toggleManualEntryForm()"
+        ${hasProjects ? '' : 'disabled title="Zuerst ein Projekt anlegen"'}>
+        <span class="material-symbols-rounded fs-16">add</span>
+        Eintrag hinzufügen
+    </button>
+    <div class="ts-manual-form is-hidden" id="tsManualForm">
+        <select class="ts-manual-project" id="tsManualProject">
+            ${getActiveProjectsForPicker().map(p =>
+                `<option value="${p.id}">${escapeHtml(p.label)}</option>`
+            ).join('')}
+        </select>
+        <input type="text" class="ts-time-input" id="tsManualStart" placeholder="HH:MM" maxlength="5">
+        <span class="ts-entry-arrow">→</span>
+        <input type="text" class="ts-time-input" id="tsManualEnd" placeholder="HH:MM" maxlength="5">
+        <input type="text" class="ts-manual-note" id="tsManualNote" placeholder="Notiz (optional)">
+        <button type="button" class="ts-manual-cancel" onclick="toggleManualEntryForm()">Abbrechen</button>
+        <button type="button" class="ts-manual-save" onclick="submitManualEntry()">Speichern</button>
+    </div>
+</div>`;
+
     if (entries.length === 0) {
         html += '<div class="fs-13-variant" style="padding:20px; text-align:center; font-style:italic;">Keine Zeiteintr\u00e4ge f\u00fcr diesen Tag.</div>';
         container.innerHTML = html;
@@ -199,7 +222,13 @@ export function renderTimesheetCard() {
             <div class="ts-entry-content">
                 <div class="ts-entry-header">
                     <div class="ts-entry-project-info">
-                        <span class="ts-entry-project" style="color:${pColor};" title="${escapeHtml(projectLabel)}">${escapeHtml(projectLabel)}</span>
+                        <button type="button" class="ts-entry-project ts-entry-project-btn"
+                            style="color:${pColor};"
+                            title="Projekt wechseln"
+                            onclick="toggleProjectPicker('${p.id}', ${entry.logIdx}, this)">
+                            ${escapeHtml(projectLabel)}
+                            <span class="material-symbols-rounded fs-14">expand_more</span>
+                        </button>
                         ${projectNum ? `<span class="ts-entry-num">${projectNum}</span>` : ''}
                     </div>
                     <span class="ts-entry-duration">${durationStr}</span>
@@ -337,11 +366,199 @@ function showOverlapWarning(overlaps) {
     container.insertBefore(warningDiv, container.firstChild);
 }
 
+// =============================================================================
+// addManualLog – manuell abgeschlossenen Eintrag anlegen
+// =============================================================================
+// Liefert true bei Erfolg, false bei Validierungsfehler.
+function parseHHMM(value) {
+    if (typeof value !== 'string') return null;
+    const m = value.trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return null;
+    const h = parseInt(m[1], 10);
+    const min = parseInt(m[2], 10);
+    if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+    return { h, min };
+}
+
+export function addManualLog(projectId, dateStr, startHHMM, endHHMM, note) {
+    const project = state.projects.find(p => p.id === projectId);
+    if (!project) {
+        showAlert('Bitte ein Projekt wählen.', { title: 'Kein Projekt', icon: 'error' });
+        return false;
+    }
+    const s = parseHHMM(startHHMM);
+    const e = parseHHMM(endHHMM);
+    if (!s || !e) {
+        showAlert('Ungültiges Zeitformat. Bitte HH:MM eingeben.', { title: 'Ungültige Zeit', icon: 'error' });
+        return false;
+    }
+    const startTs = new Date(dateStr + 'T' + String(s.h).padStart(2, '0') + ':' + String(s.min).padStart(2, '0') + ':00').getTime();
+    const endTs = new Date(dateStr + 'T' + String(e.h).padStart(2, '0') + ':' + String(e.min).padStart(2, '0') + ':00').getTime();
+    if (isNaN(startTs) || isNaN(endTs)) {
+        showAlert('Ungültiges Datum oder Zeit.', { title: 'Ungültige Zeit', icon: 'error' });
+        return false;
+    }
+    if (endTs <= startTs) {
+        showAlert('Endzeit muss nach der Startzeit liegen.', { title: 'Ungültige Zeit', icon: 'error' });
+        return false;
+    }
+    if (!Array.isArray(project.logs)) project.logs = [];
+    project.logs.push({ start: startTs, end: endTs, note: (note || '').trim() });
+    commitState();
+    return true;
+}
+
+// =============================================================================
+// changeLogProject – Eintrag in anderes Projekt verschieben
+// =============================================================================
+// Für laufende Einträge wird stattdessen switchProject() aufgerufen.
+// Liefert true bei Mutation, false sonst.
+export function changeLogProject(oldProjectId, logIdx, newProjectId) {
+    if (oldProjectId === newProjectId) return false;
+    const oldP = state.projects.find(p => p.id === oldProjectId);
+    const newP = state.projects.find(p => p.id === newProjectId);
+    if (!oldP || !newP) return false;
+    if (!Array.isArray(oldP.logs) || logIdx < 0 || logIdx >= oldP.logs.length) return false;
+    const log = oldP.logs[logIdx];
+
+    if (log.end === null || log.end === undefined) {
+        switchProject(newProjectId);
+        return true;
+    }
+
+    oldP.logs.splice(logIdx, 1);
+    if (!Array.isArray(newP.logs)) newP.logs = [];
+    newP.logs.push(log);
+    commitState();
+    return true;
+}
+
+// =============================================================================
+// Projekt-Picker (Dropdown beim Klick auf Projektname)
+// =============================================================================
+let openPickerEl = null;
+
+function getActiveProjectsForPicker() {
+    return state.projects
+        .filter(p => !p.archived)
+        .map(p => {
+            const parent = p.parentId ? state.projects.find(pp => pp.id === p.parentId) : null;
+            const label = parent ? parent.name + ' → ' + p.name : p.name;
+            return { id: p.id, label, color: p.color || '#757575', sortKey: (parent ? parent.name : p.name) + ' ' + p.name };
+        })
+        .sort((a, b) => a.sortKey.localeCompare(b.sortKey, 'de'));
+}
+
+function closeProjectPicker() {
+    if (openPickerEl) {
+        openPickerEl.remove();
+        openPickerEl = null;
+        document.removeEventListener('click', onPickerOutsideClick, true);
+        document.removeEventListener('keydown', onPickerKeydown, true);
+    }
+}
+
+function onPickerOutsideClick(ev) {
+    if (openPickerEl && !openPickerEl.contains(ev.target) && !ev.target.closest('.ts-entry-project-btn')) {
+        closeProjectPicker();
+    }
+}
+
+function onPickerKeydown(ev) {
+    if (ev.key === 'Escape') closeProjectPicker();
+}
+
+export function toggleProjectPicker(projectId, logIdx, anchorBtn) {
+    // Wenn ein Picker offen ist: schließen. Wenn er zum gleichen Anchor gehörte → fertig (Toggle-Verhalten).
+    // Wenn er zu einem anderen Anchor gehörte → fall through und öffne den neuen.
+    if (openPickerEl) {
+        const wasSameAnchor = openPickerEl.parentElement === anchorBtn.closest('.ts-entry-content');
+        closeProjectPicker();
+        if (wasSameAnchor) return;
+    }
+    const list = getActiveProjectsForPicker();
+    if (list.length === 0) return;
+    const picker = document.createElement('div');
+    picker.className = 'ts-project-picker';
+    picker.innerHTML = list.map(p =>
+        `<button type="button" class="ts-project-picker-item${p.id === projectId ? ' is-current' : ''}"
+            onclick="pickProjectForLog('${projectId}', ${logIdx}, '${p.id}')">
+            <span class="ts-project-picker-dot" style="background:${p.color};"></span>
+            <span class="ts-project-picker-label">${escapeHtml(p.label)}</span>
+        </button>`
+    ).join('');
+
+    const entryContent = anchorBtn.closest('.ts-entry-content');
+    if (!entryContent) return;
+    entryContent.appendChild(picker);
+    openPickerEl = picker;
+
+    setTimeout(() => {
+        document.addEventListener('click', onPickerOutsideClick, true);
+        document.addEventListener('keydown', onPickerKeydown, true);
+    }, 0);
+}
+
+export function pickProjectForLog(oldProjectId, logIdx, newProjectId) {
+    closeProjectPicker();
+    changeLogProject(oldProjectId, logIdx, newProjectId);
+}
+
+// =============================================================================
+// Manueller Eintrag – Inline-Formular
+// =============================================================================
+export function toggleManualEntryForm() {
+    const form = document.getElementById('tsManualForm');
+    if (!form) return;
+    const willOpen = form.classList.contains('is-hidden');
+    form.classList.toggle('is-hidden');
+    if (willOpen) {
+        const startInput = document.getElementById('tsManualStart');
+        if (startInput) startInput.focus();
+        document.addEventListener('keydown', onManualFormKeydown);
+    } else {
+        ['tsManualStart', 'tsManualEnd', 'tsManualNote'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        document.removeEventListener('keydown', onManualFormKeydown);
+    }
+}
+
+function onManualFormKeydown(ev) {
+    if (ev.key === 'Escape') {
+        const form = document.getElementById('tsManualForm');
+        if (form && !form.classList.contains('is-hidden')) toggleManualEntryForm();
+    }
+}
+
+export function submitManualEntry() {
+    const projectId = document.getElementById('tsManualProject')?.value;
+    const startVal = document.getElementById('tsManualStart')?.value || '';
+    const endVal = document.getElementById('tsManualEnd')?.value || '';
+    const noteVal = document.getElementById('tsManualNote')?.value || '';
+    const dateStr = getTimesheetDate();
+    // Listener vorab abmelden: addManualLog → commitState → re-render entfernt das Form,
+    // dadurch würde das Cleanup in toggleManualEntryForm nicht mehr greifen.
+    document.removeEventListener('keydown', onManualFormKeydown);
+    const ok = addManualLog(projectId, dateStr, startVal, endVal, noteVal);
+    if (!ok) {
+        // Form bleibt offen → Listener wieder anhängen.
+        document.addEventListener('keydown', onManualFormKeydown);
+    }
+}
+
 // onclick-Handler für inline HTML verfügbar machen
-window.navigateTimesheetDay = navigateTimesheetDay;
-window.goToTimesheetToday = goToTimesheetToday;
-window.updateTimesheetLogTime = updateTimesheetLogTime;
-window.saveTimesheetNote = saveTimesheetNote;
-window.deleteTimesheetLog = deleteTimesheetLog;
-window.deleteAutoPauseFromTimesheet = deleteAutoPauseFromTimesheet;
-window.deletePause = deletePause;
+if (typeof window !== 'undefined') {
+    window.navigateTimesheetDay = navigateTimesheetDay;
+    window.goToTimesheetToday = goToTimesheetToday;
+    window.updateTimesheetLogTime = updateTimesheetLogTime;
+    window.saveTimesheetNote = saveTimesheetNote;
+    window.deleteTimesheetLog = deleteTimesheetLog;
+    window.deleteAutoPauseFromTimesheet = deleteAutoPauseFromTimesheet;
+    window.deletePause = deletePause;
+    window.toggleProjectPicker = toggleProjectPicker;
+    window.pickProjectForLog = pickProjectForLog;
+    window.toggleManualEntryForm = toggleManualEntryForm;
+    window.submitManualEntry = submitManualEntry;
+}

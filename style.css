@@ -2190,3 +2190,156 @@ textarea.input-field {
 .gap-8 { gap: 8px; }
 .fw-500 { font-weight: 500; }
 .fw-600 { font-weight: 600; }
+
+/* === Timesheet: klickbarer Projektname + Picker === */
+.ts-entry-project-btn {
+    background: transparent;
+    border: none;
+    padding: 2px 4px;
+    margin: -2px -4px;
+    border-radius: 4px;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ts-entry-project-btn:hover {
+    background: var(--md-sys-color-surface-container-high);
+}
+.ts-entry-project-btn .material-symbols-rounded {
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+.ts-project-picker {
+    position: absolute;
+    z-index: 100;
+    margin-top: 4px;
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    padding: 4px;
+    max-height: 280px;
+    overflow-y: auto;
+    min-width: 200px;
+    max-width: 320px;
+}
+.ts-project-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--md-sys-color-on-surface);
+    font-size: 13px;
+}
+.ts-project-picker-item:hover {
+    background: var(--md-sys-color-surface-container-highest);
+}
+.ts-project-picker-item.is-current {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+.ts-project-picker-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.ts-project-picker-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ts-entry-content { position: relative; }
+
+/* === Timesheet: Manueller Eintrag === */
+.ts-manual-row {
+    margin: 8px 0 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.ts-manual-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px dashed var(--md-sys-color-outline);
+    border-radius: 8px;
+    color: var(--md-sys-color-primary);
+    font-size: 13px;
+    cursor: pointer;
+    align-self: flex-start;
+}
+.ts-manual-btn:hover:not(:disabled) {
+    background: var(--md-sys-color-surface-container-high);
+}
+.ts-manual-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.ts-manual-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px;
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 8px;
+}
+.ts-manual-form.is-hidden {
+    display: none;
+}
+.ts-manual-project {
+    flex: 1 1 160px;
+    min-width: 140px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    font-size: 13px;
+}
+.ts-manual-note {
+    flex: 2 1 180px;
+    min-width: 140px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    font-size: 13px;
+}
+.ts-manual-cancel,
+.ts-manual-save {
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: none;
+    font-size: 13px;
+    cursor: pointer;
+}
+.ts-manual-cancel {
+    background: transparent;
+    color: var(--md-sys-color-on-surface-variant);
+}
+.ts-manual-save {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+}
+.ts-manual-save:hover {
+    filter: brightness(1.1);
+}
