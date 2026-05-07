@@ -4,6 +4,7 @@ import { getRoundedMs, calculateNetDurationForDate } from '../calculations.js';
 import { commitState, persistState, notifyStateChanged } from '../stateManager.js';
 import { showAlert, showConfirm } from './dialogs.js';
 import { deletePause, deleteAutoPauseFromTimesheet } from '../pauses.js';
+import { switchProject } from '../projects.js';
 
 // =============================================================================
 // ui/timesheet.js – Stundenzettel (tägliche Zeiteinträge)
@@ -375,6 +376,31 @@ export function addManualLog(projectId, dateStr, startHHMM, endHHMM, note) {
     }
     if (!Array.isArray(project.logs)) project.logs = [];
     project.logs.push({ start: startTs, end: endTs, note: (note || '').trim() });
+    commitState();
+    return true;
+}
+
+// =============================================================================
+// changeLogProject – Eintrag in anderes Projekt verschieben
+// =============================================================================
+// Für laufende Einträge wird stattdessen switchProject() aufgerufen.
+// Liefert true bei Mutation, false sonst.
+export function changeLogProject(oldProjectId, logIdx, newProjectId) {
+    if (oldProjectId === newProjectId) return false;
+    const oldP = state.projects.find(p => p.id === oldProjectId);
+    const newP = state.projects.find(p => p.id === newProjectId);
+    if (!oldP || !newP) return false;
+    if (!Array.isArray(oldP.logs) || logIdx < 0 || logIdx >= oldP.logs.length) return false;
+    const log = oldP.logs[logIdx];
+
+    if (log.end === null || log.end === undefined) {
+        switchProject(newProjectId);
+        return true;
+    }
+
+    oldP.logs.splice(logIdx, 1);
+    if (!Array.isArray(newP.logs)) newP.logs = [];
+    newP.logs.push(log);
     commitState();
     return true;
 }

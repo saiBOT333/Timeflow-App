@@ -23,6 +23,9 @@ vi.mock('../src/pauses.js', () => ({
     deletePause: vi.fn(),
     deleteAutoPauseFromTimesheet: vi.fn(),
 }));
+vi.mock('../src/projects.js', () => ({
+    switchProject: vi.fn(),
+}));
 
 import { addManualLog, changeLogProject } from '../src/ui/timesheet.js';
 
@@ -87,5 +90,48 @@ describe('addManualLog – Validierung', () => {
     test('Notiz wird getrimmt', () => {
         addManualLog('p1', '2026-05-07', '09:00', '10:00', '   Hallo   ');
         expect(state.projects[0].logs[0].note).toBe('Hallo');
+    });
+});
+
+describe('changeLogProject – abgeschlossener Eintrag', () => {
+    beforeEach(() => {
+        state.projects[0].logs = [
+            { start: 1000, end: 2000, note: 'a' },
+            { start: 3000, end: 4000, note: 'b' },
+        ];
+    });
+
+    test('verschiebt Log korrekt zwischen Projekten', () => {
+        const ok = changeLogProject('p1', 0, 'p2');
+        expect(ok).toBe(true);
+        expect(state.projects[0].logs).toHaveLength(1);
+        expect(state.projects[0].logs[0].note).toBe('b');
+        expect(state.projects[1].logs).toHaveLength(1);
+        expect(state.projects[1].logs[0]).toEqual({ start: 1000, end: 2000, note: 'a' });
+    });
+
+    test('Wechsel auf gleiches Projekt: keine Mutation, false', () => {
+        const ok = changeLogProject('p1', 0, 'p1');
+        expect(ok).toBe(false);
+        expect(state.projects[0].logs).toHaveLength(2);
+        expect(state.projects[1].logs).toHaveLength(0);
+    });
+
+    test('unbekannte Projekt-ID (Quelle) → false', () => {
+        const ok = changeLogProject('unknown', 0, 'p2');
+        expect(ok).toBe(false);
+        expect(state.projects[0].logs).toHaveLength(2);
+    });
+
+    test('unbekannte Projekt-ID (Ziel) → false', () => {
+        const ok = changeLogProject('p1', 0, 'unknown');
+        expect(ok).toBe(false);
+        expect(state.projects[0].logs).toHaveLength(2);
+    });
+
+    test('ungültiger logIdx → false', () => {
+        const ok = changeLogProject('p1', 99, 'p2');
+        expect(ok).toBe(false);
+        expect(state.projects[0].logs).toHaveLength(2);
     });
 });
