@@ -2263,3 +2263,83 @@ textarea.input-field {
     white-space: nowrap;
 }
 .ts-entry-content { position: relative; }
+
+/* === Timesheet: Manueller Eintrag === */
+.ts-manual-row {
+    margin: 8px 0 4px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.ts-manual-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px dashed var(--md-sys-color-outline);
+    border-radius: 8px;
+    color: var(--md-sys-color-primary);
+    font-size: 13px;
+    cursor: pointer;
+    align-self: flex-start;
+}
+.ts-manual-btn:hover:not(:disabled) {
+    background: var(--md-sys-color-surface-container-high);
+}
+.ts-manual-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.ts-manual-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px;
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 8px;
+}
+.ts-manual-form.is-hidden {
+    display: none;
+}
+.ts-manual-project {
+    flex: 1 1 160px;
+    min-width: 140px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    font-size: 13px;
+}
+.ts-manual-note {
+    flex: 2 1 180px;
+    min-width: 140px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    font-size: 13px;
+}
+.ts-manual-cancel,
+.ts-manual-save {
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: none;
+    font-size: 13px;
+    cursor: pointer;
+}
+.ts-manual-cancel {
+    background: transparent;
+    color: var(--md-sys-color-on-surface-variant);
+}
+.ts-manual-save {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+}
+.ts-manual-save:hover {
+    filter: brightness(1.1);
+}

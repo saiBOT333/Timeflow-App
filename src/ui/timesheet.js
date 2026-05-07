@@ -137,6 +137,28 @@ export function renderTimesheetCard() {
         </div>
     </div>`;
 
+    const hasProjects = state.projects.some(p => !p.archived);
+    html += `<div class="ts-manual-row">
+    <button type="button" class="ts-manual-btn" onclick="toggleManualEntryForm()"
+        ${hasProjects ? '' : 'disabled title="Zuerst ein Projekt anlegen"'}>
+        <span class="material-symbols-rounded fs-16">add</span>
+        Eintrag hinzufügen
+    </button>
+    <div class="ts-manual-form is-hidden" id="tsManualForm">
+        <select class="ts-manual-project" id="tsManualProject">
+            ${getActiveProjectsForPicker().map(p =>
+                `<option value="${p.id}">${escapeHtml(p.label)}</option>`
+            ).join('')}
+        </select>
+        <input type="text" class="ts-time-input" id="tsManualStart" placeholder="HH:MM" maxlength="5">
+        <span class="ts-entry-arrow">→</span>
+        <input type="text" class="ts-time-input" id="tsManualEnd" placeholder="HH:MM" maxlength="5">
+        <input type="text" class="ts-manual-note" id="tsManualNote" placeholder="Notiz (optional)">
+        <button type="button" class="ts-manual-cancel" onclick="toggleManualEntryForm()">Abbrechen</button>
+        <button type="button" class="ts-manual-save" onclick="submitManualEntry()">Speichern</button>
+    </div>
+</div>`;
+
     if (entries.length === 0) {
         html += '<div class="fs-13-variant" style="padding:20px; text-align:center; font-style:italic;">Keine Zeiteintr\u00e4ge f\u00fcr diesen Tag.</div>';
         container.innerHTML = html;
@@ -479,6 +501,46 @@ export function pickProjectForLog(oldProjectId, logIdx, newProjectId) {
     changeLogProject(oldProjectId, logIdx, newProjectId);
 }
 
+// =============================================================================
+// Manueller Eintrag – Inline-Formular
+// =============================================================================
+export function toggleManualEntryForm() {
+    const form = document.getElementById('tsManualForm');
+    if (!form) return;
+    const willOpen = form.classList.contains('is-hidden');
+    form.classList.toggle('is-hidden');
+    if (willOpen) {
+        const startInput = document.getElementById('tsManualStart');
+        if (startInput) startInput.focus();
+        document.addEventListener('keydown', onManualFormKeydown);
+    } else {
+        ['tsManualStart', 'tsManualEnd', 'tsManualNote'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        document.removeEventListener('keydown', onManualFormKeydown);
+    }
+}
+
+function onManualFormKeydown(ev) {
+    if (ev.key === 'Escape') {
+        const form = document.getElementById('tsManualForm');
+        if (form && !form.classList.contains('is-hidden')) toggleManualEntryForm();
+    }
+}
+
+export function submitManualEntry() {
+    const projectId = document.getElementById('tsManualProject')?.value;
+    const startVal = document.getElementById('tsManualStart')?.value || '';
+    const endVal = document.getElementById('tsManualEnd')?.value || '';
+    const noteVal = document.getElementById('tsManualNote')?.value || '';
+    const dateStr = getTimesheetDate();
+    const ok = addManualLog(projectId, dateStr, startVal, endVal, noteVal);
+    if (ok) {
+        toggleManualEntryForm();
+    }
+}
+
 // onclick-Handler für inline HTML verfügbar machen
 if (typeof window !== 'undefined') {
     window.navigateTimesheetDay = navigateTimesheetDay;
@@ -490,4 +552,6 @@ if (typeof window !== 'undefined') {
     window.deletePause = deletePause;
     window.toggleProjectPicker = toggleProjectPicker;
     window.pickProjectForLog = pickProjectForLog;
+    window.toggleManualEntryForm = toggleManualEntryForm;
+    window.submitManualEntry = submitManualEntry;
 }
