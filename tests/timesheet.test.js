@@ -46,3 +46,46 @@ describe('addManualLog – Happy Path', () => {
         expect(log.note).toBe('Meeting');
     });
 });
+
+describe('addManualLog – Validierung', () => {
+    test('unbekannte Projekt-ID → false, kein Log angelegt', () => {
+        const ok = addManualLog('unknown', '2026-05-07', '09:00', '10:00', '');
+        expect(ok).toBe(false);
+        expect(state.projects[0].logs).toHaveLength(0);
+        expect(state.projects[1].logs).toHaveLength(0);
+    });
+
+    test('ungültiges Zeitformat (Start) → false', () => {
+        const ok = addManualLog('p1', '2026-05-07', '9 Uhr', '10:00', '');
+        expect(ok).toBe(false);
+        expect(state.projects[0].logs).toHaveLength(0);
+    });
+
+    test('ungültiges Zeitformat (Ende) → false', () => {
+        const ok = addManualLog('p1', '2026-05-07', '09:00', '25:99', '');
+        expect(ok).toBe(false);
+        expect(state.projects[0].logs).toHaveLength(0);
+    });
+
+    test('Start gleich Ende → false', () => {
+        const ok = addManualLog('p1', '2026-05-07', '10:00', '10:00', '');
+        expect(ok).toBe(false);
+        expect(state.projects[0].logs).toHaveLength(0);
+    });
+
+    test('Start nach Ende → false', () => {
+        const ok = addManualLog('p1', '2026-05-07', '12:00', '11:00', '');
+        expect(ok).toBe(false);
+        expect(state.projects[0].logs).toHaveLength(0);
+    });
+
+    test('Notiz leer/undefined → log.note ist leerer String', () => {
+        addManualLog('p1', '2026-05-07', '09:00', '10:00', undefined);
+        expect(state.projects[0].logs[0].note).toBe('');
+    });
+
+    test('Notiz wird getrimmt', () => {
+        addManualLog('p1', '2026-05-07', '09:00', '10:00', '   Hallo   ');
+        expect(state.projects[0].logs[0].note).toBe('Hallo');
+    });
+});
