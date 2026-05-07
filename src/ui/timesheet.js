@@ -469,9 +469,12 @@ function onPickerKeydown(ev) {
 }
 
 export function toggleProjectPicker(projectId, logIdx, anchorBtn) {
+    // Wenn ein Picker offen ist: schließen. Wenn er zum gleichen Anchor gehörte → fertig (Toggle-Verhalten).
+    // Wenn er zu einem anderen Anchor gehörte → fall through und öffne den neuen.
     if (openPickerEl) {
+        const wasSameAnchor = openPickerEl.parentElement === anchorBtn.closest('.ts-entry-content');
         closeProjectPicker();
-        return;
+        if (wasSameAnchor) return;
     }
     const list = getActiveProjectsForPicker();
     if (list.length === 0) return;
@@ -535,9 +538,13 @@ export function submitManualEntry() {
     const endVal = document.getElementById('tsManualEnd')?.value || '';
     const noteVal = document.getElementById('tsManualNote')?.value || '';
     const dateStr = getTimesheetDate();
+    // Listener vorab abmelden: addManualLog → commitState → re-render entfernt das Form,
+    // dadurch würde das Cleanup in toggleManualEntryForm nicht mehr greifen.
+    document.removeEventListener('keydown', onManualFormKeydown);
     const ok = addManualLog(projectId, dateStr, startVal, endVal, noteVal);
-    if (ok) {
-        toggleManualEntryForm();
+    if (!ok) {
+        // Form bleibt offen → Listener wieder anhängen.
+        document.addEventListener('keydown', onManualFormKeydown);
     }
 }
 
