@@ -337,11 +337,55 @@ function showOverlapWarning(overlaps) {
     container.insertBefore(warningDiv, container.firstChild);
 }
 
+// =============================================================================
+// addManualLog – manuell abgeschlossenen Eintrag anlegen
+// =============================================================================
+// Liefert true bei Erfolg, false bei Validierungsfehler.
+function parseHHMM(value) {
+    if (typeof value !== 'string') return null;
+    const m = value.trim().match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return null;
+    const h = parseInt(m[1], 10);
+    const min = parseInt(m[2], 10);
+    if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+    return { h, min };
+}
+
+export function addManualLog(projectId, dateStr, startHHMM, endHHMM, note) {
+    const project = state.projects.find(p => p.id === projectId);
+    if (!project) {
+        showAlert('Bitte ein Projekt wählen.', { title: 'Kein Projekt', icon: 'error' });
+        return false;
+    }
+    const s = parseHHMM(startHHMM);
+    const e = parseHHMM(endHHMM);
+    if (!s || !e) {
+        showAlert('Ungültiges Zeitformat. Bitte HH:MM eingeben.', { title: 'Ungültige Zeit', icon: 'error' });
+        return false;
+    }
+    const startTs = new Date(dateStr + 'T' + String(s.h).padStart(2, '0') + ':' + String(s.min).padStart(2, '0') + ':00').getTime();
+    const endTs = new Date(dateStr + 'T' + String(e.h).padStart(2, '0') + ':' + String(e.min).padStart(2, '0') + ':00').getTime();
+    if (isNaN(startTs) || isNaN(endTs)) {
+        showAlert('Ungültiges Datum oder Zeit.', { title: 'Ungültige Zeit', icon: 'error' });
+        return false;
+    }
+    if (endTs <= startTs) {
+        showAlert('Endzeit muss nach der Startzeit liegen.', { title: 'Ungültige Zeit', icon: 'error' });
+        return false;
+    }
+    if (!Array.isArray(project.logs)) project.logs = [];
+    project.logs.push({ start: startTs, end: endTs, note: (note || '').trim() });
+    commitState();
+    return true;
+}
+
 // onclick-Handler für inline HTML verfügbar machen
-window.navigateTimesheetDay = navigateTimesheetDay;
-window.goToTimesheetToday = goToTimesheetToday;
-window.updateTimesheetLogTime = updateTimesheetLogTime;
-window.saveTimesheetNote = saveTimesheetNote;
-window.deleteTimesheetLog = deleteTimesheetLog;
-window.deleteAutoPauseFromTimesheet = deleteAutoPauseFromTimesheet;
-window.deletePause = deletePause;
+if (typeof window !== 'undefined') {
+    window.navigateTimesheetDay = navigateTimesheetDay;
+    window.goToTimesheetToday = goToTimesheetToday;
+    window.updateTimesheetLogTime = updateTimesheetLogTime;
+    window.saveTimesheetNote = saveTimesheetNote;
+    window.deleteTimesheetLog = deleteTimesheetLog;
+    window.deleteAutoPauseFromTimesheet = deleteAutoPauseFromTimesheet;
+    window.deletePause = deletePause;
+}
