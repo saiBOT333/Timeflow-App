@@ -145,6 +145,15 @@ export function migrateState(loaded) {
             ];
         }
     }
+    // Auto-Heal: Projekte mit status='running' aber ohne offenen Log gelten als gestoppt.
+    // Schützt vor Altdaten aus dem stopProject-Bug (PR #11), wo der offene Log bereits
+    // manuell geschlossen wurde, das Projekt aber unstoppbar als "running" stecken blieb.
+    (loaded.projects || []).forEach(p => {
+        if (p.status === 'running') {
+            const hasOpenLog = Array.isArray(p.logs) && p.logs.some(l => !l.end);
+            if (!hasOpenLog) p.status = 'stopped';
+        }
+    });
     // Ensure parentId exists on all projects and migrate dailyNotes to log.note
     (loaded.projects || []).forEach(p => {
         if (!p.dailyNotes) p.dailyNotes = {};

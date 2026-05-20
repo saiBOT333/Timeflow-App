@@ -150,9 +150,9 @@ export function renderTimesheetCard() {
                 `<option value="${p.id}">${escapeHtml(p.label)}</option>`
             ).join('')}
         </select>
-        <input type="text" class="ts-time-input" id="tsManualStart" placeholder="HH:MM" maxlength="5">
+        <input type="time" class="ts-time-input" id="tsManualStart" step="60">
         <span class="ts-entry-arrow">→</span>
-        <input type="text" class="ts-time-input" id="tsManualEnd" placeholder="HH:MM" maxlength="5">
+        <input type="time" class="ts-time-input" id="tsManualEnd" step="60">
         <input type="text" class="ts-manual-note" id="tsManualNote" placeholder="Notiz (optional)">
         <button type="button" class="ts-manual-cancel" onclick="toggleManualEntryForm()">Abbrechen</button>
         <button type="button" class="ts-manual-save" onclick="submitManualEntry()">Speichern</button>
@@ -234,13 +234,13 @@ export function renderTimesheetCard() {
                     <span class="ts-entry-duration">${durationStr}</span>
                 </div>
                 <div class="ts-entry-times">
-                    <input type="text" class="ts-time-input" value="${startTime}"
+                    <input type="time" class="ts-time-input" value="${startTime}" step="60"
                         onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'start', this.value, '${viewDate}')"
                         title="Startzeit bearbeiten">
                     <span class="ts-entry-arrow">\u2192</span>
                     ${entry.isActive
                         ? '<span class="ts-entry-running">l\u00e4uft...</span>'
-                        : `<input type="text" class="ts-time-input" value="${endTime}"
+                        : `<input type="time" class="ts-time-input" value="${endTime}" step="60"
                             onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'end', this.value, '${viewDate}')"
                             title="Endzeit bearbeiten">`
                     }
