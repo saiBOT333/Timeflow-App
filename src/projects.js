@@ -33,11 +33,15 @@ export function startProject(idOrObj) {
 }
 
 export function stopProject(project) {
-    if (!project || !project.logs || project.logs.length === 0) return;
+    if (!project) return;
+    // Status IMMER zurücksetzen – auch wenn keine Logs vorhanden sind.
+    // Sonst bleibt ein verwaistes "running"-Projekt für immer hängen.
     project.status = 'stopped';
-    // Offenen Log finden – kann nach addManualLog auch nicht-letzter Eintrag sein.
-    const openLog = project.logs.find(l => !l.end);
-    if (openLog) openLog.end = Date.now();
+    if (!Array.isArray(project.logs)) return;
+    // Alle offenen Logs schließen (defensiv – normal nur einer, kann nach
+    // addManualLog auch nicht-letzter Eintrag sein).
+    const now = Date.now();
+    project.logs.forEach(l => { if (!l.end) l.end = now; });
 }
 
 export function stopAllProjects() {

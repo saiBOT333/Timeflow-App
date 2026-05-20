@@ -7,7 +7,7 @@
  *   - Alles andere:                                  Network-First mit Cache-Fallback
  */
 
-const CACHE_VERSION = 'timeflow-v3.5.0';
+const CACHE_VERSION = 'timeflow-v3.5.1';
 
 // Core-Assets die immer gecacht werden (relativ zur SW-Scope-URL)
 // Im Vite-Build werden app.js + style.css gehasht (z.B. assets/app-Bx7F3k2d.js)
