@@ -35,8 +35,9 @@ export function startProject(idOrObj) {
 export function stopProject(project) {
     if (!project || !project.logs || project.logs.length === 0) return;
     project.status = 'stopped';
-    const lastLog = project.logs[project.logs.length - 1];
-    if (lastLog && !lastLog.end) lastLog.end = Date.now();
+    // Offenen Log finden – kann nach addManualLog auch nicht-letzter Eintrag sein.
+    const openLog = project.logs.find(l => !l.end);
+    if (openLog) openLog.end = Date.now();
 }
 
 export function stopAllProjects() {
