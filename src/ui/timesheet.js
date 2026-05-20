@@ -244,9 +244,9 @@ export function renderTimesheetCard() {
                             onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'end', this.value, '${viewDate}')"
                             title="Endzeit bearbeiten">`
                     }
-                    ${!entry.isActive ? `<button class="icon-btn ts-delete-btn" onclick="deleteTimesheetLog('${p.id}', ${entry.logIdx})" title="Eintrag l\u00f6schen">
+                    <button class="icon-btn ts-delete-btn" onclick="deleteTimesheetLog('${p.id}', ${entry.logIdx})" title="${entry.isActive ? 'Laufenden Eintrag verwerfen (Projekt wird gestoppt)' : 'Eintrag l\u00f6schen'}">
                         <span class="material-symbols-rounded fs-16">delete</span>
-                    </button>` : ''}
+                    </button>
                 </div>
                 <div class="ts-entry-note-row">
                     <span class="material-symbols-rounded ts-note-icon">sticky_note_2</span>
@@ -307,10 +307,25 @@ export function saveTimesheetNote(projectId, logIndex, value) {
 export async function deleteTimesheetLog(projectId, logIndex) {
     const p = state.projects.find(x => x.id === projectId);
     if (!p || !p.logs[logIndex]) return;
-    if (p.logs[logIndex].end === null) return;
-    const ok = await showConfirm('Diesen Zeiteintrag l\u00f6schen?', { title: 'Eintrag l\u00f6schen', icon: 'delete', okText: 'L\u00f6schen', danger: true });
+    const log = p.logs[logIndex];
+    const isActive = !log.end;
+    const ok = await showConfirm(
+        isActive
+            ? 'Den laufenden Zeiteintrag verwerfen? Das Projekt wird dadurch gestoppt.'
+            : 'Diesen Zeiteintrag l\u00f6schen?',
+        {
+            title: isActive ? 'Laufenden Eintrag verwerfen' : 'Eintrag l\u00f6schen',
+            icon: 'delete',
+            okText: isActive ? 'Verwerfen' : 'L\u00f6schen',
+            danger: true
+        }
+    );
     if (!ok) return;
     p.logs.splice(logIndex, 1);
+    // Offenen Log entfernt \u2192 Projekt stoppen, falls kein weiterer offener Log existiert.
+    if (isActive && !p.logs.some(l => !l.end)) {
+        p.status = 'stopped';
+    }
     commitState();
 }
 
