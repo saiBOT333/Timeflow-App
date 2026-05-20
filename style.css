@@ -1497,10 +1497,12 @@ textarea.input-field {
     color: var(--md-sys-color-on-surface);
     font-family: var(--font-mono);
     font-size: var(--md-sys-typescale-body-small);
-    width: 50px;
+    /* type="time" braucht Platz für native Spinner-Controls auf Desktop. */
+    width: 90px;
     text-align: center;
     padding: 2px 4px;
     transition: border-color 0.2s, background 0.2s;
+    color-scheme: light dark;
 }
 .ts-time-input:hover { border-color: var(--md-sys-color-outline-variant); }
 .ts-time-input:focus {
@@ -1508,6 +1510,13 @@ textarea.input-field {
     background: var(--md-sys-color-surface-container-high);
     outline: none;
 }
+/* Native time-input-Controls dezenter darstellen */
+.ts-time-input::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+    cursor: pointer;
+    filter: var(--time-picker-icon-filter, none);
+}
+.ts-time-input::-webkit-calendar-picker-indicator:hover { opacity: 1; }
 .ts-entry-arrow {
     opacity: 0.4;
     font-size: var(--md-sys-typescale-label-large);
