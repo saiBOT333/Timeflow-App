@@ -14,3 +14,73 @@ const KEY = 'backupDir';
 export function isSupported() {
     return typeof window !== 'undefined' && 'showDirectoryPicker' in window;
 }
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+function idbGet(key) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const req = tx.objectStore(STORE).get(key);
+        req.onsuccess = () => resolve(req.result ?? null);
+        req.onerror = () => reject(req.error);
+    }));
+}
+
+function idbSet(key, val) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).put(val, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    }));
+}
+
+function idbDel(key) {
+    return openDB().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).delete(key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    }));
+}
+
+export async function pickBackupFolder() {
+    if (!isSupported()) return null;
+    let handle;
+    try {
+        handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    } catch (e) {
+        if (e && e.name === 'AbortError') return null;
+        throw e;
+    }
+    await idbSet(KEY, handle);
+    return handle.name;
+}
+
+export async function getSavedFolder() {
+    try {
+        return await idbGet(KEY);
+    } catch {
+        return null;
+    }
+}
+
+export async function getSavedFolderName() {
+    const handle = await getSavedFolder();
+    return handle ? handle.name : null;
+}
+
+export async function clearBackupFolder() {
+    try {
+        await idbDel(KEY);
+    } catch {
+        /* nichts zu tun */
+    }
+}
