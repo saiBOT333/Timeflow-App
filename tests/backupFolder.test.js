@@ -8,12 +8,22 @@ import { describe, test, expect, beforeEach, afterEach, vi, beforeAll } from 'vi
 
 // fake-indexeddb nutzt structuredClone, das vi.fn()-Methoden nicht klonen kann.
 // File-System-Handles sind in echten Browsern strukturklonbar (spezieller Typ).
-// Im Test-Environment patchen wir structuredClone, damit Funktionen als Referenz
-// übernommen werden statt einen DataCloneError zu werfen.
+// Im Test-Environment patchen wir structuredClone: bei DataCloneError wird ein
+// rekursiver Deep-Clone verwendet, der Funktionen als Referenz erhält.
+function _cloneKeepFns(val) {
+    if (val === null || typeof val !== 'object') return val;
+    if (Array.isArray(val)) return val.map(_cloneKeepFns);
+    const out = {};
+    for (const k of Object.keys(val)) {
+        const v = val[k];
+        out[k] = typeof v === 'function' ? v : _cloneKeepFns(v);
+    }
+    return out;
+}
 beforeAll(() => {
     const _orig = globalThis.structuredClone;
     globalThis.structuredClone = (val) => {
-        try { return _orig(val); } catch { return JSON.parse(JSON.stringify(val, (_k, v) => typeof v === 'function' ? v : v)); }
+        try { return _orig(val); } catch { return _cloneKeepFns(val); }
     };
 });
 
@@ -26,6 +36,7 @@ vi.mock('../src/export.js', () => ({
 import {
     isSupported,
     pickBackupFolder,
+    getSavedFolder,
     getSavedFolderName,
     clearBackupFolder,
 } from '../src/backupFolder.js';
@@ -69,6 +80,16 @@ describe('pickBackupFolder / getSavedFolderName / clearBackupFolder', () => {
         const name = await pickBackupFolder();
         expect(name).toBe('Backups');
         expect(await getSavedFolderName()).toBe('Backups');
+    });
+
+    test('Handle-Methoden bleiben nach IDB-Roundtrip erhalten', async () => {
+        const handle = makeDirHandle('Backups');
+        window.showDirectoryPicker = vi.fn().mockResolvedValue(handle);
+        await pickBackupFolder();
+
+        const saved = await getSavedFolder();
+        expect(typeof saved.queryPermission).toBe('function');
+        expect(typeof saved.requestPermission).toBe('function');
     });
 
     test('pickBackupFolder gibt null bei Abbruch (AbortError)', async () => {
