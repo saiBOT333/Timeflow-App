@@ -3,6 +3,7 @@ import { APP_VERSION } from './config.js';
 import { commitState, persistState } from './stateManager.js';
 import { escapeHtml } from './utils.js';
 import { showConfirm } from './ui/dialogs.js';
+import { isSupported, pickBackupFolder, getSavedFolderName, clearBackupFolder } from './backupFolder.js';
 
 // =============================================================================
 // settings.js – Einstellungs-Modal, Erinnerungen, Externe Links
@@ -71,6 +72,7 @@ export function openSettingsModal(options) {
     updateTimerModePreview();
     renderReminderListSettings();
     renderExternalLinksSettings();
+    renderBackupFolderSetting();
     const versionLabel = document.getElementById('settingsVersionLabel');
     if (versionLabel) versionLabel.textContent = 'v' + APP_VERSION;
     // Switch to requested tab or default to general
@@ -94,6 +96,47 @@ export function resetSettingsModalState() {
 // =============================================================================
 // SETTINGS SPEICHERN / RESET
 // =============================================================================
+
+// =============================================================================
+// BACKUP-ORDNER (Feierabend) – nutzt File System Access API via backupFolder.js
+// Status lebt in IndexedDB (nicht in state), Aktionen wirken sofort.
+// =============================================================================
+
+async function renderBackupFolderSetting() {
+    const group = document.getElementById('backupFolderGroup');
+    if (!group) return;
+    const nameEl = document.getElementById('backupFolderName');
+    const clearBtn = document.getElementById('backupFolderClearBtn');
+    const pickBtn = document.getElementById('backupFolderPickBtn');
+    const unsupported = document.getElementById('backupFolderUnsupported');
+
+    if (!isSupported()) {
+        if (pickBtn) pickBtn.disabled = true;
+        if (clearBtn) clearBtn.hidden = true;
+        if (unsupported) unsupported.hidden = false;
+        if (nameEl) nameEl.textContent = '';
+        return;
+    }
+    if (unsupported) unsupported.hidden = true;
+    if (pickBtn) pickBtn.disabled = false;
+
+    const name = await getSavedFolderName();
+    if (nameEl) nameEl.textContent = name ? `Ordner: ${name}` : 'Kein Ordner – Backup geht in Downloads';
+    if (clearBtn) clearBtn.hidden = !name;
+}
+
+async function pickBackupFolderSetting() {
+    const name = await pickBackupFolder();
+    if (name) await renderBackupFolderSetting();
+}
+
+async function clearBackupFolderSetting() {
+    await clearBackupFolder();
+    await renderBackupFolderSetting();
+}
+
+window.pickBackupFolderSetting = pickBackupFolderSetting;
+window.clearBackupFolderSetting = clearBackupFolderSetting;
 
 export function saveSettings() {
     // Flush pendingSettings → state. Kein DOM-Lesen hier.

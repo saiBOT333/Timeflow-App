@@ -56,6 +56,17 @@
                     </div>
                 </div>
 
+                <div class="setting-group" id="backupFolderGroup">
+                    <label class="setting-label">Backup-Ordner (Feierabend)</label>
+                    <div class="setting-hint mb-8">Beim Feierabend wird das Backup direkt in diesen Ordner geschrieben. Ohne Ordner landet es im Standard-Download-Ordner.</div>
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="md-btn md-btn-tonal" id="backupFolderPickBtn" onclick="pickBackupFolderSetting()">Ordner wählen…</button>
+                        <span id="backupFolderName" class="setting-hint"></span>
+                        <button type="button" class="md-btn md-btn-tonal" id="backupFolderClearBtn" onclick="clearBackupFolderSetting()" hidden>Entfernen</button>
+                    </div>
+                    <div class="setting-hint mb-8" id="backupFolderUnsupported" hidden>Nur in Chrome/Edge verfügbar.</div>
+                </div>
+
                 <div class="setting-group">
                     <label class="setting-label">Zeiten runden (CSV)</label>
                     <div class="input-container">
