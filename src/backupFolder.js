@@ -100,3 +100,18 @@ export async function writeBackupToFolder(handle, filename, content) {
     await writable.write(content);
     await writable.close();
 }
+
+export async function saveBackup(state) {
+    const content = JSON.stringify(state);
+    const filename = getFileName('json');
+    const handle = await getSavedFolder();
+    if (handle) {
+        try {
+            await writeBackupToFolder(handle, filename, content);
+            return;
+        } catch (e) {
+            console.warn('Backup-Ordner nicht beschreibbar – Fallback auf Download:', e);
+        }
+    }
+    downloadBackup();
+}

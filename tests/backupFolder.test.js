@@ -40,7 +40,9 @@ import {
     getSavedFolderName,
     clearBackupFolder,
     writeBackupToFolder,
+    saveBackup,
 } from '../src/backupFolder.js';
+import { downloadBackup } from '../src/export.js';
 
 // Erzeugt ein gefälschtes Directory-Handle mit Berechtigungs-Stubs.
 function makeDirHandle(name) {
@@ -155,5 +157,54 @@ describe('writeBackupToFolder', () => {
     test('wirft wenn Berechtigung verweigert wird', async () => {
         const { handle } = makeWritableDirHandle('Backups', { permission: 'denied' });
         await expect(writeBackupToFolder(handle, 'b.json', '{}')).rejects.toThrow();
+    });
+});
+
+describe('saveBackup', () => {
+    beforeEach(() => {
+        downloadBackup.mockClear();
+    });
+    afterEach(async () => {
+        delete window.showDirectoryPicker;
+        await clearBackupFolder();
+    });
+
+    test('ohne gespeicherten Ordner -> downloadBackup (Fallback)', async () => {
+        await saveBackup({ x: 1 });
+        expect(downloadBackup).toHaveBeenCalledTimes(1);
+    });
+
+    test('mit beschreibbarem Ordner -> schreibt dorthin, kein Download', async () => {
+        const writes = [];
+        const writable = { write: c => { writes.push(c); return Promise.resolve(); }, close: () => Promise.resolve() };
+        const fileHandle = { createWritable: () => Promise.resolve(writable) };
+        const handle = {
+            name: 'Backups',
+            queryPermission: () => Promise.resolve('granted'),
+            requestPermission: () => Promise.resolve('granted'),
+            getFileHandle: () => Promise.resolve(fileHandle),
+        };
+        window.showDirectoryPicker = () => Promise.resolve(handle);
+        await pickBackupFolder();
+
+        await saveBackup({ x: 2 });
+
+        expect(downloadBackup).not.toHaveBeenCalled();
+        expect(writes).toEqual([JSON.stringify({ x: 2 })]);
+    });
+
+    test('Schreibfehler -> Fallback auf downloadBackup', async () => {
+        const handle = {
+            name: 'Backups',
+            queryPermission: () => Promise.resolve('granted'),
+            requestPermission: () => Promise.resolve('granted'),
+            getFileHandle: () => Promise.reject(new Error('weg')),
+        };
+        window.showDirectoryPicker = () => Promise.resolve(handle);
+        await pickBackupFolder();
+
+        await saveBackup({ x: 3 });
+
+        expect(downloadBackup).toHaveBeenCalledTimes(1);
     });
 });
