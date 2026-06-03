@@ -158,6 +158,25 @@ describe('writeBackupToFolder', () => {
         const { handle } = makeWritableDirHandle('Backups', { permission: 'denied' });
         await expect(writeBackupToFolder(handle, 'b.json', '{}')).rejects.toThrow();
     });
+
+    test('bei write()-Fehler: original Error propagiert und abort() wird aufgerufen', async () => {
+        const abort = vi.fn().mockResolvedValue(undefined);
+        const writable = {
+            write: () => Promise.reject(new Error('disk full')),
+            close: vi.fn(),
+            abort,
+        };
+        const fileHandle = { createWritable: vi.fn().mockResolvedValue(writable) };
+        const handle = {
+            name: 'Backups',
+            kind: 'directory',
+            queryPermission: vi.fn().mockResolvedValue('granted'),
+            requestPermission: vi.fn().mockResolvedValue('granted'),
+            getFileHandle: vi.fn().mockResolvedValue(fileHandle),
+        };
+        await expect(writeBackupToFolder(handle, 'b.json', '{}')).rejects.toThrow('disk full');
+        expect(abort).toHaveBeenCalled();
+    });
 });
 
 describe('saveBackup', () => {

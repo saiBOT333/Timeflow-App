@@ -97,8 +97,13 @@ export async function writeBackupToFolder(handle, filename, content) {
     }
     const fileHandle = await handle.getFileHandle(filename, { create: true });
     const writable = await fileHandle.createWritable();
-    await writable.write(content);
-    await writable.close();
+    try {
+        await writable.write(content);
+        await writable.close();
+    } catch (e) {
+        if (typeof writable.abort === 'function') { try { await writable.abort(); } catch {} }
+        throw e;
+    }
 }
 
 export async function saveBackup(state) {
@@ -113,5 +118,8 @@ export async function saveBackup(state) {
             console.warn('Backup-Ordner nicht beschreibbar – Fallback auf Download:', e);
         }
     }
+    // Fallback: downloadBackup() serialisiert den state-Singleton selbst –
+    // korrekt, da saveBackup() ausschliesslich mit genau diesem Singleton
+    // aufgerufen wird (siehe quickActions.onFeierabend).
     downloadBackup();
 }
