@@ -84,3 +84,19 @@ export async function clearBackupFolder() {
         /* nichts zu tun */
     }
 }
+
+async function ensureWritePermission(handle) {
+    const opts = { mode: 'readwrite' };
+    if ((await handle.queryPermission(opts)) === 'granted') return true;
+    return (await handle.requestPermission(opts)) === 'granted';
+}
+
+export async function writeBackupToFolder(handle, filename, content) {
+    if (!(await ensureWritePermission(handle))) {
+        throw new Error('Backup-Ordner: Schreibberechtigung verweigert');
+    }
+    const fileHandle = await handle.getFileHandle(filename, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(content);
+    await writable.close();
+}

@@ -39,6 +39,7 @@ import {
     getSavedFolder,
     getSavedFolderName,
     clearBackupFolder,
+    writeBackupToFolder,
 } from '../src/backupFolder.js';
 
 // Erzeugt ein gefälschtes Directory-Handle mit Berechtigungs-Stubs.
@@ -113,5 +114,46 @@ describe('pickBackupFolder / getSavedFolderName / clearBackupFolder', () => {
 
     test('getSavedFolderName ist null ohne gespeichertes Handle', async () => {
         expect(await getSavedFolderName()).toBeNull();
+    });
+});
+
+// Directory-Handle inkl. createWritable-Kette für Schreibtests.
+function makeWritableDirHandle(name, { permission = 'granted' } = {}) {
+    const writes = [];
+    const writable = {
+        write: vi.fn(chunk => { writes.push(chunk); return Promise.resolve(); }),
+        close: vi.fn().mockResolvedValue(undefined),
+    };
+    const fileHandle = {
+        createWritable: vi.fn().mockResolvedValue(writable),
+    };
+    return {
+        handle: {
+            name,
+            kind: 'directory',
+            queryPermission: vi.fn().mockResolvedValue(permission),
+            requestPermission: vi.fn().mockResolvedValue(permission),
+            getFileHandle: vi.fn().mockResolvedValue(fileHandle),
+        },
+        writes,
+        writable,
+        fileHandle,
+    };
+}
+
+describe('writeBackupToFolder', () => {
+    test('schreibt Inhalt in neue Datei bei erteilter Berechtigung', async () => {
+        const { handle, writes, writable, fileHandle } = makeWritableDirHandle('Backups');
+        await writeBackupToFolder(handle, 'b.json', '{"a":1}');
+
+        expect(handle.getFileHandle).toHaveBeenCalledWith('b.json', { create: true });
+        expect(fileHandle.createWritable).toHaveBeenCalled();
+        expect(writes).toEqual(['{"a":1}']);
+        expect(writable.close).toHaveBeenCalled();
+    });
+
+    test('wirft wenn Berechtigung verweigert wird', async () => {
+        const { handle } = makeWritableDirHandle('Backups', { permission: 'denied' });
+        await expect(writeBackupToFolder(handle, 'b.json', '{}')).rejects.toThrow();
     });
 });
