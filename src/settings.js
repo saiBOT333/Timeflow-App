@@ -2,7 +2,7 @@ import { state } from './state.js';
 import { APP_VERSION } from './config.js';
 import { commitState, persistState } from './stateManager.js';
 import { escapeHtml } from './utils.js';
-import { showConfirm } from './ui/dialogs.js';
+import { showAlert, showConfirm } from './ui/dialogs.js';
 import { isSupported, pickBackupFolder, getSavedFolderName, clearBackupFolder } from './backupFolder.js';
 
 // =============================================================================
@@ -119,6 +119,7 @@ async function renderBackupFolderSetting() {
     }
     if (unsupported) unsupported.hidden = true;
     if (pickBtn) pickBtn.disabled = false;
+    if (nameEl) nameEl.textContent = 'Wird geladen…';
 
     const name = await getSavedFolderName();
     if (nameEl) nameEl.textContent = name ? `Ordner: ${name}` : 'Kein Ordner – Backup geht in Downloads';
@@ -126,8 +127,12 @@ async function renderBackupFolderSetting() {
 }
 
 async function pickBackupFolderSetting() {
-    const name = await pickBackupFolder();
-    if (name) await renderBackupFolderSetting();
+    try {
+        const name = await pickBackupFolder();
+        if (name) await renderBackupFolderSetting();
+    } catch (e) {
+        showAlert('Backup-Ordner konnte nicht gespeichert werden: ' + (e && e.message ? e.message : e), { title: 'Fehler', icon: 'error' });
+    }
 }
 
 async function clearBackupFolderSetting() {
