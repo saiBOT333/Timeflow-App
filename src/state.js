@@ -88,7 +88,7 @@ export const uiState = {
     weeklyMarkedRows:    new Set(),
 
     // Dezimaldarstellung in der Wochenübersicht (true = h.hh, false = hh:mm)
-    weeklyDecimal:       false,
+    weeklyDecimal:       true,
 
     // Offenes Projekt-Kontextmenü (project-id|null)
     openMenuProjectId:   null,

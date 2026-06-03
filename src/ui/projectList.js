@@ -2,10 +2,11 @@ import { state, uiState } from '../state.js';
 import { notifyStateChanged } from '../stateManager.js';
 import { ARCHIVE_COLOR } from '../config.js';
 import { escapeHtml, getContrastTextColor } from '../utils.js';
-import { isParentProject, getChildProjects, calculateProjectTotalMs,
+import { isParentProject, getChildProjects,
          toggleFavorite, openProjectEdit, openSubProjectModal,
          setCategory, deleteProject, switchProject } from '../projects.js';
 import { openTagAssign } from '../tags.js';
+import { calculateNetDurationWithChildren } from './timeBadges.js';
 
 // =============================================================================
 // ui/projectList.js – Projektlisten rendern, Overflow-Menü, Archiv-Suche
@@ -143,7 +144,7 @@ export function renderList(elementId, items) {
         // Budget-Fortschrittsbalken (nur für Hauptprojekte mit gesetztem Budget)
         let budgetBarHtml = '';
         if (!isSub && p.budgetHours != null && p.budgetHours > 0) {
-            const totalMs = calculateProjectTotalMs(p);
+            const totalMs = calculateNetDurationWithChildren(p);
             const budgetMs = p.budgetHours * 3600000;
             const pct = Math.min((totalMs / budgetMs) * 100, 100);
             const usedH = (totalMs / 3600000).toFixed(1);
