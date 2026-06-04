@@ -90,6 +90,15 @@
                 </div>
 
                 <div class="setting-group">
+                    <label class="setting-label">Signalton bei Erinnerung</label>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <input type="checkbox" id="settingsReminderSound" style="width:20px; height:20px; cursor:pointer;" onchange="pendingSettings.reminderSound = this.checked">
+                        <span class="fs-13-variant">Spielt einen kurzen Ton, wenn eine Erinnerung aufploppt</span>
+                        <button type="button" class="md-btn md-btn-tonal" style="margin-left:auto;" onclick="testReminderSound()">Test</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
                     <label class="setting-label mb-4">Timer-Anzeige</label>
                     <div class="setting-hint mb-12">Wie soll ein laufender Timer dargestellt werden?</div>
                     <div style="display:flex; flex-direction:column; gap:10px;">

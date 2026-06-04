@@ -9,6 +9,7 @@ import { updateDayProgress } from './ui/progressCard.js';
 import { showConfirm } from './ui/dialogs.js';
 import { renderActiveProjectCard, checkPauseStatus, isGreetingRunning, setActiveReminder } from './ui/activeCard.js';
 import { layoutMasonry } from './ui/masonry.js';
+import { playReminderSound } from './sound.js';
 
 // Modul-Variable: welche Erinnerungen/AutoStop heute schon gefeuert wurden
 let firedRemindersToday = {};
@@ -116,11 +117,13 @@ export function checkReminders() {
                 if (currentHHMM >= r.time) {
                     firedRemindersToday[intervalKey] = nowMs;
                     setActiveReminder(r.text, idx);
+                    if (state.settings.reminderSound !== false) playReminderSound();
                     if (!isGreetingRunning()) { renderActiveProjectCard(); layoutMasonry(); }
                 }
             } else if (nowMs - lastFired >= r.intervalMin * 60000) {
                 firedRemindersToday[intervalKey] = nowMs;
                 setActiveReminder(r.text, idx);
+                if (state.settings.reminderSound !== false) playReminderSound();
                 if (!isGreetingRunning()) { renderActiveProjectCard(); layoutMasonry(); }
             }
             return;
@@ -129,6 +132,7 @@ export function checkReminders() {
         if (currentHHMM >= r.time && currentHHMM < incrementTime(r.time, 1)) {
             firedRemindersToday[key] = true;
             setActiveReminder(r.text, idx);
+            if (state.settings.reminderSound !== false) playReminderSound();
             if (!isGreetingRunning()) {
                 renderActiveProjectCard();
                 layoutMasonry();
