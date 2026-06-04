@@ -31,6 +31,7 @@ function makeAudioMock() {
 describe('playReminderSound', () => {
     let restore;
     beforeEach(() => {
+        // Dynamischer Import + resetModules: setzt den modul-internen audioCtx-Singleton pro Test zurück
         vi.resetModules();
         restore = { AudioContext: globalThis.AudioContext, webkit: globalThis.webkitAudioContext };
     });

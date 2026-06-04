@@ -29,7 +29,9 @@ export function playReminderSound() {
         if (!Ctx) return;
         if (!audioCtx) audioCtx = new Ctx();
         const ctx = audioCtx;
-        // Browser starten den Context teils suspendiert
+        // Browser starten den Context teils suspendiert.
+        // resume() ist async und wird bewusst nicht awaited – beim allerersten Ton einer Session
+        // kann die Hüllkurve minimal abgeschnitten sein (akzeptiert, kein Crash).
         if (ctx.state === 'suspended' && typeof ctx.resume === 'function') ctx.resume();
         const now = ctx.currentTime;
         playBeep(ctx, now, 0.0);   // Piep 1
