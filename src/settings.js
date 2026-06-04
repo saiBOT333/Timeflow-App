@@ -4,6 +4,7 @@ import { commitState, persistState } from './stateManager.js';
 import { escapeHtml } from './utils.js';
 import { showAlert, showConfirm } from './ui/dialogs.js';
 import { isSupported, pickBackupFolder, getSavedFolderName, clearBackupFolder } from './backupFolder.js';
+import { playReminderSound } from './sound.js';
 
 // =============================================================================
 // settings.js – Einstellungs-Modal, Erinnerungen, Externe Links
@@ -50,6 +51,7 @@ export function openSettingsModal(options) {
         rounding:        state.settings.rounding !== undefined ? state.settings.rounding : '0',
         greeting:        state.settings.greeting || '',
         progressEnabled: state.settings.progressEnabled !== false,
+        reminderSound:   state.settings.reminderSound !== false,
         workdayHours:    state.settings.workdayHours || 10,
         yellowPct:       state.settings.yellowPct || 60,
         redPct:          state.settings.redPct || 85,
@@ -64,6 +66,7 @@ export function openSettingsModal(options) {
     document.getElementById('settingsRounding').value = pendingSettings.rounding;
     document.getElementById('settingsGreeting').value = pendingSettings.greeting;
     document.getElementById('settingsProgressEnabled').checked = pendingSettings.progressEnabled;
+    document.getElementById('settingsReminderSound').checked = pendingSettings.reminderSound;
     document.getElementById('settingsWorkdayHours').value = pendingSettings.workdayHours;
     document.getElementById('settingsYellowPct').value = pendingSettings.yellowPct;
     document.getElementById('settingsRedPct').value = pendingSettings.redPct;
@@ -142,6 +145,7 @@ async function clearBackupFolderSetting() {
 
 window.pickBackupFolderSetting = pickBackupFolderSetting;
 window.clearBackupFolderSetting = clearBackupFolderSetting;
+window.testReminderSound = () => playReminderSound();
 
 export function saveSettings() {
     // Flush pendingSettings → state. Kein DOM-Lesen hier.
@@ -149,6 +153,7 @@ export function saveSettings() {
     state.settings.rounding        = pendingSettings.rounding;
     state.settings.greeting        = pendingSettings.greeting;
     state.settings.progressEnabled = pendingSettings.progressEnabled;
+    state.settings.reminderSound = pendingSettings.reminderSound;
     state.settings.workdayHours    = pendingSettings.workdayHours;
     state.settings.yellowPct       = pendingSettings.yellowPct;
     state.settings.redPct          = pendingSettings.redPct;
