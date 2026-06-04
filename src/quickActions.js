@@ -4,7 +4,7 @@ import { toggleManualPause } from './pauses.js';
 import { startProject, stopAllProjects } from './projects.js';
 import { setFeierabendActive } from './ui/activeCard.js';
 import { persistState, persistStateImmediate } from './stateManager.js';
-import { downloadBackup } from './export.js';
+import { saveBackup } from './backupFolder.js';
 import { pushUndo, showUndoToast } from './undo.js';
 import { updateUI } from './ui/render.js';
 
@@ -34,7 +34,7 @@ async function onFeierabend() {
         setFeierabendActive(true);
         persistStateImmediate();
         updateUI();
-        downloadBackup();
+        await saveBackup(state);
         showUndoToast('Feierabend rückgängig');
     }
 }
