@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+// Hinweis: Die Guard-Logik (reminderSound !== false) in checkReminders() wird
+// nicht hier getestet, sondern manuell im Browser verifiziert (siehe Plan).
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // --- Minimaler Web-Audio-Mock ---------------------------------------------
