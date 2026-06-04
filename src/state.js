@@ -26,6 +26,7 @@ export const state = {
         redPct: 85,
         timerMode: 'standard',
         reminders: [],
+        reminderSound: true,
         autoPauses: [],
         showWeekend: true,
         homeOffice: false,
