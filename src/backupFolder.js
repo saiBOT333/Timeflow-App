@@ -68,6 +68,8 @@ export async function getSavedFolder() {
     try {
         return await idbGet(KEY);
     } catch {
+        // Jeder IndexedDB-Fehler → null, damit saveBackup auf den Download
+        // zurückfällt. Bewusst breit: Feierabend darf nie am Backup scheitern.
         return null;
     }
 }
