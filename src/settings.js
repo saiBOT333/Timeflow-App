@@ -153,7 +153,7 @@ export function saveSettings() {
     state.settings.rounding        = pendingSettings.rounding;
     state.settings.greeting        = pendingSettings.greeting;
     state.settings.progressEnabled = pendingSettings.progressEnabled;
-    state.settings.reminderSound = pendingSettings.reminderSound;
+    state.settings.reminderSound   = pendingSettings.reminderSound;
     state.settings.workdayHours    = pendingSettings.workdayHours;
     state.settings.yellowPct       = pendingSettings.yellowPct;
     state.settings.redPct          = pendingSettings.redPct;
