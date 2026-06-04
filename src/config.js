@@ -6,7 +6,7 @@
 // =============================================================================
 
 // --- VERSION ---
-export const APP_VERSION = '3.4.0';
+export const APP_VERSION = '3.5.0';
 
 // --- DEFAULT-KONFIGURATION ---
 export const DEFAULT_AUTO_PAUSES = [
@@ -28,6 +28,20 @@ export const ARCHIVE_COLOR = '#757575';
 // Das Popup erscheint automatisch beim nächsten Start, wenn APP_VERSION
 // noch nicht als gesehen gespeichert ist.
 export const CHANGELOG = {
+    '3.5.0': {
+        title: 'Version 3.5.0',
+        subtitle: 'Backup-Ordner & Stundenzettel-Erweiterungen',
+        changes: [
+            { icon: 'folder',     text: 'Backup-Ordner: Beim Feierabend lässt sich jetzt ein fester Ordner wählen, in den das Backup automatisch geschrieben wird (Chrome/Edge). Ohne Ordner landet es wie bisher im Download-Ordner.' },
+            { icon: 'swap_horiz', text: 'Stundenzettel: Projekt eines Eintrags per Klick auf den Projektnamen wechseln.' },
+            { icon: 'add_circle', text: 'Stundenzettel: Manuelle Zeiteinträge mit Start, Ende und Notiz direkt anlegen.' },
+            { icon: 'delete',     text: 'Stundenzettel: Auch laufende Einträge lassen sich verwerfen – mit eigener Sicherheitsabfrage.' },
+            { icon: 'schedule',   text: 'Stundenzettel: Zeiteingabe über native Uhrzeit-Felder – bequemer und fehlerärmer.' },
+            { icon: 'percent',    text: 'Budget-Balken: Rechnet jetzt netto (abzüglich Pausen) – stimmt mit der angezeigten Gesamtsumme überein.' },
+            { icon: 'tune',       text: 'Wochenübersicht: Dezimalformat ist beim Start jetzt Standard – Umschalten auf HH:MM per Klick bleibt möglich.' },
+            { icon: 'healing',    text: 'Bugfix: Projekte, die fälschlich als „läuft" hängen blieben, werden beim Laden automatisch korrigiert.' }
+        ]
+    },
     '3.4.0': {
         title: 'Version 3.4.0',
         subtitle: 'Auto-Pause-Overhaul & CSS-Refactoring',
