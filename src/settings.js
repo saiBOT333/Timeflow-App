@@ -55,7 +55,6 @@ export function openSettingsModal(options) {
         workdayHours:    state.settings.workdayHours || 10,
         yellowPct:       state.settings.yellowPct || 60,
         redPct:          state.settings.redPct || 85,
-        autoStopTime:    state.settings.autoStopTime || '',
         timerMode:       state.settings.timerMode || 'standard',
         externalLinks:   JSON.parse(JSON.stringify(state.settings.externalLinks || []))
     };
@@ -70,7 +69,6 @@ export function openSettingsModal(options) {
     document.getElementById('settingsWorkdayHours').value = pendingSettings.workdayHours;
     document.getElementById('settingsYellowPct').value = pendingSettings.yellowPct;
     document.getElementById('settingsRedPct').value = pendingSettings.redPct;
-    document.getElementById('settingsAutoStopTime').value = pendingSettings.autoStopTime || '';
     document.getElementById('timerMode' + (pendingSettings.timerMode === 'pulse' ? 'Pulse' : 'Standard')).checked = true;
     updateTimerModePreview();
     renderReminderListSettings();
@@ -157,7 +155,6 @@ export function saveSettings() {
     state.settings.workdayHours    = pendingSettings.workdayHours;
     state.settings.yellowPct       = pendingSettings.yellowPct;
     state.settings.redPct          = pendingSettings.redPct;
-    state.settings.autoStopTime    = pendingSettings.autoStopTime || '';
     state.settings.timerMode       = pendingSettings.timerMode || 'standard';
     // Externe Links: nur vollständige Einträge (label + url) übernehmen
     state.settings.externalLinks   = (pendingSettings.externalLinks || []).filter(l => l.label && l.url);

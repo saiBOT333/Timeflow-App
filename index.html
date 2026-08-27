@@ -147,17 +147,6 @@
                 </div>
 
                 <div class="setting-group">
-                    <label class="setting-label mb-4">Automatischer Tagesabschluss</label>
-                    <div class="setting-hint mb-8">Alle laufenden Timer werden täglich um diese Uhrzeit automatisch gestoppt. Leer lassen zum Deaktivieren.</div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div class="input-container" style="width:120px;">
-                            <input type="time" class="input-field" id="settingsAutoStopTime" oninput="pendingSettings.autoStopTime = this.value">
-                        </div>
-                        <span class="setting-hint">Uhr (leer = deaktiviert)</span>
-                    </div>
-                </div>
-
-                <div class="setting-group">
                     <label class="setting-label">Farbschwellen (%)</label>
                     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                         <div style="display:flex; align-items:center; gap:6px;">
@@ -359,7 +348,7 @@
                 <span class="material-symbols-rounded fs-28 text-primary" id="confirmModalIcon" style="flex-shrink:0; margin-top:2px;">help_outline</span>
                 <div>
                     <div class="modal-title fs-18 mb-8" id="confirmModalTitle">Bestätigung</div>
-                    <div class="fs-14-variant" id="confirmModalMessage" style="line-height:1.5;"></div>
+                    <div class="fs-14-variant" id="confirmModalMessage" style="line-height:1.5; white-space:pre-line;"></div>
                 </div>
             </div>
             <div class="modal-actions">

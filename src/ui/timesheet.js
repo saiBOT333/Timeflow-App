@@ -1,5 +1,5 @@
 import { state } from '../state.js';
-import { formatMs, escapeHtml } from '../utils.js';
+import { formatMs, escapeHtml, getLocalDateStr } from '../utils.js';
 import { getRoundedMs, calculateNetDurationForDate } from '../calculations.js';
 import { commitState, persistState, notifyStateChanged } from '../stateManager.js';
 import { showAlert, showConfirm } from './dialogs.js';
@@ -14,7 +14,7 @@ let timesheetDate = null;
 
 export function getTimesheetDate() {
     if (!timesheetDate) {
-        timesheetDate = new Date().toISOString().split('T')[0];
+        timesheetDate = getLocalDateStr();
     }
     return timesheetDate;
 }
@@ -22,12 +22,22 @@ export function getTimesheetDate() {
 export function navigateTimesheetDay(dir) {
     const d = new Date(getTimesheetDate() + 'T12:00:00');
     d.setDate(d.getDate() + dir);
-    timesheetDate = d.toISOString().split('T')[0];
+    timesheetDate = getLocalDateStr(d);
     notifyStateChanged();
 }
 
 export function goToTimesheetToday() {
-    timesheetDate = new Date().toISOString().split('T')[0];
+    timesheetDate = getLocalDateStr();
+    notifyStateChanged();
+}
+
+/**
+ * Stundenzettel auf einen bestimmten Tag stellen.
+ * @param {string} dateStr – "YYYY-MM-DD"
+ */
+export function setTimesheetDate(dateStr) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')) return;
+    timesheetDate = dateStr;
     notifyStateChanged();
 }
 
@@ -59,7 +69,7 @@ export function renderTimesheetCard() {
     if (!container) return;
 
     const viewDate = getTimesheetDate();
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
     const isToday = viewDate === todayStr;
     const now = Date.now();
     const dayStart = new Date(viewDate + 'T00:00:00').getTime();
