@@ -490,6 +490,16 @@
 <h3>Wie funktioniert die Zeiterfassung?</h3>
 <p>Jedes Projekt hat eine Liste von Zeiteintr&auml;gen (Logs). Wenn du ein Projekt startest, wird ein neuer Eintrag mit der aktuellen Uhrzeit als Startzeit angelegt. Beim Stoppen wird die Endzeit gesetzt. Pausen werden automatisch von der Nettoproduktivzeit abgezogen.</p>
 
+<h3>Tagesgrenze &ndash; jeder Tag steht f&uuml;r sich</h3>
+<p>Um <strong>00:00 Uhr</strong> ist Schluss: Ein Tag l&auml;uft nie in den n&auml;chsten hinein. Wird der Rechner heruntergefahren oder zugeklappt, ohne dass vorher &bdquo;Feierabend&ldquo; geklickt wurde, erkennt TimeFlow das beim n&auml;chsten Start.</p>
+<ul>
+    <li>Die offene Aktivit&auml;t des Vortags wird automatisch beendet &ndash; und zwar zu dem Zeitpunkt, an dem TimeFlow zuletzt lief (nicht erst um Mitternacht).</li>
+    <li>Ein Hinweis <strong>&bdquo;Nicht abgestochen&ldquo;</strong> zeigt, welche Aktivit&auml;t betroffen war und auf welche Uhrzeit sie gesetzt wurde. &Uuml;ber <em>Stundenzettel pr&uuml;fen</em> springst du direkt in den Tag und kannst die Zeit korrigieren.</li>
+    <li>Der neue Tag startet frisch bei 0 &ndash; mit dem Projekt &bdquo;Allgemein&ldquo; ab dem Zeitpunkt des Programmstarts.</li>
+    <li>Eine laufende manuelle Pause aus dem Vortag wird ebenfalls sauber beendet.</li>
+</ul>
+<div class="tip"><strong>L&auml;uft der Rechner durch?</strong> Dann wird die Aktivit&auml;t um 23:59:59 beendet und es startet nichts Neues &ndash; der Tag ist zu Ende. Nach Standby oder Ruhezustand z&auml;hlt das Aufwachen dagegen wie ein Programmstart: die Zeit l&auml;uft ab jetzt neu.</div>
+
 <h3>Zeiten manuell korrigieren</h3>
 <p>Zeitkorrekturen werden ausschlie&szlig;lich im <strong>Timesheet</strong> (Abschnitt&nbsp;6) vorgenommen &ndash; direkt am Projekt ist das nicht mehr m&ouml;glich.</p>
 <ol class="steps">

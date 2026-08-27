@@ -6,7 +6,7 @@
 // =============================================================================
 
 // --- VERSION ---
-export const APP_VERSION = '3.5.0';
+export const APP_VERSION = '3.6.0';
 
 // --- DEFAULT-KONFIGURATION ---
 export const DEFAULT_AUTO_PAUSES = [
@@ -28,6 +28,19 @@ export const ARCHIVE_COLOR = '#757575';
 // Das Popup erscheint automatisch beim nächsten Start, wenn APP_VERSION
 // noch nicht als gesehen gespeichert ist.
 export const CHANGELOG = {
+    '3.6.0': {
+        title: 'Version 3.6.0',
+        subtitle: 'Jeder Tag steht f\u00fcr sich',
+        changes: [
+            { icon: 'today',        text: 'Tagesgrenze: Um 00:00 Uhr ist Schluss \u2013 eine Aktivit\u00e4t l\u00e4uft nie mehr in den n\u00e4chsten Tag hinein.' },
+            { icon: 'schedule',     text: 'Vergessener Feierabend: Beim n\u00e4chsten Start wird die offene Aktivit\u00e4t automatisch beendet \u2013 zu dem Zeitpunkt, an dem TimeFlow zuletzt lief, nicht erst um Mitternacht.' },
+            { icon: 'info',         text: 'Hinweis \u201eNicht abgestochen\u201c zeigt, was korrigiert wurde, und springt auf Wunsch direkt in den Stundenzettel des betroffenen Tages.' },
+            { icon: 'restart_alt',  text: 'Der neue Tag startet frisch bei 0 \u2013 \u201eAllgemein\u201c l\u00e4uft ab dem Programmstart, auch nach Standby oder Ruhezustand.' },
+            { icon: 'coffee',       text: 'Eine laufende manuelle Pause aus dem Vortag wird ebenfalls sauber beendet.' },
+            { icon: 'delete',       text: 'Einstellung \u201eAutomatischer Tagesabschluss\u201c entfernt \u2013 die Tagesgrenze erledigt das jetzt zuverl\u00e4ssig.' },
+            { icon: 'bug_report',   text: 'Bugfix: Zwischen 0 und 2 Uhr nachts zeigten Timesheet, Wochen\u00fcbersicht und Fortschritt noch den Vortag \u2013 alle Tagesberechnungen laufen jetzt durchg\u00e4ngig in lokaler Zeit.' }
+        ]
+    },
     '3.5.0': {
         title: 'Version 3.5.0',
         subtitle: 'Backup-Ordner & Stundenzettel-Erweiterungen',
