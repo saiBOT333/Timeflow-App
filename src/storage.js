@@ -1,4 +1,5 @@
 import { state } from './state.js';
+import { getLocalDateStr } from './utils.js';
 
 // --- STORAGE MANAGER (IndexedDB-Wrapper) ---
 // Kapselt alle Datenbankoperationen. Schnittstelle nach außen:
@@ -186,6 +187,11 @@ export function migrateState(loaded) {
         delete loaded.customTitles.title_export;
         delete loaded.customTitles.title_progress;
     }
+    // Entfernt: „Automatischer Tagesabschluss" (autoStopTime).
+    // Der Tagesabschluss läuft jetzt über die Tagesgrenze um 00:00 (dayRollover.js).
+    if (loaded.settings && loaded.settings.autoStopTime !== undefined) {
+        delete loaded.settings.autoStopTime;
+    }
     // Remove obsolete card-progress from hiddenCards
     if (loaded.settings && Array.isArray(loaded.settings.hiddenCards)) {
         loaded.settings.hiddenCards = loaded.settings.hiddenCards.filter(id => id !== 'card-progress');
@@ -255,7 +261,7 @@ export async function loadData() {
         const _pauseCountBefore = state.pauses.length;
         const _seenPauseKeys = new Set();
         state.pauses = state.pauses.filter(pause => {
-            const dayKey = new Date(pause.startTs).toISOString().split('T')[0];
+            const dayKey = getLocalDateStr(new Date(pause.startTs));
             const key = (pause.label || '') + '|' + (pause.type || '') + '|' + dayKey + '|' + pause.startTs;
             if (_seenPauseKeys.has(key)) return false;
             _seenPauseKeys.add(key);
@@ -267,10 +273,10 @@ export async function loadData() {
         // Wenn die App geschlossen wurde während eine manuelle Pause aktiv war,
         // bleibt pause.active = true und pause.endTs = null für immer gesetzt.
         // Solche Pausen tauchen im Stundenzettel für JEDEN Tag auf, da pauseEnd = now.
-        const _todayStr = new Date().toISOString().split('T')[0];
+        const _todayStr = getLocalDateStr();
         state.pauses.forEach(pause => {
             if (pause.active && pause.startTs) {
-                const pauseDay = new Date(pause.startTs).toISOString().split('T')[0];
+                const pauseDay = getLocalDateStr(new Date(pause.startTs));
                 if (pauseDay !== _todayStr) {
                     // Pause am Ende des Starttags (23:59:59) automatisch schließen
                     pause.endTs = new Date(pauseDay + 'T23:59:59').getTime();

@@ -8,6 +8,8 @@
 // die Objekte selbst werden nie neu zugewiesen.
 // =============================================================================
 
+import { getLocalDateStr } from './utils.js';
+
 // --- HAUPT-STATE (persistiert) ---
 export const state = {
     version: 2,
@@ -65,12 +67,12 @@ export const state = {
 // Alle Laufzeit-Zustände die keinen App-Neustart überleben sollen.
 export const uiState = {
     // Navigation
-    viewDate:            new Date().toISOString().split('T')[0],  // aktuell betrachteter Tag (Pausen/Logs)
+    viewDate:            getLocalDateStr(),  // aktuell betrachteter Tag (Pausen/Logs)
     viewWeekStart:       (() => {
         const today = new Date();
         const monday = new Date(today);
         monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
-        return monday.toISOString().split('T')[0];
+        return getLocalDateStr(monday);
     })(),  // Montag der aktuell betrachteten Woche
 
     // Tag-Filter

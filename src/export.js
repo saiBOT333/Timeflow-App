@@ -1,5 +1,5 @@
 import { state, uiState } from './state.js';
-import { formatMs, formatMsDecimal, getWeekDates, getISOWeekNumber } from './utils.js';
+import { formatMs, formatMsDecimal, getWeekDates, getISOWeekNumber, getLocalDateStr } from './utils.js';
 import { getRoundedMs, calculateNetDurationForDate } from './calculations.js';
 
 // =============================================================================
@@ -18,7 +18,7 @@ import { getRoundedMs, calculateNetDurationForDate } from './calculations.js';
  */
 export function getFileName(suffix) {
     const prefix = state.settings.filePrefix || 'TimeFlow_Export';
-    return `${prefix}_${uiState.viewDate || new Date().toISOString().split('T')[0]}.${suffix}`;
+    return `${prefix}_${uiState.viewDate || getLocalDateStr()}.${suffix}`;
 }
 
 // --- CSV EXPORT ---

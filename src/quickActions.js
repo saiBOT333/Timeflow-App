@@ -1,4 +1,5 @@
 import { state } from './state.js';
+import { getLocalDateStr } from './utils.js';
 import { showAlert, showConfirm } from './ui/dialogs.js';
 import { toggleManualPause } from './pauses.js';
 import { startProject, stopAllProjects } from './projects.js';
@@ -51,10 +52,10 @@ function updateHomeOfficeBtn() {
 function toggleHomeOffice() {
     state.settings.homeOffice = !state.settings.homeOffice;
     if (state.settings.homeOffice) {
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = getLocalDateStr();
         state.pauses = state.pauses.filter(p => {
             if (p.type !== 'auto') return true;
-            const pDate = new Date(p.startTs).toISOString().split('T')[0];
+            const pDate = getLocalDateStr(new Date(p.startTs));
             return pDate !== todayStr;
         });
     }

@@ -93,6 +93,17 @@ export function escapeHtml(str) {
 // --- DATUM/WOCHE ---
 
 /**
+ * Date → "YYYY-MM-DD" in der LOKALEN Zeitzone.
+ * Bewusst nicht toISOString(): das liefert UTC und kippt rund um Mitternacht
+ * auf den falschen Kalendertag.
+ * @param {Date} [date] – Default: jetzt
+ */
+export function getLocalDateStr(date) {
+    const d = date || new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+/**
  * Gibt ein Array mit 7 ISO-Datumsstrings (Mo–So) für die Woche zurück,
  * die das übergebene Datum enthält.
  * @param {string} refDate – ISO-Datumsstring (z. B. "2026-03-03")
@@ -107,7 +118,7 @@ export function getWeekDates(refDate) {
     for (let i = 0; i < 7; i++) {
         const dd = new Date(monday);
         dd.setDate(monday.getDate() + i);
-        dates.push(dd.toISOString().split('T')[0]);
+        dates.push(getLocalDateStr(dd));
     }
     return dates;
 }

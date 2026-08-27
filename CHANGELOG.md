@@ -4,6 +4,29 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 
 ---
 
+## [3.6.0] – 2026-08-27
+
+### Neu
+- **Tagesgrenze um 00:00 Uhr**: Jeder Tag ist eigenständig. Offene Zeiteinträge und aktive Pausen aus Vortagen werden beim Start und beim Überschreiten der Tagesgrenze automatisch abgeschlossen (`src/dayRollover.js`)
+- **Heartbeat**: `tick()` schreibt alle 15 s einen Zeitstempel nach `localStorage.tf_lastActive`. Ein vergessener Feierabend wird dadurch auf den letzten tatsächlichen Laufzeitpunkt beendet statt auf 23:59:59 – ohne Heartbeat bleibt 23:59:59 als markierte Schätzung
+- **Hinweis „Nicht abgestochen"**: Nennt Aktivität, gesetzte Endzeit und beendete Pausen; „Stundenzettel prüfen" stellt den Stundenzettel auf den betroffenen Tag, klappt die Karte auf und springt hin
+- **Wochenübersicht – Projektnummer kopieren**: Die Nummer in der `#`-Spalte ist jetzt ein Button, der sie in die Zwischenablage legt (`src/clipboard.js`, mit `execCommand`-Fallback für unsichere Kontexte). Rückmeldung direkt am Button statt per Dialog; der Klick markiert die Zeile nicht mit. Die `#`-Spalte wurde von 72 auf 90 px verbreitert, damit lange Nummern neben dem Icon vollständig lesbar bleiben
+- **Frischer Tagesstart**: Nach PC-Start und nach Standby/Ruhezustand (Heartbeat-Lücke > 5 min) läuft „Allgemein" ab jetzt neu. Lief der Rechner durch, endet der Tag um 23:59:59 ohne Neustart
+
+### Behoben
+- **Timesheet – Zeiteingabe per Tastatur**: Ein `<input type="time">` feuert `change` bereits nach jedem vollständigen Segment, also schon nach der Stunde. Der Handler rief `commitState()` auf, das Re-Render baute das fokussierte Feld neu auf und brach die Eingabe ab – Tippen war unmöglich, nur der Uhren-Picker funktionierte. `updateTimesheetLogTime()` unterscheidet jetzt zwischen laufender Eingabe (`onchange`, still übernehmen + persistieren, kein Re-Render) und beendeter Eingabe (`onblur`, Meldung bei ungültiger Zeit + Re-Render). Das Re-Render wird zusätzlich aufgeschoben, solange der Fokus im Stundenzettel bleibt (Tab ins nächste Feld); Dauer und Tagessumme werden in dieser Zeit gezielt nachgezogen, ohne die Eingabefelder anzufassen
+
+### Verbessert
+- **Timesheet – laufenden Eintrag umbuchen**: Die Projektzuordnung des laufenden Eintrags verhielt sich anders als bei abgeschlossenen Einträgen: `changeLogProject()` rief für offene Logs `switchProject()` auf, wodurch das alte Projekt gestoppt und im Zielprojekt ein **neuer** Eintrag ab jetzt gestartet wurde. Jetzt wandert der offene Log mitsamt Startzeit und Notiz zum Zielprojekt und läuft dort weiter; der Status wird nachgezogen. Zwei offene Logs in einem Projekt werden defensiv zu einem zusammengefasst
+- **Lokale Tagesberechnung**: Alle „heute"- und Tagesschlüssel-Berechnungen nutzen `getLocalDateStr()` statt `toISOString()`. Zwischen 0 und 2 Uhr nachts zeigten Timesheet, Wochenübersicht, Fortschrittsanzeige und Zeit-Badges bisher den Vortag
+- **`getLocalDateStr`** von `ui/autoPauses.js` nach `utils.js` verschoben (pure Funktion, keine UI-Abhängigkeit)
+- **Confirm-Dialog** unterstützt mehrzeilige Meldungen (`white-space: pre-line`)
+
+### Entfernt
+- **Einstellung „Automatischer Tagesabschluss"** (`autoStopTime`) samt `checkAutoStop()` – die Tagesgrenze übernimmt diese Aufgabe zuverlässig. Der gespeicherte Wert wird beim Laden entfernt
+
+---
+
 ## [3.4.0] – 2026-03-01
 
 ### Neu

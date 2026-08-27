@@ -1,7 +1,8 @@
 import { state, uiState } from '../state.js';
-import { formatMs, formatMsDecimal, getWeekDates, getISOWeekNumber, escapeHtml } from '../utils.js';
+import { formatMs, formatMsDecimal, getWeekDates, getISOWeekNumber, escapeHtml, getLocalDateStr } from '../utils.js';
 import { calculateNetDurationForDate } from '../calculations.js';
 import { commitState, notifyStateChanged } from '../stateManager.js';
+import { copyText } from '../clipboard.js';
 
 // =============================================================================
 // ui/weeklyOverview.js – Wochenübersicht
@@ -10,12 +11,12 @@ import { commitState, notifyStateChanged } from '../stateManager.js';
 export function navigateWeek(offset) {
     const d = new Date(uiState.viewWeekStart + 'T12:00:00');
     d.setDate(d.getDate() + offset * 7);
-    uiState.viewWeekStart = d.toISOString().split('T')[0];
+    uiState.viewWeekStart = getLocalDateStr(d);
     notifyStateChanged();
 }
 
 export function goToCurrentWeek() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
     uiState.viewWeekStart = getWeekDates(todayStr)[0];
     notifyStateChanged();
 }
@@ -40,7 +41,7 @@ export function toggleWeeklyCollapse(parentId) {
 }
 
 export function toggleWeeklyRowMark(event, projectId) {
-    if (event.target.closest('.weekly-collapse-btn, .weekly-note-marker')) return;
+    if (event.target.closest('.weekly-collapse-btn, .weekly-note-marker, .weekly-copy-btn')) return;
     if (uiState.weeklyMarkedRows.has(projectId)) {
         uiState.weeklyMarkedRows.delete(projectId);
     } else {
@@ -114,6 +115,42 @@ export function closeNotePopup() {
     if (overlay) overlay.remove();
 }
 
+/**
+ * Projektnummer der Zeile in die Zwischenablage legen.
+ * Rückmeldung direkt am Button (Haken bzw. Fehlersymbol), damit kein
+ * Dialog den Arbeitsfluss unterbricht.
+ */
+export async function copyProjectNumber(event, projectId) {
+    event.stopPropagation();
+    const btn = event.currentTarget || (event.target && event.target.closest('.weekly-copy-btn'));
+    const p = state.projects.find(x => x.id === projectId);
+    if (!p || !p.number || p.number === '-') return;
+
+    const ok = await copyText(p.number);
+    showCopyFeedback(btn, ok);
+}
+
+const COPY_FEEDBACK_MS = 1400;
+
+function showCopyFeedback(btn, ok) {
+    if (!btn || !btn.isConnected) return;
+    const icon = btn.querySelector('.weekly-copy-icon');
+    if (!icon) return;
+    const originalTitle = btn.getAttribute('title') || '';
+
+    btn.classList.add(ok ? 'is-copied' : 'is-failed');
+    icon.textContent = ok ? 'check' : 'error';
+    btn.setAttribute('title', ok ? 'Kopiert!' : 'Kopieren nicht möglich');
+
+    setTimeout(() => {
+        // Zwischenzeitliches Re-Render der Tabelle: Button existiert nicht mehr
+        if (!btn.isConnected) return;
+        btn.classList.remove('is-copied', 'is-failed');
+        icon.textContent = 'content_copy';
+        btn.setAttribute('title', originalTitle);
+    }, COPY_FEEDBACK_MS);
+}
+
 export function renderWeeklyOverview() {
     const container = document.getElementById('weeklyTableContainer');
     if (!container) return;
@@ -127,7 +164,7 @@ export function renderWeeklyOverview() {
     }
 
     const allDates = getWeekDates(uiState.viewWeekStart);
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
     const weekNum = getISOWeekNumber(allDates[0]);
     const isCurrentWeek = uiState.viewWeekStart === getWeekDates(todayStr)[0];
     const weekLabelEl = document.getElementById('weekLabel');
@@ -212,7 +249,14 @@ export function renderWeeklyOverview() {
         html += '<tr class="' + rowClass + '" onclick="toggleWeeklyRowMark(event, \'' + p.id + '\')" style="cursor:pointer;" title="Klicken zum Markieren">';
         const numDisplay = (!isSub && p.number && p.number !== '-') ? p.number : '';
         const fullLabel = (isSub && p.parentId ? (activeProjects.find(x => x.id === p.parentId) || {}).name + ' \u2192 ' + p.name : p.name) + (p.number && p.number !== '-' ? ' (' + p.number + ')' : '');
-        html += '<td class="weekly-num-col">' + escapeHtml(numDisplay) + '</td>';
+        const numCell = numDisplay
+            ? '<button type="button" class="weekly-copy-btn" onclick="copyProjectNumber(event, \'' + p.id + '\')"'
+              + ' title="Projektnummer ' + escapeHtml(numDisplay) + ' kopieren">'
+              + '<span class="weekly-copy-num">' + escapeHtml(numDisplay) + '</span>'
+              + '<span class="material-symbols-rounded weekly-copy-icon">content_copy</span>'
+              + '</button>'
+            : '';
+        html += '<td class="weekly-num-col">' + numCell + '</td>';
         html += '<td class="project-name-cell" title="' + escapeHtml(fullLabel) + '">' + nameCell + '</td>';
         let rowTotal = 0;
         let displayRowTotal = 0;
@@ -275,5 +319,6 @@ window.toggleWeekend = toggleWeekend;
 window.toggleWeeklyDecimal = toggleWeeklyDecimal;
 window.toggleWeeklyCollapse = toggleWeeklyCollapse;
 window.toggleWeeklyRowMark = toggleWeeklyRowMark;
+window.copyProjectNumber = copyProjectNumber;
 window.showNotePopup = showNotePopup;
 window.closeNotePopup = closeNotePopup;

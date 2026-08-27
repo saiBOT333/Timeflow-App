@@ -9,6 +9,7 @@
 // =============================================================================
 
 import { state } from './state.js';
+import { getLocalDateStr } from './utils.js';
 
 // --- HILFSFUNKTIONEN (pure) ---
 
@@ -122,7 +123,7 @@ export function calculateNetDurationForRange(project, startDateStr, endDateStr) 
     const start = new Date(startDateStr + 'T12:00:00');
     const end = new Date(endDateStr + 'T12:00:00');
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        total += calculateNetDurationForDate(project, d.toISOString().split('T')[0]);
+        total += calculateNetDurationForDate(project, getLocalDateStr(d));
     }
     return total;
 }

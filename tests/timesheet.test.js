@@ -5,6 +5,7 @@
 // =============================================================================
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { state } from '../src/state.js';
+import { commitState, persistState, notifyStateChanged } from '../src/stateManager.js';
 
 // stateManager.commitState würde in JSDOM Events dispatchen → für reine
 // Logik-Tests stubbed. storage/render werden nicht getestet.
@@ -23,11 +24,7 @@ vi.mock('../src/pauses.js', () => ({
     deletePause: vi.fn(),
     deleteAutoPauseFromTimesheet: vi.fn(),
 }));
-vi.mock('../src/projects.js', () => ({
-    switchProject: vi.fn(),
-}));
-
-import { addManualLog, changeLogProject } from '../src/ui/timesheet.js';
+import { addManualLog, changeLogProject, updateTimesheetLogTime } from '../src/ui/timesheet.js';
 
 beforeEach(() => {
     state.projects = [
@@ -133,5 +130,119 @@ describe('changeLogProject – abgeschlossener Eintrag', () => {
         const ok = changeLogProject('p1', 99, 'p2');
         expect(ok).toBe(false);
         expect(state.projects[0].logs).toHaveLength(2);
+    });
+});
+
+describe('changeLogProject – laufender Eintrag', () => {
+    beforeEach(() => {
+        state.projects[0].logs = [
+            { start: 1000, end: 2000, note: 'abgeschlossen' },
+            { start: 3000, end: null, note: 'laeuft' },
+        ];
+        state.projects[0].status = 'running';
+    });
+
+    test('laufender Eintrag wandert mit Startzeit zum Zielprojekt und laeuft weiter', () => {
+        const ok = changeLogProject('p1', 1, 'p2');
+        expect(ok).toBe(true);
+        expect(state.projects[0].logs).toHaveLength(1);
+        expect(state.projects[0].logs[0].note).toBe('abgeschlossen');
+        expect(state.projects[1].logs).toEqual([{ start: 3000, end: null, note: 'laeuft' }]);
+    });
+
+    test('Status wandert mit: Ziel laeuft, Quelle gestoppt', () => {
+        changeLogProject('p1', 1, 'p2');
+        expect(state.projects[1].status).toBe('running');
+        expect(state.projects[0].status).toBe('stopped');
+    });
+
+    test('Quelle bleibt running, wenn dort ein weiterer offener Log existiert', () => {
+        state.projects[0].logs.push({ start: 5000, end: null });
+        changeLogProject('p1', 1, 'p2');
+        expect(state.projects[0].status).toBe('running');
+        expect(state.projects[1].status).toBe('running');
+    });
+
+    test('Zielprojekt mit bereits offenem Log: zusammengefasst, fruehester Start gewinnt', () => {
+        state.projects[1].logs = [{ start: 8000, end: null }];
+        changeLogProject('p1', 1, 'p2');
+        const open = state.projects[1].logs.filter(l => l.end === null || l.end === undefined);
+        expect(open).toHaveLength(1);
+        expect(open[0].start).toBe(3000);
+        expect(open[0].note).toBe('laeuft');
+    });
+
+    test('abgeschlossene Eintraege aendern keinen Status', () => {
+        changeLogProject('p1', 0, 'p2');
+        expect(state.projects[0].status).toBe('running');
+        expect(state.projects[1].status).toBe('idle');
+    });
+});
+
+describe('updateTimesheetLogTime – Tippen darf nicht unterbrochen werden', () => {
+    const D = '2026-05-07';
+    const at = (h, m) => new Date(D + 'T' + h + ':' + m + ':00').getTime();
+    // Das Re-Render nach blur laeuft in einem setTimeout(0) – hier abwarten.
+    const flush = () => new Promise(r => setTimeout(r, 0));
+
+    beforeEach(() => {
+        state.projects[0].logs = [{ start: at('09', '00'), end: at('11', '00'), note: 'x' }];
+        commitState.mockClear();
+        persistState.mockClear();
+        notifyStateChanged.mockClear();
+    });
+
+    test('live: uebernimmt den Wert ohne Re-Render', async () => {
+        updateTimesheetLogTime('p1', 0, 'start', '10:00', D, true);
+        expect(state.projects[0].logs[0].start).toBe(at('10', '00'));
+        expect(persistState).toHaveBeenCalledTimes(1);
+        await flush();
+        expect(notifyStateChanged).not.toHaveBeenCalled();
+        expect(commitState).not.toHaveBeenCalled();
+    });
+
+    test('live: ungueltiger Zwischenstand wird still ignoriert', async () => {
+        // Stunde 23 getippt, Ende ist 11:00 → waehrend der Eingabe kein Abbruch
+        updateTimesheetLogTime('p1', 0, 'start', '23:00', D, true);
+        expect(state.projects[0].logs[0].start).toBe(at('09', '00'));
+        expect(persistState).not.toHaveBeenCalled();
+        await flush();
+        expect(notifyStateChanged).not.toHaveBeenCalled();
+    });
+
+    test('live: leeres Feld aendert nichts', () => {
+        updateTimesheetLogTime('p1', 0, 'start', '', D, true);
+        expect(state.projects[0].logs[0].start).toBe(at('09', '00'));
+        expect(persistState).not.toHaveBeenCalled();
+    });
+
+    test('blur: uebernimmt den Wert und rendert neu', async () => {
+        updateTimesheetLogTime('p1', 0, 'end', '12:30', D, false);
+        expect(state.projects[0].logs[0].end).toBe(at('12', '30'));
+        expect(persistState).toHaveBeenCalledTimes(1);
+        await flush();
+        expect(notifyStateChanged).toHaveBeenCalledTimes(1);
+    });
+
+    test('blur nach Live-Eingabe: holt das Re-Render nach', async () => {
+        updateTimesheetLogTime('p1', 0, 'start', '10:45', D, true);
+        await flush();
+        expect(notifyStateChanged).not.toHaveBeenCalled();
+        // blur meldet denselben Wert – Dauer/Sortierung muessen trotzdem neu
+        updateTimesheetLogTime('p1', 0, 'start', '10:45', D, false);
+        await flush();
+        expect(notifyStateChanged).toHaveBeenCalledTimes(1);
+        expect(persistState).toHaveBeenCalledTimes(1);
+    });
+
+    test('Segment-Tippen: mehrere change-Events fuehren zur Zielzeit', async () => {
+        // Chrome feuert pro fertigem Segment: erst "10:00", dann "10:45"
+        updateTimesheetLogTime('p1', 0, 'start', '10:00', D, true);
+        updateTimesheetLogTime('p1', 0, 'start', '10:45', D, true);
+        updateTimesheetLogTime('p1', 0, 'start', '10:45', D, false);   // blur
+        expect(state.projects[0].logs[0].start).toBe(at('10', '45'));
+        expect(persistState).toHaveBeenCalledTimes(2);
+        await flush();
+        expect(notifyStateChanged).toHaveBeenCalledTimes(1);
     });
 });

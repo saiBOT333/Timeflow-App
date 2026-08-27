@@ -1,5 +1,5 @@
 import { state } from '../state.js';
-import { formatMs } from '../utils.js';
+import { formatMs, getLocalDateStr } from '../utils.js';
 import { calculateNetDuration, calculateNetDurationForDate } from '../calculations.js';
 import { isParentProject, getChildProjects } from '../projects.js';
 
@@ -24,7 +24,7 @@ export function calculateNetDurationForDateWithChildren(project, dateStr) {
 }
 
 export function updateTimeBadges() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
     const displayProject = state.projects.find(p => p.status === 'running') || state.projects.find(p => p.id === 'general');
 
     if (displayProject) {

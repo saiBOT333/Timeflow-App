@@ -1,18 +1,21 @@
 import { state } from './state.js';
-import { incrementTime } from './utils.js';
-import { getLocalDateStr } from './ui/autoPauses.js';
+import { incrementTime, getLocalDateStr } from './utils.js';
 import { persistState, commitState } from './stateManager.js';
-import { stopAllProjects } from './projects.js';
+import { startProject } from './projects.js';
+import { closeOpenDays, readHeartbeat, writeHeartbeat, WAKE_GAP_MS } from './dayRollover.js';
+import { showRolloverNotice } from './ui/dayRolloverNotice.js';
 import { renderPauses } from './ui/pauseList.js';
 import { updateTimeBadges } from './ui/timeBadges.js';
 import { updateDayProgress } from './ui/progressCard.js';
-import { showConfirm } from './ui/dialogs.js';
 import { renderActiveProjectCard, checkPauseStatus, isGreetingRunning, setActiveReminder } from './ui/activeCard.js';
 import { layoutMasonry } from './ui/masonry.js';
 import { playReminderSound } from './sound.js';
 
-// Modul-Variable: welche Erinnerungen/AutoStop heute schon gefeuert wurden
+// Modul-Variable: welche Erinnerungen heute schon gefeuert wurden
 let firedRemindersToday = {};
+
+// Kalendertag des letzten Ticks – erkennt das Überschreiten der Tagesgrenze
+let lastTickDay = getLocalDateStr();
 
 // -----------------------------------------------------------------------
 // tick – 1s-Taktgeber (Hauptschleife)
@@ -20,6 +23,9 @@ let firedRemindersToday = {};
 export function tick() {
     try {
         const now = Date.now();
+        // Tagesgrenze zuerst: erst danach gilt "heute" für alles Weitere.
+        // Liest den Heartbeat, bevor writeHeartbeat() ihn am Tick-Ende fortschreibt.
+        checkDayBoundary(now);
         const todayStr = getLocalDateStr();
 
         if (!state.settings.homeOffice) {
@@ -50,45 +56,36 @@ export function tick() {
         updateTimeBadges();
         checkPauseStatus();
         checkReminders();
-        checkAutoStop();
         updateDayProgress();
+        writeHeartbeat(now);
     } catch (err) {
         console.error('tick error:', err);
     }
 }
 
 // -----------------------------------------------------------------------
-// checkAutoStop – stoppt alle Projekte zu konfigurierter Uhrzeit
+// checkDayBoundary – Tageswechsel zur Laufzeit behandeln
 // -----------------------------------------------------------------------
-export function checkAutoStop() {
-    const autoStopTime = state.settings.autoStopTime;
-    if (!autoStopTime) return;
-    const hasRunning = state.projects.some(p => p.status === 'running');
-    if (!hasRunning) return;
+// Zwei Fälle, beide enden hier:
+//   1. Der Rechner lief durch (Heartbeat aktuell) → um 00:00 ist Schluss.
+//      Offene Logs werden auf 23:59:59 des Vortags geschlossen, es startet
+//      nichts neu – der Tag ist zu Ende.
+//   2. Der Rechner war im Standby/Ruhezustand (Heartbeat-Lücke) → beim
+//      Aufwachen zählt das wie ein PC-Start: der Vortag wird zum letzten
+//      Heartbeat abgeschlossen, "Allgemein" startet frisch ab jetzt.
+export function checkDayBoundary(now = Date.now()) {
+    const todayStr = getLocalDateStr();
+    if (todayStr === lastTickDay) return;
+    lastTickDay = todayStr;
 
-    const now = new Date();
-    const todayDate = now.toISOString().split('T')[0];
-    const currentHHMM = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    const lastActive = readHeartbeat();
+    const report = closeOpenDays(now, lastActive);
+    if (!report) return;
 
-    if (firedRemindersToday._date !== todayDate) {
-        firedRemindersToday = { _date: todayDate };
-    }
-
-    const autoStopKey = 'autoStop_' + autoStopTime;
-    if (firedRemindersToday[autoStopKey]) return;
-
-    if (currentHHMM >= autoStopTime) {
-        firedRemindersToday[autoStopKey] = true;
-        showConfirm(
-            'Automatischer Tagesabschluss um ' + autoStopTime + ' Uhr – alle laufenden Timer jetzt stoppen?',
-            { title: 'Tagesabschluss', icon: 'bedtime', okText: 'Stoppen', cancelText: 'Weiter arbeiten' }
-        ).then(confirmed => {
-            if (confirmed) {
-                stopAllProjects();
-                commitState();
-            }
-        });
-    }
+    const wokeUp = lastActive != null && (now - lastActive) > WAKE_GAP_MS;
+    if (wokeUp) startProject('general');
+    commitState();
+    showRolloverNotice(report, { restarted: wokeUp });
 }
 
 // -----------------------------------------------------------------------
@@ -98,7 +95,7 @@ export function checkReminders() {
     const reminders = state.settings.reminders;
     if (!reminders || reminders.length === 0) return;
     const now = new Date();
-    const todayDate = now.toISOString().split('T')[0];
+    const todayDate = getLocalDateStr(now);
     const currentHHMM = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
 
     if (firedRemindersToday._date !== todayDate) {

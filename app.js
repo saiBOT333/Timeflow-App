@@ -1,6 +1,6 @@
         import { APP_VERSION, MATERIAL_PALETTE } from './src/config.js';
         import { state, uiState } from './src/state.js';
-        import { formatMs, formatMsDecimal, formatTimeInput, incrementTime, isSameDay, hexToRgba, getContrastTextColor, escapeHtml, getWeekDates, getISOWeekNumber } from './src/utils.js';
+        import { formatMs, formatMsDecimal, formatTimeInput, incrementTime, isSameDay, hexToRgba, getContrastTextColor, escapeHtml, getWeekDates, getISOWeekNumber, getLocalDateStr } from './src/utils.js';
         import { getRoundedMs, getOverlap, mergeIntervals, calculateNetDuration, calculateNetDurationForDate, calculateNetDurationForRange } from './src/calculations.js';
         import { StorageManager, saveDataImmediate, migrateState, loadData } from './src/storage.js';
         import { persistState } from './src/stateManager.js';
@@ -20,7 +20,7 @@
         import { renderList, getReadableChipColor, closeAllProjectMenus, filterArchiveList } from './src/ui/projectList.js';
         import { renderWeeklyOverview } from './src/ui/weeklyOverview.js';
         import { renderTimesheetCard, adjustAdjacentLogs } from './src/ui/timesheet.js';
-        import { renderAutoPausesDisplay, updateAutoPause, addAutoPause, removeAutoPause, toggleAutoPausesPanel, isAutoPausesPanelOpen, getLocalDateStr } from './src/ui/autoPauses.js';
+        import { renderAutoPausesDisplay, updateAutoPause, addAutoPause, removeAutoPause, toggleAutoPausesPanel, isAutoPausesPanelOpen } from './src/ui/autoPauses.js';
         import { openTimeEdit, renderTimeEditLogs, updateLogTime, deleteLog } from './src/ui/timeEdit.js';
         import { showGreeting, isGreetingShown } from './src/ui/activeCard.js';
         import { tick } from './src/timer.js';
@@ -28,6 +28,8 @@
         import { onGoodMorning, onFeierabend, toggleHomeOffice, updateHomeOfficeBtn } from './src/quickActions.js';
         import { showOnboarding, checkAndShowChangelog } from './src/onboarding.js';
         import { updateDateDisplay } from './src/ui/dateNav.js';
+        import { closeOpenDays, writeHeartbeat } from './src/dayRollover.js';
+        import { showRolloverNotice } from './src/ui/dayRolloverNotice.js';
 
         // editingProjectId → uiState.editingProjectId (src/state.js)
         // _versionClickCount, pendingSettings, LINK_ICON_OPTIONS → src/settings.js
@@ -98,7 +100,8 @@
         // openTimeEdit, updateLogTime, deleteLog → window-Assigns in src/ui/timeEdit.js
 
         // StorageManager, saveData, saveDataImmediate, migrateState, loadData → src/storage.js
-        // getLocalDateStr, renderAutoPausesDisplay, updateAutoPause, addAutoPause,
+        // getLocalDateStr → src/utils.js
+        // renderAutoPausesDisplay, updateAutoPause, addAutoPause,
         // removeAutoPause, toggleAutoPausesPanel, isAutoPausesPanelOpen → src/ui/autoPauses.js
 
         // --- THEME ---
@@ -137,6 +140,14 @@
             applyTheme();
             setupPWA();
 
+            // --- TAGESGRENZE ---
+            // Jeder Tag ist eigenständig: offene Logs und Pausen aus Vortagen
+            // werden abgeschlossen, BEVOR unten ein neuer Log startet. Sonst
+            // liefe die Aktivität von gestern beim PC-Start einfach weiter.
+            // Muss vor writeHeartbeat() stehen – closeOpenDays() liest den
+            // Heartbeat des letzten Laufs, um die Endzeit zu bestimmen.
+            const rolloverReport = closeOpenDays();
+
             const existingGeneral = state.projects.find(p => p.id === 'general');
             if (!existingGeneral) {
                 state.projects.push({
@@ -158,10 +169,15 @@
                 }
             }
 
+            // Abgeschlossene Vortage sofort sichern – sonst ginge die Korrektur
+            // verloren, wenn die App direkt wieder geschlossen wird.
+            if (rolloverReport) saveDataImmediate();
+            writeHeartbeat(Date.now(), { force: true });
+
             // Initialize day start time for progress bar
             const storedDayStart = localStorage.getItem('tf_dayStart');
             const storedDayDate = localStorage.getItem('tf_dayStartDate');
-            const todayISO = new Date().toISOString().split('T')[0];
+            const todayISO = getLocalDateStr();
             if (storedDayStart && storedDayDate === todayISO) {
                 dayStartTime = parseInt(storedDayStart);
             } else {
@@ -193,6 +209,10 @@
             } else {
                 checkAndShowChangelog();
             }
+
+            // Hinweis „du hast nicht abgestochen" – zuletzt geöffnet, damit er
+            // über einem eventuellen Changelog-Dialog liegt.
+            if (rolloverReport) showRolloverNotice(rolloverReport, { restarted: true });
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
@@ -266,7 +286,7 @@
         window.openCardHelp = openCardHelp;
 
         // --- CORE LOGIC ---
-        // tick, checkAutoStop, checkReminders → src/timer.js
+        // tick, checkDayBoundary, checkReminders → src/timer.js
 
         // renderProgressCard, updateDayProgress → src/ui/progressCard.js
         // getDistinctColor → src/projects.js

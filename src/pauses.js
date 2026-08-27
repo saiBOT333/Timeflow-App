@@ -1,4 +1,5 @@
 import { state } from './state.js';
+import { getLocalDateStr } from './utils.js';
 import { commitState } from './stateManager.js';
 import { showConfirm } from './ui/dialogs.js';
 
@@ -72,7 +73,7 @@ export function endAutoPauseNow() {
 export function updatePauseTime(id, type, value) {
     const pause = state.pauses.find(p => p.id === id);
     if (!pause) return;
-    const todayStr = new Date(pause.startTs).toISOString().split('T')[0];
+    const todayStr = getLocalDateStr(new Date(pause.startTs));
     const newTs = new Date(todayStr + 'T' + value).getTime();
     if (isNaN(newTs)) return;
     if (type === 'start' && pause.endTs && newTs >= pause.endTs) return;

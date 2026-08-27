@@ -1,10 +1,9 @@
 import { state } from '../state.js';
-import { formatMs, escapeHtml } from '../utils.js';
+import { formatMs, escapeHtml, getLocalDateStr } from '../utils.js';
 import { getRoundedMs, calculateNetDurationForDate } from '../calculations.js';
 import { commitState, persistState, notifyStateChanged } from '../stateManager.js';
 import { showAlert, showConfirm } from './dialogs.js';
 import { deletePause, deleteAutoPauseFromTimesheet } from '../pauses.js';
-import { switchProject } from '../projects.js';
 
 // =============================================================================
 // ui/timesheet.js – Stundenzettel (tägliche Zeiteinträge)
@@ -14,7 +13,7 @@ let timesheetDate = null;
 
 export function getTimesheetDate() {
     if (!timesheetDate) {
-        timesheetDate = new Date().toISOString().split('T')[0];
+        timesheetDate = getLocalDateStr();
     }
     return timesheetDate;
 }
@@ -22,12 +21,22 @@ export function getTimesheetDate() {
 export function navigateTimesheetDay(dir) {
     const d = new Date(getTimesheetDate() + 'T12:00:00');
     d.setDate(d.getDate() + dir);
-    timesheetDate = d.toISOString().split('T')[0];
+    timesheetDate = getLocalDateStr(d);
     notifyStateChanged();
 }
 
 export function goToTimesheetToday() {
-    timesheetDate = new Date().toISOString().split('T')[0];
+    timesheetDate = getLocalDateStr();
+    notifyStateChanged();
+}
+
+/**
+ * Stundenzettel auf einen bestimmten Tag stellen.
+ * @param {string} dateStr – "YYYY-MM-DD"
+ */
+export function setTimesheetDate(dateStr) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')) return;
+    timesheetDate = dateStr;
     notifyStateChanged();
 }
 
@@ -59,7 +68,7 @@ export function renderTimesheetCard() {
     if (!container) return;
 
     const viewDate = getTimesheetDate();
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
     const isToday = viewDate === todayStr;
     const now = Date.now();
     const dayStart = new Date(viewDate + 'T00:00:00').getTime();
@@ -216,7 +225,7 @@ export function renderTimesheetCard() {
             : p.name;
         const projectNum = p.number ? '#' + p.number : '';
 
-        html += `<div class="ts-entry ${entry.isActive ? 'active' : ''}">
+        html += `<div class="ts-entry ${entry.isActive ? 'active' : ''}" data-ts-pid="${p.id}" data-ts-log="${entry.logIdx}">
             <div class="ts-entry-timeline-dot" style="background:${pColor};"></div>
             ${lineHtml}
             <div class="ts-entry-content">
@@ -224,7 +233,7 @@ export function renderTimesheetCard() {
                     <div class="ts-entry-project-info">
                         <button type="button" class="ts-entry-project ts-entry-project-btn"
                             style="color:${pColor};"
-                            title="Projekt wechseln"
+                            title="Eintrag einem anderen Projekt zuordnen"
                             onclick="toggleProjectPicker('${p.id}', ${entry.logIdx}, this)">
                             ${escapeHtml(projectLabel)}
                             <span class="material-symbols-rounded fs-14">expand_more</span>
@@ -235,13 +244,15 @@ export function renderTimesheetCard() {
                 </div>
                 <div class="ts-entry-times">
                     <input type="time" class="ts-time-input" value="${startTime}" step="60"
-                        onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'start', this.value, '${viewDate}')"
+                        onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'start', this.value, '${viewDate}', true)"
+                        onblur="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'start', this.value, '${viewDate}', false)"
                         title="Startzeit bearbeiten">
                     <span class="ts-entry-arrow">\u2192</span>
                     ${entry.isActive
                         ? '<span class="ts-entry-running">l\u00e4uft...</span>'
                         : `<input type="time" class="ts-time-input" value="${endTime}" step="60"
-                            onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'end', this.value, '${viewDate}')"
+                            onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'end', this.value, '${viewDate}', true)"
+                            onblur="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'end', this.value, '${viewDate}', false)"
                             title="Endzeit bearbeiten">`
                     }
                     <button class="icon-btn ts-delete-btn" onclick="deleteTimesheetLog('${p.id}', ${entry.logIdx})" title="${entry.isActive ? 'Laufenden Eintrag verwerfen (Projekt wird gestoppt)' : 'Eintrag l\u00f6schen'}">
@@ -267,19 +278,50 @@ export function renderTimesheetCard() {
     showOverlapWarning(overlaps);
 }
 
-export function updateTimesheetLogTime(projectId, logIndex, type, value, dateStr) {
+/**
+ * Start-/Endzeit eines Zeiteintrags setzen.
+ *
+ * Ein <input type="time"> feuert `change` bereits, sobald ein Segment
+ * vollst\u00e4ndig ist \u2013 beim Tippen also schon nach der Stunde. Ein Re-Render an
+ * dieser Stelle w\u00fcrde das Feld unter dem Cursor neu aufbauen und die Eingabe
+ * abbrechen. Deshalb zwei Modi:
+ *
+ *   live = true  (onchange, Eingabe l\u00e4uft noch): still \u00fcbernehmen und nur
+ *                persistieren \u2013 kein Re-Render, der Fokus bleibt erhalten.
+ *                Ung\u00fcltige Zwischenst\u00e4nde werden kommentarlos ignoriert.
+ *   live = false (onblur, Eingabe beendet): \u00fcbernehmen, Meldung bei
+ *                ung\u00fcltiger Zeit, danach neu rendern.
+ *
+ * @param {boolean} live \u2013 true solange das Feld noch bearbeitet wird
+ */
+export function updateTimesheetLogTime(projectId, logIndex, type, value, dateStr, live = false) {
     const p = state.projects.find(x => x.id === projectId);
     if (!p || !p.logs[logIndex]) return;
     const log = p.logs[logIndex];
     const newTs = new Date(dateStr + 'T' + value + ':00').getTime();
-    if (isNaN(newTs)) return;
+    if (isNaN(newTs)) {
+        // Leeres/unvollst\u00e4ndiges Feld: beim Verlassen den gespeicherten Wert
+        // wieder anzeigen, w\u00e4hrend der Eingabe nichts tun.
+        if (!live) scheduleTimesheetRefresh();
+        return;
+    }
+
+    if (newTs === (type === 'start' ? log.start : log.end)) {
+        // Unver\u00e4ndert \u2013 typischerweise das blur nach einer bereits live
+        // \u00fcbernommenen Eingabe. Dann steht das aufgeschobene Re-Render aus
+        // (Dauer, Sortierung, Summen), sonst ist nichts zu tun.
+        if (!live) scheduleTimesheetRefresh();
+        return;
+    }
 
     if (type === 'start' && log.end && newTs >= log.end) {
+        if (live) return;
         showAlert('Startzeit muss vor der Endzeit liegen.', { title: 'Ung\u00fcltige Zeit', icon: 'error' });
         renderTimesheetCard();
         return;
     }
     if (type === 'end' && newTs <= log.start) {
+        if (live) return;
         showAlert('Endzeit muss nach der Startzeit liegen.', { title: 'Ung\u00fcltige Zeit', icon: 'error' });
         renderTimesheetCard();
         return;
@@ -294,7 +336,62 @@ export function updateTimesheetLogTime(projectId, logIndex, type, value, dateStr
         log.end = newTs;
         adjustAdjacentLogs(oldEnd, newTs, 'start');
     }
-    commitState();
+
+    persistState();
+    if (live) refreshTimesheetDerived();
+    else scheduleTimesheetRefresh();
+}
+
+/**
+ * Aktualisiert nur die abgeleiteten Anzeigen – Dauer je Eintrag und
+ * Tagessumme – ohne die Eingabefelder anzufassen. Damit sieht man die
+ * Auswirkung schon während des Tippens, ohne dass der Cursor verloren geht.
+ */
+function refreshTimesheetDerived() {
+    if (typeof document === 'undefined') return;
+    const viewDate = getTimesheetDate();
+    const dayStart = new Date(viewDate + 'T00:00:00').getTime();
+    const dayEnd = dayStart + 86400000;
+    const now = Date.now();
+
+    document.querySelectorAll('.ts-entry[data-ts-pid]').forEach(row => {
+        const proj = state.projects.find(x => x.id === row.dataset.tsPid);
+        const log = proj && Array.isArray(proj.logs) ? proj.logs[Number(row.dataset.tsLog)] : null;
+        if (!log) return;
+        const cell = row.querySelector('.ts-entry-duration');
+        if (!cell) return;
+        const from = Math.max(log.start, dayStart);
+        const to = Math.min(log.end || now, dayEnd);
+        cell.textContent = formatMs(Math.max(0, to - from), false);
+    });
+
+    const totalEl = document.querySelector('.ts-day-summary-time');
+    if (totalEl) {
+        const total = state.projects.reduce((sum, proj) => sum + calculateNetDurationForDate(proj, viewDate), 0);
+        totalEl.textContent = formatMs(getRoundedMs(total, parseInt(state.settings.rounding || 0)), false);
+    }
+}
+
+/**
+ * Re-Render nach einer Zeiteingabe \u2013 aber erst, wenn der Stundenzettel den
+ * Fokus wirklich verlassen hat. Beim Tabben ins n\u00e4chste Zeitfeld feuert das
+ * blur, bevor der Browser den Fokus weitergibt; w\u00fcrde die Karte hier sofort
+ * neu gebaut, landete der Fokus im Nichts. Jeder weitere blur schiebt das
+ * Rendern erneut an, es geht also nichts verloren.
+ */
+function scheduleTimesheetRefresh() {
+    setTimeout(() => {
+        if (typeof document !== 'undefined') {
+            const container = document.getElementById('timesheetContainer');
+            if (container && container.contains(document.activeElement)) {
+                // Fokus noch im Stundenzettel (z. B. Tab ins Endzeit-Feld):
+                // nur die abgeleiteten Werte nachziehen, nicht neu bauen.
+                refreshTimesheetDerived();
+                return;
+            }
+        }
+        notifyStateChanged();
+    }, 0);
 }
 
 export function saveTimesheetNote(projectId, logIndex, value) {
@@ -424,9 +521,11 @@ export function addManualLog(projectId, dateStr, startHHMM, endHHMM, note) {
 }
 
 // =============================================================================
-// changeLogProject – Eintrag in anderes Projekt verschieben
+// changeLogProject – Eintrag in anderes Projekt umbuchen
 // =============================================================================
-// Für laufende Einträge wird stattdessen switchProject() aufgerufen.
+// Gilt auch für den laufenden Eintrag: der wandert mitsamt seiner Startzeit
+// zum Zielprojekt und läuft dort weiter. Es wird also nichts gestoppt und
+// nichts neu gestartet – die Startzeit bleibt erhalten.
 // Liefert true bei Mutation, false sonst.
 export function changeLogProject(oldProjectId, logIdx, newProjectId) {
     if (oldProjectId === newProjectId) return false;
@@ -435,17 +534,39 @@ export function changeLogProject(oldProjectId, logIdx, newProjectId) {
     if (!oldP || !newP) return false;
     if (!Array.isArray(oldP.logs) || logIdx < 0 || logIdx >= oldP.logs.length) return false;
     const log = oldP.logs[logIdx];
-
-    if (log.end === null || log.end === undefined) {
-        switchProject(newProjectId);
-        return true;
-    }
+    const isRunning = log.end === null || log.end === undefined;
 
     oldP.logs.splice(logIdx, 1);
     if (!Array.isArray(newP.logs)) newP.logs = [];
     newP.logs.push(log);
+
+    if (isRunning) {
+        // Status nachziehen: das Zielprojekt läuft jetzt, das alte nur noch,
+        // wenn dort ein weiterer offener Log übrig ist.
+        mergeOpenLogs(newP);
+        newP.status = 'running';
+        if (!oldP.logs.some(l => l.end === null || l.end === undefined)) {
+            oldP.status = 'stopped';
+        }
+    }
     commitState();
     return true;
+}
+
+/**
+ * Defensiv: ein Projekt darf nie zwei offene Logs haben. Falls das Zielprojekt
+ * bereits einen laufenden Eintrag hatte, wird zu einem zusammengefasst –
+ * frühester Start gewinnt, eine vorhandene Notiz bleibt erhalten.
+ */
+function mergeOpenLogs(project) {
+    const open = (project.logs || []).filter(l => l.end === null || l.end === undefined);
+    if (open.length < 2) return;
+    const survivor = open[0];
+    open.slice(1).forEach(l => {
+        survivor.start = Math.min(survivor.start, l.start);
+        if (!survivor.note && l.note) survivor.note = l.note;
+    });
+    project.logs = project.logs.filter(l => !open.includes(l) || l === survivor);
 }
 
 // =============================================================================
