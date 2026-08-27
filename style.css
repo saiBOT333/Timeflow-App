@@ -949,8 +949,8 @@ textarea.input-field {
 }
 .weekly-table th.weekly-num-col,
 .weekly-table td.weekly-num-col {
-    width: 72px;
-    max-width: 72px;
+    width: 90px;
+    max-width: 90px;
     text-align: left;
     font-family: var(--font-mono);
     font-size: var(--md-sys-typescale-label-medium);
@@ -1575,6 +1575,51 @@ textarea.input-field {
 .ts-note-input.has-note + .ts-note-icon,
 .ts-entry-note-row:focus-within .ts-note-icon {
     color: var(--md-sys-color-primary);
+    opacity: 1;
+}
+
+/* --- WEEKLY COPY BUTTON (Projektnummer in die Zwischenablage) --- */
+.weekly-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px;
+    margin-left: -4px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+.weekly-copy-num {
+    white-space: nowrap;
+}
+.weekly-copy-icon {
+    font-size: 14px;
+    opacity: 0;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+}
+.weekly-copy-btn:hover {
+    background: var(--md-sys-color-surface-container-highest);
+}
+.weekly-copy-btn:hover .weekly-copy-icon,
+.weekly-copy-btn:focus-visible .weekly-copy-icon {
+    opacity: 0.7;
+}
+.weekly-copy-btn.is-copied {
+    background: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+}
+.weekly-copy-btn.is-failed {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+}
+.weekly-copy-btn.is-copied .weekly-copy-icon,
+.weekly-copy-btn.is-failed .weekly-copy-icon {
     opacity: 1;
 }
 

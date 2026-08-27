@@ -10,6 +10,7 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 - **Tagesgrenze um 00:00 Uhr**: Jeder Tag ist eigenständig. Offene Zeiteinträge und aktive Pausen aus Vortagen werden beim Start und beim Überschreiten der Tagesgrenze automatisch abgeschlossen (`src/dayRollover.js`)
 - **Heartbeat**: `tick()` schreibt alle 15 s einen Zeitstempel nach `localStorage.tf_lastActive`. Ein vergessener Feierabend wird dadurch auf den letzten tatsächlichen Laufzeitpunkt beendet statt auf 23:59:59 – ohne Heartbeat bleibt 23:59:59 als markierte Schätzung
 - **Hinweis „Nicht abgestochen"**: Nennt Aktivität, gesetzte Endzeit und beendete Pausen; „Stundenzettel prüfen" stellt den Stundenzettel auf den betroffenen Tag, klappt die Karte auf und springt hin
+- **Wochenübersicht – Projektnummer kopieren**: Die Nummer in der `#`-Spalte ist jetzt ein Button, der sie in die Zwischenablage legt (`src/clipboard.js`, mit `execCommand`-Fallback für unsichere Kontexte). Rückmeldung direkt am Button statt per Dialog; der Klick markiert die Zeile nicht mit. Die `#`-Spalte wurde von 72 auf 90 px verbreitert, damit lange Nummern neben dem Icon vollständig lesbar bleiben
 - **Frischer Tagesstart**: Nach PC-Start und nach Standby/Ruhezustand (Heartbeat-Lücke > 5 min) läuft „Allgemein" ab jetzt neu. Lief der Rechner durch, endet der Tag um 23:59:59 ohne Neustart
 
 ### Behoben
