@@ -23,10 +23,6 @@ vi.mock('../src/pauses.js', () => ({
     deletePause: vi.fn(),
     deleteAutoPauseFromTimesheet: vi.fn(),
 }));
-vi.mock('../src/projects.js', () => ({
-    switchProject: vi.fn(),
-}));
-
 import { addManualLog, changeLogProject } from '../src/ui/timesheet.js';
 
 beforeEach(() => {
@@ -133,5 +129,51 @@ describe('changeLogProject – abgeschlossener Eintrag', () => {
         const ok = changeLogProject('p1', 99, 'p2');
         expect(ok).toBe(false);
         expect(state.projects[0].logs).toHaveLength(2);
+    });
+});
+
+describe('changeLogProject – laufender Eintrag', () => {
+    beforeEach(() => {
+        state.projects[0].logs = [
+            { start: 1000, end: 2000, note: 'abgeschlossen' },
+            { start: 3000, end: null, note: 'laeuft' },
+        ];
+        state.projects[0].status = 'running';
+    });
+
+    test('laufender Eintrag wandert mit Startzeit zum Zielprojekt und laeuft weiter', () => {
+        const ok = changeLogProject('p1', 1, 'p2');
+        expect(ok).toBe(true);
+        expect(state.projects[0].logs).toHaveLength(1);
+        expect(state.projects[0].logs[0].note).toBe('abgeschlossen');
+        expect(state.projects[1].logs).toEqual([{ start: 3000, end: null, note: 'laeuft' }]);
+    });
+
+    test('Status wandert mit: Ziel laeuft, Quelle gestoppt', () => {
+        changeLogProject('p1', 1, 'p2');
+        expect(state.projects[1].status).toBe('running');
+        expect(state.projects[0].status).toBe('stopped');
+    });
+
+    test('Quelle bleibt running, wenn dort ein weiterer offener Log existiert', () => {
+        state.projects[0].logs.push({ start: 5000, end: null });
+        changeLogProject('p1', 1, 'p2');
+        expect(state.projects[0].status).toBe('running');
+        expect(state.projects[1].status).toBe('running');
+    });
+
+    test('Zielprojekt mit bereits offenem Log: zusammengefasst, fruehester Start gewinnt', () => {
+        state.projects[1].logs = [{ start: 8000, end: null }];
+        changeLogProject('p1', 1, 'p2');
+        const open = state.projects[1].logs.filter(l => l.end === null || l.end === undefined);
+        expect(open).toHaveLength(1);
+        expect(open[0].start).toBe(3000);
+        expect(open[0].note).toBe('laeuft');
+    });
+
+    test('abgeschlossene Eintraege aendern keinen Status', () => {
+        changeLogProject('p1', 0, 'p2');
+        expect(state.projects[0].status).toBe('running');
+        expect(state.projects[1].status).toBe('idle');
     });
 });

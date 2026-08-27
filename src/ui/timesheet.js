@@ -4,7 +4,6 @@ import { getRoundedMs, calculateNetDurationForDate } from '../calculations.js';
 import { commitState, persistState, notifyStateChanged } from '../stateManager.js';
 import { showAlert, showConfirm } from './dialogs.js';
 import { deletePause, deleteAutoPauseFromTimesheet } from '../pauses.js';
-import { switchProject } from '../projects.js';
 
 // =============================================================================
 // ui/timesheet.js – Stundenzettel (tägliche Zeiteinträge)
@@ -234,7 +233,7 @@ export function renderTimesheetCard() {
                     <div class="ts-entry-project-info">
                         <button type="button" class="ts-entry-project ts-entry-project-btn"
                             style="color:${pColor};"
-                            title="Projekt wechseln"
+                            title="Eintrag einem anderen Projekt zuordnen"
                             onclick="toggleProjectPicker('${p.id}', ${entry.logIdx}, this)">
                             ${escapeHtml(projectLabel)}
                             <span class="material-symbols-rounded fs-14">expand_more</span>
@@ -434,9 +433,11 @@ export function addManualLog(projectId, dateStr, startHHMM, endHHMM, note) {
 }
 
 // =============================================================================
-// changeLogProject – Eintrag in anderes Projekt verschieben
+// changeLogProject – Eintrag in anderes Projekt umbuchen
 // =============================================================================
-// Für laufende Einträge wird stattdessen switchProject() aufgerufen.
+// Gilt auch für den laufenden Eintrag: der wandert mitsamt seiner Startzeit
+// zum Zielprojekt und läuft dort weiter. Es wird also nichts gestoppt und
+// nichts neu gestartet – die Startzeit bleibt erhalten.
 // Liefert true bei Mutation, false sonst.
 export function changeLogProject(oldProjectId, logIdx, newProjectId) {
     if (oldProjectId === newProjectId) return false;
@@ -445,17 +446,39 @@ export function changeLogProject(oldProjectId, logIdx, newProjectId) {
     if (!oldP || !newP) return false;
     if (!Array.isArray(oldP.logs) || logIdx < 0 || logIdx >= oldP.logs.length) return false;
     const log = oldP.logs[logIdx];
-
-    if (log.end === null || log.end === undefined) {
-        switchProject(newProjectId);
-        return true;
-    }
+    const isRunning = log.end === null || log.end === undefined;
 
     oldP.logs.splice(logIdx, 1);
     if (!Array.isArray(newP.logs)) newP.logs = [];
     newP.logs.push(log);
+
+    if (isRunning) {
+        // Status nachziehen: das Zielprojekt läuft jetzt, das alte nur noch,
+        // wenn dort ein weiterer offener Log übrig ist.
+        mergeOpenLogs(newP);
+        newP.status = 'running';
+        if (!oldP.logs.some(l => l.end === null || l.end === undefined)) {
+            oldP.status = 'stopped';
+        }
+    }
     commitState();
     return true;
+}
+
+/**
+ * Defensiv: ein Projekt darf nie zwei offene Logs haben. Falls das Zielprojekt
+ * bereits einen laufenden Eintrag hatte, wird zu einem zusammengefasst –
+ * frühester Start gewinnt, eine vorhandene Notiz bleibt erhalten.
+ */
+function mergeOpenLogs(project) {
+    const open = (project.logs || []).filter(l => l.end === null || l.end === undefined);
+    if (open.length < 2) return;
+    const survivor = open[0];
+    open.slice(1).forEach(l => {
+        survivor.start = Math.min(survivor.start, l.start);
+        if (!survivor.note && l.note) survivor.note = l.note;
+    });
+    project.logs = project.logs.filter(l => !open.includes(l) || l === survivor);
 }
 
 // =============================================================================

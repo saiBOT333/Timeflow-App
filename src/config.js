@@ -38,6 +38,7 @@ export const CHANGELOG = {
             { icon: 'restart_alt',  text: 'Der neue Tag startet frisch bei 0 \u2013 \u201eAllgemein\u201c l\u00e4uft ab dem Programmstart, auch nach Standby oder Ruhezustand.' },
             { icon: 'coffee',       text: 'Eine laufende manuelle Pause aus dem Vortag wird ebenfalls sauber beendet.' },
             { icon: 'delete',       text: 'Einstellung \u201eAutomatischer Tagesabschluss\u201c entfernt \u2013 die Tagesgrenze erledigt das jetzt zuverl\u00e4ssig.' },
+            { icon: 'swap_horiz',   text: 'Timesheet: Auch der laufende Eintrag l\u00e4sst sich einem anderen Projekt zuordnen \u2013 er wandert mitsamt Startzeit und Notiz mit und l\u00e4uft dort weiter, statt das Zielprojekt neu zu starten.' },
             { icon: 'bug_report',   text: 'Bugfix: Zwischen 0 und 2 Uhr nachts zeigten Timesheet, Wochen\u00fcbersicht und Fortschritt noch den Vortag \u2013 alle Tagesberechnungen laufen jetzt durchg\u00e4ngig in lokaler Zeit.' }
         ]
     },

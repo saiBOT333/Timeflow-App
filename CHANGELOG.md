@@ -13,6 +13,7 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 - **Frischer Tagesstart**: Nach PC-Start und nach Standby/Ruhezustand (Heartbeat-Lücke > 5 min) läuft „Allgemein" ab jetzt neu. Lief der Rechner durch, endet der Tag um 23:59:59 ohne Neustart
 
 ### Verbessert
+- **Timesheet – laufenden Eintrag umbuchen**: Die Projektzuordnung des laufenden Eintrags verhielt sich anders als bei abgeschlossenen Einträgen: `changeLogProject()` rief für offene Logs `switchProject()` auf, wodurch das alte Projekt gestoppt und im Zielprojekt ein **neuer** Eintrag ab jetzt gestartet wurde. Jetzt wandert der offene Log mitsamt Startzeit und Notiz zum Zielprojekt und läuft dort weiter; der Status wird nachgezogen. Zwei offene Logs in einem Projekt werden defensiv zu einem zusammengefasst
 - **Lokale Tagesberechnung**: Alle „heute"- und Tagesschlüssel-Berechnungen nutzen `getLocalDateStr()` statt `toISOString()`. Zwischen 0 und 2 Uhr nachts zeigten Timesheet, Wochenübersicht, Fortschrittsanzeige und Zeit-Badges bisher den Vortag
 - **`getLocalDateStr`** von `ui/autoPauses.js` nach `utils.js` verschoben (pure Funktion, keine UI-Abhängigkeit)
 - **Confirm-Dialog** unterstützt mehrzeilige Meldungen (`white-space: pre-line`)
