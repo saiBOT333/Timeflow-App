@@ -1,5 +1,5 @@
 import { state } from '../state.js';
-import { formatMs } from '../utils.js';
+import { formatMs, getLocalDateStr } from '../utils.js';
 import { calculateNetDurationForDate } from '../calculations.js';
 
 // =============================================================================
@@ -7,7 +7,7 @@ import { calculateNetDurationForDate } from '../calculations.js';
 // =============================================================================
 
 function getTotalWorkedTodayMs() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
     let total = 0;
     state.projects.forEach(p => {
         total += calculateNetDurationForDate(p, todayStr);

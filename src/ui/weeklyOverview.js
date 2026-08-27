@@ -1,5 +1,5 @@
 import { state, uiState } from '../state.js';
-import { formatMs, formatMsDecimal, getWeekDates, getISOWeekNumber, escapeHtml } from '../utils.js';
+import { formatMs, formatMsDecimal, getWeekDates, getISOWeekNumber, escapeHtml, getLocalDateStr } from '../utils.js';
 import { calculateNetDurationForDate } from '../calculations.js';
 import { commitState, notifyStateChanged } from '../stateManager.js';
 
@@ -10,12 +10,12 @@ import { commitState, notifyStateChanged } from '../stateManager.js';
 export function navigateWeek(offset) {
     const d = new Date(uiState.viewWeekStart + 'T12:00:00');
     d.setDate(d.getDate() + offset * 7);
-    uiState.viewWeekStart = d.toISOString().split('T')[0];
+    uiState.viewWeekStart = getLocalDateStr(d);
     notifyStateChanged();
 }
 
 export function goToCurrentWeek() {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
     uiState.viewWeekStart = getWeekDates(todayStr)[0];
     notifyStateChanged();
 }
@@ -127,7 +127,7 @@ export function renderWeeklyOverview() {
     }
 
     const allDates = getWeekDates(uiState.viewWeekStart);
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateStr();
     const weekNum = getISOWeekNumber(allDates[0]);
     const isCurrentWeek = uiState.viewWeekStart === getWeekDates(todayStr)[0];
     const weekLabelEl = document.getElementById('weekLabel');

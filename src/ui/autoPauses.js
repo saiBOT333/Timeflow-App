@@ -1,5 +1,5 @@
 import { state } from '../state.js';
-import { escapeHtml } from '../utils.js';
+import { escapeHtml, getLocalDateStr } from '../utils.js';
 import { commitState } from '../stateManager.js';
 import { showConfirm } from './dialogs.js';
 import { layoutMasonry } from './masonry.js';
@@ -12,11 +12,6 @@ let autoPausesPanelOpen = false;
 
 export function isAutoPausesPanelOpen() {
     return autoPausesPanelOpen;
-}
-
-export function getLocalDateStr(date) {
-    const d = date || new Date();
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
 function getAutoPauses() {

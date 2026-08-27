@@ -1,5 +1,5 @@
 import { state, uiState } from '../state.js';
-import { formatTimeInput } from '../utils.js';
+import { formatTimeInput, getLocalDateStr } from '../utils.js';
 import { deletePause, updatePauseTime } from '../pauses.js';
 
 // =============================================================================
@@ -10,7 +10,7 @@ export function renderPauses() {
     const el = document.getElementById('pauseList');
     el.innerHTML = '';
     const relevantPauses = state.pauses.filter(p => {
-        const pDate = new Date(p.startTs).toISOString().split('T')[0];
+        const pDate = getLocalDateStr(new Date(p.startTs));
         if (pDate !== uiState.viewDate) return false;
         // Nur manuelle Pausen — Auto-Pausen werden über das Config-Panel verwaltet
         if (p.type === 'auto') return false;

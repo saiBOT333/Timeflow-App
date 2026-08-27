@@ -1,4 +1,5 @@
 import { uiState } from '../state.js';
+import { getLocalDateStr } from '../utils.js';
 import { updateUI } from './render.js';
 import { renderTimesheetCard } from './timesheet.js';
 import { layoutMasonry } from './masonry.js';
@@ -7,7 +8,7 @@ export function updateDateDisplay() {
     const d = new Date(uiState.viewDate + 'T12:00:00');
     const options = { weekday: 'short', day: 'numeric', month: 'long' };
     const formatted = d.toLocaleDateString('de-DE', options);
-    const isToday = uiState.viewDate === new Date().toISOString().split('T')[0];
+    const isToday = uiState.viewDate === getLocalDateStr();
     const el = document.getElementById('dateDisplay');
     el.innerText = formatted;
     el.classList.toggle('is-today', isToday);
@@ -16,13 +17,13 @@ export function updateDateDisplay() {
 function navigateDate(offset) {
     const d = new Date(uiState.viewDate + 'T12:00:00');
     d.setDate(d.getDate() + offset);
-    uiState.viewDate = d.toISOString().split('T')[0];
+    uiState.viewDate = getLocalDateStr(d);
     updateDateDisplay();
     updateUI();
 }
 
 function goToToday() {
-    uiState.viewDate = new Date().toISOString().split('T')[0];
+    uiState.viewDate = getLocalDateStr();
     updateDateDisplay();
     updateUI();
 }
