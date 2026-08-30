@@ -1,15 +1,19 @@
-import { downloadBackup, getFileName } from './export.js';
+import { downloadBackup, downloadCSV, buildCSV, getFileName } from './export.js';
 
 // =============================================================================
-// backupFolder.js – Optionaler Backup-Ordner via File System Access API.
-// Das Directory-Handle wird in IndexedDB gehalten (nicht in state/localStorage,
-// da Handles nur strukturklonbar in IndexedDB persistierbar sind).
-// saveBackup() schreibt ins Ordner-Handle oder fällt still auf downloadBackup().
+// backupFolder.js – Optionale Zielordner via File System Access API.
+// Zwei unabhängige Ordner: einer für das Feierabend-Backup (JSON), einer für
+// den CSV-Export. Die Directory-Handles werden in IndexedDB gehalten (nicht in
+// state/localStorage, da Handles nur strukturklonbar in IndexedDB persistierbar
+// sind).
+// saveBackup() / saveCSV() schreiben ins jeweilige Ordner-Handle oder fallen
+// still auf den Browser-Download zurück.
 // =============================================================================
 
 const DB_NAME = 'timeflow-backup';
 const STORE = 'handles';
-const KEY = 'backupDir';
+const KEY_BACKUP = 'backupDir';
+const KEY_CSV = 'csvDir';
 
 export function isSupported() {
     return typeof window !== 'undefined' && 'showDirectoryPicker' in window;
@@ -51,7 +55,9 @@ function idbDel(key) {
     }));
 }
 
-export async function pickBackupFolder() {
+// --- GENERISCHE ORDNER-VERWALTUNG (pro IndexedDB-Key ein Ordner) ---
+
+async function pickFolder(key) {
     if (!isSupported()) return null;
     let handle;
     try {
@@ -60,32 +66,70 @@ export async function pickBackupFolder() {
         if (e && e.name === 'AbortError') return null;
         throw e;
     }
-    await idbSet(KEY, handle);
+    await idbSet(key, handle);
     return handle.name;
 }
 
-export async function getSavedFolder() {
+async function getFolder(key) {
     try {
-        return await idbGet(KEY);
+        return await idbGet(key);
     } catch {
-        // Jeder IndexedDB-Fehler → null, damit saveBackup auf den Download
-        // zurückfällt. Bewusst breit: Feierabend darf nie am Backup scheitern.
+        // Jeder IndexedDB-Fehler → null, damit auf den Download zurückgefallen
+        // wird. Bewusst breit: Feierabend/Export dürfen nie am Ordner scheitern.
         return null;
     }
 }
 
-export async function getSavedFolderName() {
-    const handle = await getSavedFolder();
+async function getFolderName(key) {
+    const handle = await getFolder(key);
     return handle ? handle.name : null;
 }
 
-export async function clearBackupFolder() {
+async function clearFolder(key) {
     try {
-        await idbDel(KEY);
+        await idbDel(key);
     } catch {
         /* nichts zu tun */
     }
 }
+
+// --- BACKUP-ORDNER (Feierabend, JSON) ---
+
+export function pickBackupFolder() {
+    return pickFolder(KEY_BACKUP);
+}
+
+export function getSavedFolder() {
+    return getFolder(KEY_BACKUP);
+}
+
+export function getSavedFolderName() {
+    return getFolderName(KEY_BACKUP);
+}
+
+export function clearBackupFolder() {
+    return clearFolder(KEY_BACKUP);
+}
+
+// --- CSV-ORDNER (Wochen-Export) ---
+
+export function pickCsvFolder() {
+    return pickFolder(KEY_CSV);
+}
+
+export function getSavedCsvFolder() {
+    return getFolder(KEY_CSV);
+}
+
+export function getSavedCsvFolderName() {
+    return getFolderName(KEY_CSV);
+}
+
+export function clearCsvFolder() {
+    return clearFolder(KEY_CSV);
+}
+
+// --- SCHREIBEN ---
 
 async function ensureWritePermission(handle) {
     const opts = { mode: 'readwrite' };
@@ -95,7 +139,7 @@ async function ensureWritePermission(handle) {
 
 export async function writeBackupToFolder(handle, filename, content) {
     if (!(await ensureWritePermission(handle))) {
-        throw new Error('Backup-Ordner: Schreibberechtigung verweigert');
+        throw new Error('Ordner: Schreibberechtigung verweigert');
     }
     const fileHandle = await handle.getFileHandle(filename, { create: true });
     const writable = await fileHandle.createWritable();
@@ -124,4 +168,25 @@ export async function saveBackup(state) {
     // korrekt, da saveBackup() ausschliesslich mit genau diesem Singleton
     // aufgerufen wird (siehe quickActions.onFeierabend).
     downloadBackup();
+}
+
+/**
+ * Schreibt den CSV-Wochenexport in den gewählten CSV-Ordner – ohne Ordner
+ * (oder wenn er nicht beschreibbar ist) als normaler Browser-Download.
+ * @returns {Promise<{folder: string|null, filename: string}>} folder = Ordnername
+ *          bei Direkt-Schreiben, null beim Download-Fallback.
+ */
+export async function saveCSV() {
+    const { filename, content } = buildCSV();
+    const handle = await getSavedCsvFolder();
+    if (handle) {
+        try {
+            await writeBackupToFolder(handle, filename, content);
+            return { folder: handle.name, filename };
+        } catch (e) {
+            console.warn('CSV-Ordner nicht beschreibbar – Fallback auf Download:', e);
+        }
+    }
+    downloadCSV();
+    return { folder: null, filename };
 }

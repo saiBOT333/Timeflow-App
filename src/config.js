@@ -6,7 +6,7 @@
 // =============================================================================
 
 // --- VERSION ---
-export const APP_VERSION = '3.7.0';
+export const APP_VERSION = '3.8.0';
 
 // --- DEFAULT-KONFIGURATION ---
 export const DEFAULT_AUTO_PAUSES = [
@@ -28,6 +28,16 @@ export const ARCHIVE_COLOR = '#757575';
 // Das Popup erscheint automatisch beim nächsten Start, wenn APP_VERSION
 // noch nicht als gesehen gespeichert ist.
 export const CHANGELOG = {
+    '3.8.0': {
+        title: 'Version 3.8.0',
+        subtitle: 'Speicherort auch f\u00fcr den CSV-Export',
+        changes: [
+            { icon: 'folder',       text: 'CSV-Ordner: Wie beim Backup l\u00e4sst sich jetzt auch f\u00fcr den CSV-Export ein fester Ordner w\u00e4hlen (Einstellungen \u2192 Allgemein, Chrome/Edge).' },
+            { icon: 'download',     text: 'Ohne gew\u00e4hlten Ordner \u2013 oder wenn er nicht mehr beschreibbar ist \u2013 landet die CSV wie bisher im Standard-Download-Ordner.' },
+            { icon: 'check_circle', text: 'Nach dem Export meldet eine kurze Einblendung, in welchen Ordner die Datei geschrieben wurde.' },
+            { icon: 'folder_open',  text: 'Backup- und CSV-Ordner sind unabh\u00e4ngig: Backups und Stundenzettel k\u00f6nnen in getrennten Ordnern liegen.' }
+        ]
+    },
     '3.7.0': {
         title: 'Version 3.7.0',
         subtitle: 'Der Tag als durchgehende Kette',

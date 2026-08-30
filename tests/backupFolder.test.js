@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 // =============================================================================
 // backupFolder.test.js – Tests für isSupported, pickBackupFolder,
-// getSavedFolderName, clearBackupFolder, saveBackup
+// getSavedFolderName, clearBackupFolder, saveBackup sowie den CSV-Ordner
+// (pickCsvFolder, getSavedCsvFolderName, clearCsvFolder, saveCSV)
 // =============================================================================
 import 'fake-indexeddb/auto';
 import { describe, test, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
@@ -27,10 +28,13 @@ beforeAll(() => {
     };
 });
 
-// export.js mocken: downloadBackup als Spy, getFileName deterministisch.
+// export.js mocken: downloadBackup/downloadCSV als Spies, getFileName und
+// buildCSV deterministisch.
 vi.mock('../src/export.js', () => ({
     downloadBackup: vi.fn(),
+    downloadCSV: vi.fn(),
     getFileName: () => 'TimeFlow_Export_2026-06-03.json',
+    buildCSV: () => ({ filename: 'TimeFlow_Export_KW23_2026.csv', content: '\uFEFF#;Projekt\n' }),
 }));
 
 import {
@@ -41,8 +45,12 @@ import {
     clearBackupFolder,
     writeBackupToFolder,
     saveBackup,
+    pickCsvFolder,
+    getSavedCsvFolderName,
+    clearCsvFolder,
+    saveCSV,
 } from '../src/backupFolder.js';
-import { downloadBackup } from '../src/export.js';
+import { downloadBackup, downloadCSV } from '../src/export.js';
 
 // Erzeugt ein gefälschtes Directory-Handle mit Berechtigungs-Stubs.
 function makeDirHandle(name) {
@@ -225,5 +233,84 @@ describe('saveBackup', () => {
         await saveBackup({ x: 3 });
 
         expect(downloadBackup).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('CSV-Ordner', () => {
+    beforeEach(() => {
+        downloadCSV.mockClear();
+    });
+    afterEach(async () => {
+        delete window.showDirectoryPicker;
+        await clearCsvFolder();
+        await clearBackupFolder();
+    });
+
+    test('pickCsvFolder speichert Handle und gibt Namen zurück', async () => {
+        const handle = makeDirHandle('Stundenzettel');
+        window.showDirectoryPicker = vi.fn().mockResolvedValue(handle);
+
+        expect(await pickCsvFolder()).toBe('Stundenzettel');
+        expect(await getSavedCsvFolderName()).toBe('Stundenzettel');
+    });
+
+    test('CSV- und Backup-Ordner sind unabhängig voneinander', async () => {
+        window.showDirectoryPicker = vi.fn().mockResolvedValue(makeDirHandle('Backups'));
+        await pickBackupFolder();
+        window.showDirectoryPicker = vi.fn().mockResolvedValue(makeDirHandle('Stundenzettel'));
+        await pickCsvFolder();
+
+        expect(await getSavedFolderName()).toBe('Backups');
+        expect(await getSavedCsvFolderName()).toBe('Stundenzettel');
+
+        await clearCsvFolder();
+        expect(await getSavedCsvFolderName()).toBeNull();
+        expect(await getSavedFolderName()).toBe('Backups');
+    });
+
+    test('saveCSV ohne Ordner -> downloadCSV (Fallback)', async () => {
+        const res = await saveCSV();
+        expect(downloadCSV).toHaveBeenCalledTimes(1);
+        expect(res).toEqual({ folder: null, filename: 'TimeFlow_Export_KW23_2026.csv' });
+    });
+
+    test('saveCSV mit Ordner -> schreibt dorthin, kein Download', async () => {
+        const { handle, writes } = makeWritableDirHandle('Stundenzettel');
+        window.showDirectoryPicker = () => Promise.resolve(handle);
+        await pickCsvFolder();
+
+        const res = await saveCSV();
+
+        expect(downloadCSV).not.toHaveBeenCalled();
+        expect(handle.getFileHandle).toHaveBeenCalledWith('TimeFlow_Export_KW23_2026.csv', { create: true });
+        expect(writes).toEqual(['\uFEFF#;Projekt\n']);
+        expect(res).toEqual({ folder: 'Stundenzettel', filename: 'TimeFlow_Export_KW23_2026.csv' });
+    });
+
+    test('saveCSV bei Schreibfehler -> Fallback auf downloadCSV', async () => {
+        const handle = {
+            name: 'Stundenzettel',
+            queryPermission: () => Promise.resolve('granted'),
+            requestPermission: () => Promise.resolve('granted'),
+            getFileHandle: () => Promise.reject(new Error('weg')),
+        };
+        window.showDirectoryPicker = () => Promise.resolve(handle);
+        await pickCsvFolder();
+
+        const res = await saveCSV();
+
+        expect(downloadCSV).toHaveBeenCalledTimes(1);
+        expect(res).toEqual({ folder: null, filename: 'TimeFlow_Export_KW23_2026.csv' });
+    });
+
+    test('saveCSV schreibt nicht in den Backup-Ordner', async () => {
+        const { handle } = makeWritableDirHandle('Backups');
+        window.showDirectoryPicker = () => Promise.resolve(handle);
+        await pickBackupFolder();
+
+        await saveCSV();
+
+        expect(handle.getFileHandle).not.toHaveBeenCalled();
+        expect(downloadCSV).toHaveBeenCalledTimes(1);
     });
 });

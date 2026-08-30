@@ -23,7 +23,13 @@ export function getFileName(suffix) {
 
 // --- CSV EXPORT ---
 
-export function downloadCSV() {
+/**
+ * Baut den Wochen-CSV-Export auf (inkl. BOM, damit Excel UTF-8 erkennt).
+ * Reine Datenfunktion ohne Seiteneffekte – downloadCSV() und saveCSV()
+ * (backupFolder.js) teilen sich damit denselben Inhalt.
+ * @returns {{filename: string, content: string}}
+ */
+export function buildCSV() {
     const rounding = parseInt(state.settings.rounding || 0);
     const fmt = ms => uiState.weeklyDecimal ? formatMsDecimal(ms) : formatMs(ms, false);
     const allDates = getWeekDates(uiState.viewWeekStart);
@@ -83,7 +89,13 @@ export function downloadCSV() {
     const prefix = state.settings.filePrefix || 'TimeFlow_Export';
     const filename = prefix + '_KW' + weekNum + '_' + year + '.csv';
 
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    return { filename, content: '\uFEFF' + csv };
+}
+
+/** CSV als Browser-Download (Fallback, wenn kein CSV-Ordner gewählt ist). */
+export function downloadCSV() {
+    const { filename, content } = buildCSV();
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url; link.download = filename;

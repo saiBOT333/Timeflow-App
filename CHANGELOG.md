@@ -4,6 +4,23 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 
 ---
 
+## [3.8.0] – 2026-08-30
+
+### Neu
+- **CSV-Ordner**: Der Speicherort des CSV-Wochenexports lässt sich – wie beim Backup – fest wählen (Einstellungen → Allgemein). Der Export wird dann direkt in diesen Ordner geschrieben, statt über den Download-Ordner zu laufen
+  - Backup- und CSV-Ordner sind zwei unabhängige Einträge (`backupDir` / `csvDir` in derselben IndexedDB) – beide dürfen auf verschiedene Ordner zeigen, jeder lässt sich einzeln entfernen
+  - Ohne Ordner, ohne Browser-Unterstützung (nur Chrome/Edge) oder wenn der Ordner nicht mehr beschreibbar ist, greift unverändert der Browser-Download
+  - Nach dem Schreiben meldet eine kurze Einblendung Ordner und Dateiname – ohne Download-Anzeige des Browsers wäre sonst nicht erkennbar, wo die Datei gelandet ist
+
+### Intern
+- **`buildCSV()`** (`src/export.js`): Der CSV-Aufbau ist jetzt eine reine Funktion und liefert `{ filename, content }` (inkl. BOM). `downloadCSV()` und `saveCSV()` teilen sich denselben Inhalt – der Ordner-Export kann keine abweichende Datei erzeugen
+- **`src/backupFolder.js`** verwaltet beide Zielordner über eine gemeinsame, key-parametrisierte Ordner-Logik; die bestehenden Backup-Exporte bleiben unverändert
+- **`src/ui/toast.js`** neu: kurze Info-Einblendung ohne Aktion (Blatt-Modul ohne Importe, nutzt die Optik des Undo-Toasts)
+- **Settings**: Backup- und CSV-Ordner nutzen dieselbe Render-/Pick-/Clear-Logik, unterschieden nur über die Element-IDs
+- **6 neue Tests** (`tests/backupFolder.test.js`): Unabhängigkeit beider Ordner, Schreiben in den CSV-Ordner, Download-Fallback ohne Ordner und bei Schreibfehler
+
+---
+
 ## [3.7.0] – 2026-08-30
 
 ### Neu
