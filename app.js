@@ -12,6 +12,8 @@
         import { setupPWA, showUpdateToast } from './src/pwa.js';
         import { openSettingsModal, resetSettingsModalState, saveSettings, onVersionLabelClick, resetApp, updateTimerModePreview, switchSettingsTab, updateProgressPreview, renderReminderListSettings, addReminderFromSettings, removeReminder, openRemindersSettings, getIconPickerOptions, toggleIconPicker, selectLinkIcon, renderExternalLinksSettings, addExternalLinkSetting, removeExternalLink, renderExternalLinksCard, openExternalLink } from './src/settings.js';
         import { getFileName, downloadCSV, downloadBackup } from './src/export.js';
+        import { saveCSV } from './src/backupFolder.js';
+        import { showInfoToast } from './src/ui/toast.js';
         import { renderProgressCard, updateDayProgress } from './src/ui/progressCard.js';
         import { layoutMasonry, toggleGridWidth, applyCardOrder, saveGridLayout, setupDragAndDrop } from './src/ui/masonry.js';
         import { applyCardVisibility, renderCardVisibilityMenu, applyCompactMode, toggleCardVisibilityMenu, toggleCardVisibility, toggleCompactMode, applyPreset } from './src/ui/cardVisibility.js';
@@ -88,6 +90,15 @@
         window.resetApp = resetApp;
         window.onVersionLabelClick = onVersionLabelClick;
         window.downloadCSV = downloadCSV;
+        // CSV-Button: schreibt in den gewählten CSV-Ordner, sonst Download.
+        window.exportCSV = async function exportCSV() {
+            try {
+                const { folder, filename } = await saveCSV();
+                if (folder) showInfoToast('CSV gespeichert in "' + folder + '": ' + filename);
+            } catch (e) {
+                showAlert('CSV-Export fehlgeschlagen: ' + (e && e.message ? e.message : e), { title: 'Fehler', icon: 'error' });
+            }
+        };
         window.downloadBackup = downloadBackup;
         window.toggleGridWidth = toggleGridWidth;
         window.toggleCardVisibilityMenu = toggleCardVisibilityMenu;

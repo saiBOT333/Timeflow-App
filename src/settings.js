@@ -3,7 +3,8 @@ import { APP_VERSION } from './config.js';
 import { commitState, persistState } from './stateManager.js';
 import { escapeHtml } from './utils.js';
 import { showAlert, showConfirm } from './ui/dialogs.js';
-import { isSupported, pickBackupFolder, getSavedFolderName, clearBackupFolder } from './backupFolder.js';
+import { isSupported, pickBackupFolder, getSavedFolderName, clearBackupFolder,
+         pickCsvFolder, getSavedCsvFolderName, clearCsvFolder } from './backupFolder.js';
 import { playReminderSound } from './sound.js';
 
 // =============================================================================
@@ -73,7 +74,7 @@ export function openSettingsModal(options) {
     updateTimerModePreview();
     renderReminderListSettings();
     renderExternalLinksSettings();
-    renderBackupFolderSetting();
+    renderFolderSettings();
     const versionLabel = document.getElementById('settingsVersionLabel');
     if (versionLabel) versionLabel.textContent = 'v' + APP_VERSION;
     // Switch to requested tab or default to general
@@ -99,17 +100,39 @@ export function resetSettingsModalState() {
 // =============================================================================
 
 // =============================================================================
-// BACKUP-ORDNER (Feierabend) – nutzt File System Access API via backupFolder.js
-// Status lebt in IndexedDB (nicht in state), Aktionen wirken sofort.
+// ZIELORDNER (Backup beim Feierabend + CSV-Export) – File System Access API
+// via backupFolder.js. Status lebt in IndexedDB (nicht in state), Aktionen
+// wirken sofort. Beide Ordner teilen sich dieselbe Render-/Pick-/Clear-Logik,
+// nur die IDs und die Ordner-API unterscheiden sich.
 // =============================================================================
 
-async function renderBackupFolderSetting() {
-    const group = document.getElementById('backupFolderGroup');
+const FOLDER_SETTINGS = {
+    backup: {
+        prefix: 'backupFolder',
+        emptyHint: 'Kein Ordner – Backup geht in Downloads',
+        pick: pickBackupFolder,
+        getName: getSavedFolderName,
+        clear: clearBackupFolder,
+        errorText: 'Backup-Ordner konnte nicht gespeichert werden: '
+    },
+    csv: {
+        prefix: 'csvFolder',
+        emptyHint: 'Kein Ordner – CSV geht in Downloads',
+        pick: pickCsvFolder,
+        getName: getSavedCsvFolderName,
+        clear: clearCsvFolder,
+        errorText: 'CSV-Ordner konnte nicht gespeichert werden: '
+    }
+};
+
+async function renderFolderSetting(kind) {
+    const cfg = FOLDER_SETTINGS[kind];
+    const group = document.getElementById(cfg.prefix + 'Group');
     if (!group) return;
-    const nameEl = document.getElementById('backupFolderName');
-    const clearBtn = document.getElementById('backupFolderClearBtn');
-    const pickBtn = document.getElementById('backupFolderPickBtn');
-    const unsupported = document.getElementById('backupFolderUnsupported');
+    const nameEl = document.getElementById(cfg.prefix + 'Name');
+    const clearBtn = document.getElementById(cfg.prefix + 'ClearBtn');
+    const pickBtn = document.getElementById(cfg.prefix + 'PickBtn');
+    const unsupported = document.getElementById(cfg.prefix + 'Unsupported');
 
     if (!isSupported()) {
         if (pickBtn) pickBtn.disabled = true;
@@ -122,27 +145,35 @@ async function renderBackupFolderSetting() {
     if (pickBtn) pickBtn.disabled = false;
     if (nameEl) nameEl.textContent = 'Wird geladen…';
 
-    const name = await getSavedFolderName();
-    if (nameEl) nameEl.textContent = name ? `Ordner: ${name}` : 'Kein Ordner – Backup geht in Downloads';
+    const name = await cfg.getName();
+    if (nameEl) nameEl.textContent = name ? `Ordner: ${name}` : cfg.emptyHint;
     if (clearBtn) clearBtn.hidden = !name;
 }
 
-async function pickBackupFolderSetting() {
+async function pickFolderSetting(kind) {
+    const cfg = FOLDER_SETTINGS[kind];
     try {
-        const name = await pickBackupFolder();
-        if (name) await renderBackupFolderSetting();
+        const name = await cfg.pick();
+        if (name) await renderFolderSetting(kind);
     } catch (e) {
-        showAlert('Backup-Ordner konnte nicht gespeichert werden: ' + (e && e.message ? e.message : e), { title: 'Fehler', icon: 'error' });
+        showAlert(cfg.errorText + (e && e.message ? e.message : e), { title: 'Fehler', icon: 'error' });
     }
 }
 
-async function clearBackupFolderSetting() {
-    await clearBackupFolder();
-    await renderBackupFolderSetting();
+async function clearFolderSetting(kind) {
+    await FOLDER_SETTINGS[kind].clear();
+    await renderFolderSetting(kind);
 }
 
-window.pickBackupFolderSetting = pickBackupFolderSetting;
-window.clearBackupFolderSetting = clearBackupFolderSetting;
+function renderFolderSettings() {
+    renderFolderSetting('backup');
+    renderFolderSetting('csv');
+}
+
+window.pickBackupFolderSetting = () => pickFolderSetting('backup');
+window.clearBackupFolderSetting = () => clearFolderSetting('backup');
+window.pickCsvFolderSetting = () => pickFolderSetting('csv');
+window.clearCsvFolderSetting = () => clearFolderSetting('csv');
 window.testReminderSound = () => playReminderSound();
 
 export function saveSettings() {

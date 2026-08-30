@@ -67,6 +67,17 @@
                     <div class="setting-hint mb-8" id="backupFolderUnsupported" hidden>Nur in Chrome/Edge verfügbar.</div>
                 </div>
 
+                <div class="setting-group" id="csvFolderGroup">
+                    <label class="setting-label">CSV-Ordner (Wochenexport)</label>
+                    <div class="setting-hint mb-8">Der CSV-Export wird direkt in diesen Ordner geschrieben. Ohne Ordner landet er im Standard-Download-Ordner.</div>
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="md-btn md-btn-tonal" id="csvFolderPickBtn" onclick="pickCsvFolderSetting()">Ordner wählen…</button>
+                        <span id="csvFolderName" class="setting-hint"></span>
+                        <button type="button" class="md-btn md-btn-tonal" id="csvFolderClearBtn" onclick="clearCsvFolderSetting()" hidden>Entfernen</button>
+                    </div>
+                    <div class="setting-hint mb-8" id="csvFolderUnsupported" hidden>Nur in Chrome/Edge verfügbar.</div>
+                </div>
+
                 <div class="setting-group">
                     <label class="setting-label">Zeiten runden (CSV)</label>
                     <div class="input-container">
@@ -457,6 +468,10 @@
             <button class="md-btn md-btn-tonal" onclick="undo()" style="height:32px; padding:0 16px; font-size:12px;">Rückgängig</button>
         </div>
 
+        <div id="infoToast" class="undo-toast hidden">
+            <span id="infoToastText"></span>
+        </div>
+
         <!-- QUICK ACTIONS -->
         <div class="quick-actions">
             <button class="action-btn" onclick="onGoodMorning()">
@@ -682,7 +697,7 @@
                     <button class="icon-btn" onclick="downloadBackup()" title="Backup"><span class="material-symbols-rounded">save</span></button>
                     <button class="icon-btn" onclick="document.getElementById('restoreInput').click()" title="Restore"><span class="material-symbols-rounded">upload_file</span></button>
                     <input type="file" id="restoreInput" class="hidden" accept=".json" onchange="restoreBackup(event)">
-                    <button class="md-btn md-btn-primary" onclick="downloadCSV()">CSV</button>
+                    <button class="md-btn md-btn-primary" onclick="exportCSV()">CSV</button>
                 </div>
             </div>
         </div>
