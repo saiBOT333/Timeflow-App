@@ -78,6 +78,59 @@ export function calculateNetDuration(project) {
 }
 
 /**
+ * Die Pausen eines Tages als zusammengefasste, auf den Tag beschnittene
+ * Intervalle. Eine Quelle für alles, was Pausen abzieht oder darstellt –
+ * damit Tagessumme und Timeline nie auseinanderlaufen.
+ *
+ * @param {string} dateStr – "YYYY-MM-DD"
+ * @param {number} [now]   – Referenz für laufende Pausen
+ * @returns {Array<{start:number,end:number}>} aufsteigend, überlappungsfrei
+ */
+export function getPauseIntervalsForDate(dateStr, now = Date.now()) {
+    const dayStart = new Date(dateStr + 'T00:00:00').getTime();
+    const dayEnd = dayStart + 86400000;
+
+    return mergeIntervals(
+        state.pauses
+            .filter(p => {
+                const pEnd = p.active ? now : (p.endTs || now);
+                return pEnd > dayStart && p.startTs < dayEnd;
+            })
+            .map(p => ({
+                start: Math.max(p.startTs, dayStart),
+                end: Math.min(p.active ? now : (p.endTs || now), dayEnd)
+            }))
+    );
+}
+
+/**
+ * Zieht Intervalle aus einem Zeitraum ab und liefert die verbleibenden Stücke.
+ * Damit wird ein Zeiteintrag an den Pausen aufgetrennt, die ihn unterbrechen.
+ *
+ * @param {number} start
+ * @param {number} end
+ * @param {Array<{start:number,end:number}>} intervals – dürfen sich überlappen
+ * @returns {Array<{start:number,end:number}>} leer, wenn nichts übrig bleibt
+ */
+export function subtractIntervals(start, end, intervals) {
+    if (!(end > start)) return [];
+    let segments = [{ start, end }];
+    mergeIntervals((intervals || []).map(i => ({ start: i.start, end: i.end }))).forEach(cut => {
+        const next = [];
+        segments.forEach(seg => {
+            if (cut.end <= seg.start || cut.start >= seg.end) {
+                next.push(seg);
+                return;
+            }
+            if (cut.start > seg.start) next.push({ start: seg.start, end: cut.start });
+            if (cut.end < seg.end) next.push({ start: cut.end, end: seg.end });
+        });
+        segments = next;
+    });
+    return segments;
+}
+
+/**
  * Netto-Arbeitszeit eines Projekts für einen bestimmten Tag
  * @param {object} project
  * @param {string} dateStr – "YYYY-MM-DD"
@@ -87,16 +140,7 @@ export function calculateNetDurationForDate(project, dateStr) {
     const dayEnd = dayStart + 86400000;
     const now = Date.now();
 
-    const pauseIntervals = state.pauses
-        .filter(p => {
-            const pEnd = p.active ? now : (p.endTs || now);
-            return pEnd > dayStart && p.startTs < dayEnd;
-        })
-        .map(p => ({
-            start: Math.max(p.startTs, dayStart),
-            end: Math.min(p.active ? now : (p.endTs || now), dayEnd)
-        }));
-    const mergedPauses = mergeIntervals(pauseIntervals);
+    const mergedPauses = getPauseIntervalsForDate(dateStr, now);
 
     let totalMs = 0;
     (project.logs || []).forEach(log => {

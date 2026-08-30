@@ -609,6 +609,31 @@
     <li><strong>&Uuml;berlappungswarnung:</strong> Wenn sich zwei Eintr&auml;ge zeitlich &uuml;berschneiden, erscheint ein farbiger Hinweis direkt im Eintrag</li>
 </ul>
 
+<h3>Der Tag als durchgehende Kette</h3>
+<p>Ein Arbeitstag l&auml;uft in der Regel ohne Unterbrechung durch &ndash; getrennt wird er nur durch eine Pause oder einen bewusst gestoppten Tag. Das Timesheet behandelt ihn deshalb als <strong>zusammenh&auml;ngende Kette</strong>. Zwei Regeln greifen dabei automatisch:</p>
+<ul>
+    <li><strong>Nachziehen:</strong> Wird ein Eintrag k&uuml;rzer, r&uuml;ckt der direkt anschlie&szlig;ende Nachbar nach. Endet &bdquo;Projekt A&ldquo; statt um 10:00 nun um 09:30, beginnt das folgende Projekt ebenfalls um 09:30 &ndash; das Tagesende und die Tagessumme bleiben unver&auml;ndert, korrigiert wird nur der Umschaltpunkt.</li>
+    <li><strong>Freischneiden:</strong> Beansprucht ein Eintrag ein Zeitfenster, weichen die anderen. Ein angeschnittener Eintrag wird gek&uuml;rzt, ein umschlie&szlig;ender wird geteilt.</li>
+</ul>
+<p>Lag zwischen zwei Eintr&auml;gen schon vorher eine <strong>echte L&uuml;cke</strong>, bleibt sie erhalten &ndash; da wurde ja bewusst nicht gearbeitet. Auch Pausen sind feste Ankerpunkte: sie werden nie verschoben und unterbrechen damit die Kette.</p>
+
+<h3>Pausen in der Timeline</h3>
+<p>L&auml;uft eine Pause mitten durch einen Eintrag, wird dieser in der Timeline <strong>an ihr aufgetrennt</strong> &ndash; die Pause steht dann dort, wo sie zeitlich hingeh&ouml;rt, und nicht unter einem Block, der bereits an ihr vorbeil&auml;uft:</p>
+<ul>
+    <li>Projekt A 09:00&ndash;10:00 &middot; <em>Pause 10:00&ndash;10:30</em> &middot; Projekt A 10:30&ndash;12:00 <span style="opacity:.7">(mit <strong>weiter</strong> markiert)</span></li>
+</ul>
+<p>Jeder Abschnitt zeigt seine <strong>Netto-Dauer</strong>, die Zeilen summieren sich damit genau auf die Tagessumme oben in der Karte. Es handelt sich weiterhin um <em>einen</em> Eintrag: Projektwahl, Notiz und L&ouml;schen sitzen auf dem ersten Abschnitt und gelten f&uuml;r das Ganze. Die inneren Grenzen geh&ouml;ren der Pause und sind deshalb als Text dargestellt &ndash; ge&auml;ndert werden sie &uuml;ber den Pausen-Eintrag selbst. Bearbeitbar bleiben Start und Ende des Eintrags.</p>
+
+<h3>Ein Projekt nachtragen</h3>
+<p>Der typische Fall: Ein Projekt lief den halben Tag durch, dazwischen fehlt aber ein anderes. &Uuml;ber <strong>Eintrag hinzuf&uuml;gen</strong> tr&auml;gst du es mit seinen Zeiten nach &ndash; der neue Eintrag schneidet sich sein Fenster frei und der durchgelaufene Eintrag wird sauber in zwei Teile geteilt:</p>
+<ul>
+    <li>vorher: Projekt A 09:00&ndash;12:00</li>
+    <li>nachgetragen: Projekt B 10:00&ndash;11:00</li>
+    <li>danach: A 09:00&ndash;10:00 &middot; B 10:00&ndash;11:00 &middot; A 11:00&ndash;12:00</li>
+</ul>
+<p>Die Tagessumme bleibt dabei gleich &ndash; es &auml;ndert sich nur die Zuordnung. W&uuml;rde ein Eintrag durch die &Auml;nderung <strong>vollst&auml;ndig verschwinden</strong>, kommt vorher eine Nachfrage mit Projektname und Uhrzeit; still gel&ouml;scht wird nie. Jede &Auml;nderung, die andere Eintr&auml;ge ber&uuml;hrt, l&auml;sst sich au&szlig;erdem &uuml;ber den <strong>R&uuml;ckg&auml;ngig</strong>-Hinweis in einem Schritt zur&uuml;cknehmen.</p>
+<p>Ein <strong>laufender Eintrag</strong> wird dabei nie gel&ouml;scht: F&auml;llt er in das freigeschnittene Fenster, l&auml;uft er dahinter einfach weiter.</p>
+
 <div class="tip"><strong>Unterschied zur Wochen&uuml;bersicht:</strong> Das Timesheet zeigt <em>einzelne Zeitabschnitte</em> in zeitlicher Reihenfolge. Die Wochen&uuml;bersicht zeigt <em>aggregierte Tageszeiten</em> pro Projekt. Beide Ansichten erg&auml;nzen sich.</div>
 
 

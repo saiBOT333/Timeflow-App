@@ -19,7 +19,7 @@
         import { renderPauses } from './src/ui/pauseList.js';
         import { renderList, getReadableChipColor, closeAllProjectMenus, filterArchiveList } from './src/ui/projectList.js';
         import { renderWeeklyOverview } from './src/ui/weeklyOverview.js';
-        import { renderTimesheetCard, adjustAdjacentLogs } from './src/ui/timesheet.js';
+        import { renderTimesheetCard } from './src/ui/timesheet.js';
         import { renderAutoPausesDisplay, updateAutoPause, addAutoPause, removeAutoPause, toggleAutoPausesPanel, isAutoPausesPanelOpen } from './src/ui/autoPauses.js';
         import { openTimeEdit, renderTimeEditLogs, updateLogTime, deleteLog } from './src/ui/timeEdit.js';
         import { showGreeting, isGreetingShown } from './src/ui/activeCard.js';
@@ -333,7 +333,7 @@
         // --- TIMESHEET ---
         // timesheetDate, getTimesheetDate, navigateTimesheetDay, goToTimesheetToday,
         // renderTimesheetCard, updateTimesheetLogTime, saveTimesheetNote,
-        // deleteTimesheetLog, adjustAdjacentLogs → src/ui/timesheet.js
+        // deleteTimesheetLog, applyBoundaryChange → src/ui/timesheet.js
 
         // updateDateDisplay, navigateDate, goToToday, toggleCard → src/ui/dateNav.js
 

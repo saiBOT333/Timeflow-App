@@ -1,52 +1,24 @@
 // =============================================================================
-// undo.js – Undo-Stack + Toast-Benachrichtigung + undo()-Aktion
+// undo.js – undo()-Aktion auf Basis des Undo-Stacks
 // =============================================================================
-// pushUndo(entry)   – Eintrag auf den Stack legen (max. 5)
-// popUndo()         – Letzten Eintrag holen
+// pushUndo(entry)   – Eintrag auf den Stack legen (max. 5)   → undoStack.js
+// popUndo()         – Letzten Eintrag holen                  → undoStack.js
 // hasUndo()         – Prüfen ob etwas rückgängig gemacht werden kann
 // showUndoToast(label) – Toast einblenden
 // hideUndoToast()      – Toast ausblenden
 // undo()            – Letzten Undo-Eintrag anwenden
+//
+// Stack und Toast liegen in undoStack.js (ohne Importe), damit Module, die nur
+// einen Snapshot ablegen, keinen Zyklus über render.js erzeugen.
 // =============================================================================
 
 import { state } from './state.js';
 import { setFeierabendActive } from './ui/activeCard.js';
 import { persistState } from './stateManager.js';
 import { updateUI } from './ui/render.js';
+import { popUndo, hasUndo, hideUndoToast } from './undoStack.js';
 
-let undoStack = [];
-let undoToastTimeout = null;
-
-export function pushUndo(entry) {
-    undoStack.push(entry);
-    if (undoStack.length > 5) undoStack.shift();
-}
-
-export function popUndo() {
-    return undoStack.pop();
-}
-
-export function hasUndo() {
-    return undoStack.length > 0;
-}
-
-export function showUndoToast(label) {
-    const toast = document.getElementById('undoToast');
-    const text = document.getElementById('undoToastText');
-    if (!toast || !text) return;
-    text.textContent = label;
-    toast.classList.remove('hidden');
-    if (undoToastTimeout) clearTimeout(undoToastTimeout);
-    undoToastTimeout = setTimeout(() => {
-        hideUndoToast();
-    }, 8000);
-}
-
-export function hideUndoToast() {
-    const toast = document.getElementById('undoToast');
-    if (toast) toast.classList.add('hidden');
-    if (undoToastTimeout) clearTimeout(undoToastTimeout);
-}
+export { pushUndo, popUndo, hasUndo, showUndoToast, hideUndoToast } from './undoStack.js';
 
 export function undo() {
     if (!hasUndo()) return;
@@ -62,6 +34,11 @@ export function undo() {
         state.projects = entry.data;
         state.pauses = entry.pauses;
         setFeierabendActive(false);
+    } else if (entry.type === 'timesheet') {
+        // Snapshot aller Projekte vor einer Stundenzettel-Änderung: die
+        // Tageskette kann mehrere Einträge auf einmal berühren, deshalb wird
+        // der komplette Projektstand zurückgespielt.
+        state.projects = entry.data;
     }
 
     persistState();

@@ -6,7 +6,7 @@
 // =============================================================================
 
 // --- VERSION ---
-export const APP_VERSION = '3.6.0';
+export const APP_VERSION = '3.7.0';
 
 // --- DEFAULT-KONFIGURATION ---
 export const DEFAULT_AUTO_PAUSES = [
@@ -28,6 +28,19 @@ export const ARCHIVE_COLOR = '#757575';
 // Das Popup erscheint automatisch beim nächsten Start, wenn APP_VERSION
 // noch nicht als gesehen gespeichert ist.
 export const CHANGELOG = {
+    '3.7.0': {
+        title: 'Version 3.7.0',
+        subtitle: 'Der Tag als durchgehende Kette',
+        changes: [
+            { icon: 'link',         text: 'Zeiten anpassen: Wird ein Eintrag k\u00fcrzer, r\u00fcckt der direkt anschlie\u00dfende Nachbar nach \u2013 der Tag bleibt geschlossen, das Tagesende bleibt stehen.' },
+            { icon: 'content_cut',  text: 'Eintrag nachtragen: Ein neuer Eintrag schneidet sich sein Zeitfenster frei. L\u00e4uft ein Projekt darunter durch, wird es sauber in zwei Teile geteilt.' },
+            { icon: 'warning',      text: 'Bevor ein Eintrag dabei vollst\u00e4ndig verschwindet, kommt eine Nachfrage mit Projektname und Uhrzeit \u2013 nichts wird still gel\u00f6scht.' },
+            { icon: 'undo',         text: 'Jede Anpassung, die andere Eintr\u00e4ge ber\u00fchrt, l\u00e4sst sich per Undo-Toast in einem Schritt zur\u00fccknehmen.' },
+            { icon: 'coffee',       text: 'Bewusste Unterbrechungen bleiben: Ist zwischen zwei Eintr\u00e4gen eine echte L\u00fccke oder eine Pause, zieht nichts automatisch nach.' },
+            { icon: 'play_circle',  text: 'Der laufende Eintrag wird nie gel\u00f6scht \u2013 er l\u00e4uft hinter dem eingef\u00fcgten Zeitfenster weiter.' },
+            { icon: 'splitscreen',  text: 'Pausen stehen jetzt an der richtigen Stelle: L\u00e4uft eine Pause durch einen Eintrag, wird er in der Timeline an ihr aufgetrennt. Die Einzeldauern gehen damit auch auf die Tagessumme auf.' }
+        ]
+    },
     '3.6.0': {
         title: 'Version 3.6.0',
         subtitle: 'Jeder Tag steht f\u00fcr sich',
