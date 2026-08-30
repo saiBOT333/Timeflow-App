@@ -37,7 +37,8 @@ export const CHANGELOG = {
             { icon: 'warning',      text: 'Bevor ein Eintrag dabei vollst\u00e4ndig verschwindet, kommt eine Nachfrage mit Projektname und Uhrzeit \u2013 nichts wird still gel\u00f6scht.' },
             { icon: 'undo',         text: 'Jede Anpassung, die andere Eintr\u00e4ge ber\u00fchrt, l\u00e4sst sich per Undo-Toast in einem Schritt zur\u00fccknehmen.' },
             { icon: 'coffee',       text: 'Bewusste Unterbrechungen bleiben: Ist zwischen zwei Eintr\u00e4gen eine echte L\u00fccke oder eine Pause, zieht nichts automatisch nach.' },
-            { icon: 'play_circle',  text: 'Der laufende Eintrag wird nie gel\u00f6scht \u2013 er l\u00e4uft hinter dem eingef\u00fcgten Zeitfenster weiter.' }
+            { icon: 'play_circle',  text: 'Der laufende Eintrag wird nie gel\u00f6scht \u2013 er l\u00e4uft hinter dem eingef\u00fcgten Zeitfenster weiter.' },
+            { icon: 'splitscreen',  text: 'Pausen stehen jetzt an der richtigen Stelle: L\u00e4uft eine Pause durch einen Eintrag, wird er in der Timeline an ihr aufgetrennt. Die Einzeldauern gehen damit auch auf die Tagessumme auf.' }
         ]
     },
     '3.6.0': {

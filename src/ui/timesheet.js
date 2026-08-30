@@ -1,6 +1,6 @@
 import { state } from '../state.js';
 import { formatMs, escapeHtml, getLocalDateStr } from '../utils.js';
-import { getRoundedMs, calculateNetDurationForDate } from '../calculations.js';
+import { getRoundedMs, calculateNetDurationForDate, getPauseIntervalsForDate, subtractIntervals } from '../calculations.js';
 import { commitState, persistState, notifyStateChanged } from '../stateManager.js';
 import { showAlert, showConfirm } from './dialogs.js';
 import { deletePause, deleteAutoPauseFromTimesheet } from '../pauses.js';
@@ -167,7 +167,14 @@ export function renderTimesheetCard() {
         lbl.classList.toggle('is-today', isToday);
     }
 
-    // Alle Zeiteinträge des Tages aller Projekte sammeln
+    // Alle Zeiteinträge des Tages aller Projekte sammeln.
+    //
+    // Ein Eintrag, durch den eine Pause läuft, wird für die Anzeige an ihr
+    // aufgetrennt. Sonst stünde die Pause unter einem Block, der sie zeitlich
+    // umschließt – die Timeline läse sich rückwärts – und die Einzeldauern
+    // (brutto) gingen nicht auf die Tagessumme (netto) auf. Die Daten bleiben
+    // unangetastet: ein Log, mehrere Abschnitte.
+    const dayPauses = getPauseIntervalsForDate(viewDate, now);
     const entries = [];
     state.projects.forEach(p => {
         (p.logs || []).forEach((log, logIdx) => {
@@ -176,15 +183,28 @@ export function renderTimesheetCard() {
                 const clampedStart = Math.max(log.start, dayStart);
                 const clampedEnd = Math.min(logEnd, dayEnd);
                 const parentProject = p.parentId ? state.projects.find(pp => pp.id === p.parentId) : null;
-                entries.push({
-                    project: p,
-                    parentProject,
-                    log,
-                    logIdx,
-                    clampedStart,
-                    clampedEnd,
-                    durationMs: clampedEnd - clampedStart,
-                    isActive: !log.end
+                const segments = subtractIntervals(clampedStart, clampedEnd, dayPauses);
+                // Vollständig von einer Pause überdeckt: der Eintrag bliebe sonst
+                // unsichtbar und damit unbearbeitbar. Einmal mit Dauer 0 zeigen.
+                const fullyPaused = segments.length === 0;
+                const shown = fullyPaused ? [{ start: clampedStart, end: clampedEnd }] : segments;
+                shown.forEach((seg, segIdx) => {
+                    const isLast = segIdx === shown.length - 1;
+                    entries.push({
+                        project: p,
+                        parentProject,
+                        log,
+                        logIdx,
+                        segIdx,
+                        isFirstSegment: segIdx === 0,
+                        isLastSegment: isLast,
+                        isContinuation: segIdx > 0,
+                        fullyPaused,
+                        clampedStart: seg.start,
+                        clampedEnd: seg.end,
+                        durationMs: fullyPaused ? 0 : seg.end - seg.start,
+                        isActive: !log.end && isLast
+                    });
                 });
             }
         });
@@ -215,7 +235,8 @@ export function renderTimesheetCard() {
 
     let html = '';
 
-    const projectEntryCount = entries.filter(e => !e.isPause).length;
+    // Aufgetrennte Abschnitte gehören zu einem Eintrag – nur den ersten zählen.
+    const projectEntryCount = entries.filter(e => !e.isPause && e.isFirstSegment).length;
     const pauseEntryCount = entries.filter(e => e.isPause).length;
     const entrySummary = projectEntryCount + ' Eintr' + (projectEntryCount === 1 ? 'ag' : '\u00e4ge')
         + (pauseEntryCount > 0 ? ' \u00b7 ' + pauseEntryCount + ' Pause' + (pauseEntryCount > 1 ? 'n' : '') : '');
@@ -310,48 +331,70 @@ export function renderTimesheetCard() {
             : p.name;
         const projectNum = p.number ? '#' + p.number : '';
 
-        html += `<div class="ts-entry ${entry.isActive ? 'active' : ''}" data-ts-pid="${p.id}" data-ts-log="${entry.logIdx}">
-            <div class="ts-entry-timeline-dot" style="background:${pColor};"></div>
-            ${lineHtml}
-            <div class="ts-entry-content">
-                <div class="ts-entry-header">
-                    <div class="ts-entry-project-info">
-                        <button type="button" class="ts-entry-project ts-entry-project-btn"
+        // Nur der erste Abschnitt eines Eintrags trägt Projektwahl, Notiz und
+        // Löschen – sie gelten für den ganzen Eintrag, nicht für ein Stück davon.
+        // An den inneren Grenzen steht die Pausenzeit als Text: dort ist nichts
+        // zu bearbeiten, die Grenze gehört der Pause.
+        const startCell = entry.isFirstSegment
+            ? `<input type="time" class="ts-time-input" value="${startTime}" step="60" data-ts-field="start"
+                        onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'start', this.value, '${viewDate}', true)"
+                        onblur="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'start', this.value, '${viewDate}', false)"
+                        title="Startzeit bearbeiten">`
+            : `<span class="ts-time-fixed" title="Weiter nach der Pause">${startTime}</span>`;
+
+        let endCell;
+        if (entry.isActive) {
+            endCell = '<span class="ts-entry-running">läuft...</span>';
+        } else if (entry.isLastSegment) {
+            endCell = `<input type="time" class="ts-time-input" value="${endTime}" step="60" data-ts-field="end"
+                            onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'end', this.value, '${viewDate}', true)"
+                            onblur="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'end', this.value, '${viewDate}', false)"
+                            title="Endzeit bearbeiten">`;
+        } else {
+            endCell = `<span class="ts-time-fixed" title="Unterbrochen durch eine Pause">${endTime}</span>`;
+        }
+
+        const nameCell = entry.isFirstSegment
+            ? `<button type="button" class="ts-entry-project ts-entry-project-btn"
                             style="color:${pColor};"
                             title="Eintrag einem anderen Projekt zuordnen"
                             onclick="toggleProjectPicker('${p.id}', ${entry.logIdx}, this)">
                             ${escapeHtml(projectLabel)}
                             <span class="material-symbols-rounded fs-14">expand_more</span>
-                        </button>
-                        ${projectNum ? `<span class="ts-entry-num">${projectNum}</span>` : ''}
+                        </button>`
+            : `<span class="ts-entry-project ts-entry-project-static" style="color:${pColor};">${escapeHtml(projectLabel)}</span>
+                        <span class="ts-entry-continued" title="Fortsetzung nach der Pause">weiter</span>`;
+
+        html += `<div class="ts-entry ${entry.isActive ? 'active' : ''}${entry.isContinuation ? ' is-continued' : ''}"
+            data-ts-pid="${p.id}" data-ts-log="${entry.logIdx}" data-ts-seg="${entry.segIdx}">
+            <div class="ts-entry-timeline-dot" style="background:${pColor};"></div>
+            ${lineHtml}
+            <div class="ts-entry-content">
+                <div class="ts-entry-header">
+                    <div class="ts-entry-project-info">
+                        ${nameCell}
+                        ${projectNum && entry.isFirstSegment ? `<span class="ts-entry-num">${projectNum}</span>` : ''}
                     </div>
                     <span class="ts-entry-duration">${durationStr}</span>
                 </div>
                 <div class="ts-entry-times">
-                    <input type="time" class="ts-time-input" value="${startTime}" step="60" data-ts-field="start"
-                        onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'start', this.value, '${viewDate}', true)"
-                        onblur="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'start', this.value, '${viewDate}', false)"
-                        title="Startzeit bearbeiten">
-                    <span class="ts-entry-arrow">\u2192</span>
-                    ${entry.isActive
-                        ? '<span class="ts-entry-running">l\u00e4uft...</span>'
-                        : `<input type="time" class="ts-time-input" value="${endTime}" step="60" data-ts-field="end"
-                            onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'end', this.value, '${viewDate}', true)"
-                            onblur="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'end', this.value, '${viewDate}', false)"
-                            title="Endzeit bearbeiten">`
-                    }
-                    <button class="icon-btn ts-delete-btn" onclick="deleteTimesheetLog('${p.id}', ${entry.logIdx})" title="${entry.isActive ? 'Laufenden Eintrag verwerfen (Projekt wird gestoppt)' : 'Eintrag l\u00f6schen'}">
+                    ${startCell}
+                    <span class="ts-entry-arrow">→</span>
+                    ${endCell}
+                    ${entry.isFirstSegment
+                        ? `<button class="icon-btn ts-delete-btn" onclick="deleteTimesheetLog('${p.id}', ${entry.logIdx})" title="${entry.isActive ? 'Laufenden Eintrag verwerfen (Projekt wird gestoppt)' : 'Eintrag löschen'}">
                         <span class="material-symbols-rounded fs-16">delete</span>
-                    </button>
+                    </button>`
+                        : ''}
                 </div>
-                <div class="ts-entry-note-row">
+                ${entry.isFirstSegment ? `<div class="ts-entry-note-row">
                     <span class="material-symbols-rounded ts-note-icon">sticky_note_2</span>
                     <input type="text" class="ts-note-input ${entry.log.note ? 'has-note' : ''}"
                         value="${escapeHtml(entry.log.note || '')}"
-                        placeholder="Notiz hinzuf\u00fcgen..."
+                        placeholder="Notiz hinzufügen..."
                         onchange="saveTimesheetNote('${p.id}', ${entry.logIdx}, this.value)"
                         onkeydown="if(event.key==='Enter') this.blur();">
-                </div>
+                </div>` : ''}
             </div>
         </div>`;
     });
@@ -475,6 +518,8 @@ function refreshTimesheetDerived() {
     const dayEnd = dayStart + 86400000;
     const now = Date.now();
 
+    const dayPauses = getPauseIntervalsForDate(viewDate, now);
+
     document.querySelectorAll('.ts-entry[data-ts-pid]').forEach(row => {
         const proj = state.projects.find(x => x.id === row.dataset.tsPid);
         const log = proj && Array.isArray(proj.logs) ? proj.logs[Number(row.dataset.tsLog)] : null;
@@ -483,7 +528,12 @@ function refreshTimesheetDerived() {
         if (!cell) return;
         const from = Math.max(log.start, dayStart);
         const to = Math.min(log.end || now, dayEnd);
-        cell.textContent = formatMs(Math.max(0, to - from), false);
+        // Die Zeile zeigt einen Abschnitt zwischen Pausen, nicht den ganzen
+        // Eintrag. Waehrend des Tippens kann sich die Zahl der Abschnitte
+        // aendern – dann greift erst das Re-Render beim Verlassen des Feldes.
+        const segments = subtractIntervals(from, to, dayPauses);
+        const seg = segments[Number(row.dataset.tsSeg) || 0];
+        cell.textContent = formatMs(seg ? seg.end - seg.start : 0, false);
     });
 
     const totalEl = document.querySelector('.ts-day-summary-time');

@@ -1504,6 +1504,29 @@ textarea.input-field {
     transition: border-color 0.2s, background 0.2s;
     color-scheme: light dark;
 }
+/* Innere Grenze eines aufgetrennten Eintrags: gehoert der Pause, nicht
+   bearbeitbar. Gleiche Breite wie das Eingabefeld, damit die Spalten stehen. */
+.ts-time-fixed {
+    display: inline-block;
+    width: 90px;
+    padding: 2px 4px;
+    border: 1px solid transparent;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: var(--md-sys-typescale-body-small);
+    color: var(--md-sys-color-on-surface-variant);
+}
+.ts-entry-continued {
+    /* .ts-entry-project-info ist eine Spalte – ohne align-self zoege sich der
+       Chip ueber die volle Zeilenbreite. */
+    align-self: flex-start;
+    font-size: 11px;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+}
 .ts-time-input:hover { border-color: var(--md-sys-color-outline-variant); }
 .ts-time-input:focus {
     border-color: var(--md-sys-color-primary);
@@ -2262,6 +2285,11 @@ textarea.input-field {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+/* Fortsetzungszeilen tragen keinen Button. `font: inherit` haelt sie optisch
+   identisch zum Projektnamen der ersten Zeile (der Button setzt dasselbe). */
+.ts-entry-project-static {
+    font: inherit;
 }
 .ts-entry-project-btn:hover {
     background: var(--md-sys-color-surface-container-high);

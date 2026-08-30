@@ -14,6 +14,13 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 - **Rückfrage vor Löschungen**: Würde eine Änderung Einträge vollständig überschreiben, nennt ein Dialog Projektname und Uhrzeit jedes betroffenen Eintrags. Kürzen und Teilen läuft ohne Nachfrage durch
 - **Undo für Stundenzettel-Änderungen**: Neuer Undo-Typ `timesheet` sichert den kompletten Projektstand, bevor die Kette mehrere Einträge anfasst – rückgängig machen trifft den ganzen Schritt
 
+### Behoben
+- **Pausen standen in der Timeline an der falschen Stelle**: Ein Eintrag, durch den eine Pause lief, wurde als ein durchgehender Block gezeichnet. Die Pause landete dadurch chronologisch *unter* einem Eintrag, der sie zeitlich umschloss – die Timeline las sich rückwärts – und die angezeigte Einzeldauer war brutto, während die Tagessumme netto rechnete (`A 09:00–12:00 = 03:00` + `B 12:00–14:00 = 02:00` bei einer Tagessumme von `04:00`). Einträge werden für die Anzeige jetzt an den Pausen aufgetrennt: die Pause steht zwischen den Abschnitten, jeder Abschnitt zeigt seine Netto-Dauer, und die Zeilen summieren sich exakt auf die Tagessumme. Die Daten bleiben unangetastet – ein Log, mehrere Abschnitte
+  - Projektwahl, Notiz und Löschen sitzen auf dem ersten Abschnitt: sie gelten für den ganzen Eintrag. Fortsetzungen tragen eine `weiter`-Markierung
+  - Die inneren Grenzen gehören der Pause und sind als Text statt als Eingabefeld dargestellt; bearbeitbar bleiben nur Start und Ende des Eintrags
+  - Ein Eintrag, der komplett in einer Pause liegt, bleibt mit Dauer `00:00` sichtbar – sonst wäre er weder auffindbar noch löschbar
+- **`getPauseIntervalsForDate()` und `subtractIntervals()`** (`src/calculations.js`): eine Quelle für alles, was Pausen abzieht oder darstellt. `calculateNetDurationForDate()` nutzt dieselbe Funktion, damit Tagessumme und Timeline nicht auseinanderlaufen können
+
 ### Verbessert
 - **`adjustAdjacentLogs()` ersetzt**: Die alte Funktion zog nur den direkten Nachbarn mit, und nur wenn dessen Grenze auf ±60 s an der alten lag. War die Verschiebung größer als der Nachbar lang, blockierte der Guard `newTs < log.end` und es passierte **gar nichts** – zurück blieb eine stille Lücke oder Überlappung, die nur die Warnzeile meldete. `applyBoundaryChange()` deckt jetzt beide Richtungen ab und wird auch vom Zeit-Modal (`ui/timeEdit.js`) genutzt
 - **Bewusste Unterbrechungen bleiben unangetastet**: Lag zwischen zwei Einträgen schon vorher eine echte Lücke, zieht nichts nach. Pausen sind Ankerpunkte – sie werden nie verschoben oder ausgeschnitten und unterbrechen damit automatisch die Kette
@@ -24,7 +31,7 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 ### Intern
 - **`src/undoStack.js`** neu: Stack und Toast ohne Importe. `undo.js` importiert `render.js`, wodurch jedes Modul, das nur einen Snapshot ablegen will, einen Import-Zyklus erzeugt hätte. `undo.js` re-exportiert alles, bestehende Importe bleiben gültig
 - **`renderTimesheetCard()`** steigt in Umgebungen ohne DOM früh aus – damit ist der Stundenzettel auch in Node-Tests aufrufbar
-- **37 neue Tests** (`tests/timeline.test.js` für die pure Logik, Integrationstests in `tests/timesheet.test.js`)
+- **56 neue Tests** (`tests/timeline.test.js` für die pure Logik, Integrationstests in `tests/timesheet.test.js`, Pausen-Segmentierung in `tests/calculations.test.js` – inklusive der Invariante, dass die Abschnitte exakt die Tagessumme ergeben)
 
 ---
 

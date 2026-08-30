@@ -14,6 +14,8 @@ import {
     calculateNetDuration,
     calculateNetDurationForDate,
     calculateNetDurationForRange,
+    getPauseIntervalsForDate,
+    subtractIntervals,
 } from '../src/calculations.js';
 
 beforeEach(() => {
@@ -198,5 +200,120 @@ describe('calculateNetDurationForRange', () => {
             logs: [{ start: dayStart + 3600000, end: dayStart + 7200000 }],
         };
         expect(calculateNetDurationForRange(project, '2026-03-07', '2026-03-09')).toBe(0);
+    });
+});
+
+
+// --- subtractIntervals ---
+
+describe('subtractIntervals', () => {
+    const seg = (start, end) => ({ start, end });
+
+    test('ohne Intervalle bleibt der Zeitraum ganz', () => {
+        expect(subtractIntervals(10, 20, [])).toEqual([seg(10, 20)]);
+        expect(subtractIntervals(10, 20, null)).toEqual([seg(10, 20)]);
+    });
+
+    test('Intervall daneben aendert nichts', () => {
+        expect(subtractIntervals(10, 20, [seg(0, 5)])).toEqual([seg(10, 20)]);
+        expect(subtractIntervals(10, 20, [seg(25, 30)])).toEqual([seg(10, 20)]);
+    });
+
+    test('Beruehrung an der Grenze schneidet nicht', () => {
+        expect(subtractIntervals(10, 20, [seg(5, 10)])).toEqual([seg(10, 20)]);
+        expect(subtractIntervals(10, 20, [seg(20, 25)])).toEqual([seg(10, 20)]);
+    });
+
+    test('Intervall in der Mitte teilt in zwei Stuecke', () => {
+        expect(subtractIntervals(10, 20, [seg(13, 15)])).toEqual([seg(10, 13), seg(15, 20)]);
+    });
+
+    test('Intervall am Anfang kuerzt vorne', () => {
+        expect(subtractIntervals(10, 20, [seg(5, 13)])).toEqual([seg(13, 20)]);
+    });
+
+    test('Intervall am Ende kuerzt hinten', () => {
+        expect(subtractIntervals(10, 20, [seg(15, 25)])).toEqual([seg(10, 15)]);
+    });
+
+    test('vollstaendige Ueberdeckung → nichts bleibt', () => {
+        expect(subtractIntervals(10, 20, [seg(5, 25)])).toEqual([]);
+        expect(subtractIntervals(10, 20, [seg(10, 20)])).toEqual([]);
+    });
+
+    test('mehrere Intervalle → mehrere Stuecke, in Reihenfolge', () => {
+        expect(subtractIntervals(0, 100, [seg(20, 30), seg(60, 70)]))
+            .toEqual([seg(0, 20), seg(30, 60), seg(70, 100)]);
+    });
+
+    test('unsortierte und ueberlappende Intervalle werden zusammengefasst', () => {
+        expect(subtractIntervals(0, 100, [seg(60, 70), seg(20, 30), seg(25, 40)]))
+            .toEqual([seg(0, 20), seg(40, 60), seg(70, 100)]);
+    });
+
+    test('leerer oder verkehrter Zeitraum → nichts', () => {
+        expect(subtractIntervals(20, 10, [])).toEqual([]);
+        expect(subtractIntervals(10, 10, [])).toEqual([]);
+    });
+
+    test('laesst die uebergebenen Intervalle unveraendert', () => {
+        const input = [seg(60, 70), seg(20, 30)];
+        subtractIntervals(0, 100, input);
+        expect(input).toEqual([seg(60, 70), seg(20, 30)]);
+    });
+});
+
+// --- getPauseIntervalsForDate ---
+
+describe('getPauseIntervalsForDate', () => {
+    const D = '2026-05-07';
+    const at = (h, m = 0) => new Date(`${D}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`).getTime();
+    const NOW = at(23);
+
+    test('liefert die Pausen des Tages aufsteigend', () => {
+        state.pauses = [
+            { startTs: at(13), endTs: at(13, 15), active: false },
+            { startTs: at(10), endTs: at(10, 30), active: false },
+        ];
+        expect(getPauseIntervalsForDate(D, NOW)).toEqual([
+            { start: at(10), end: at(10, 30) },
+            { start: at(13), end: at(13, 15) },
+        ]);
+    });
+
+    test('Pausen anderer Tage bleiben draussen', () => {
+        state.pauses = [{ startTs: new Date('2026-05-06T10:00:00').getTime(), endTs: new Date('2026-05-06T11:00:00').getTime(), active: false }];
+        expect(getPauseIntervalsForDate(D, NOW)).toEqual([]);
+    });
+
+    test('ueberlappende Pausen werden zusammengefasst', () => {
+        state.pauses = [
+            { startTs: at(10), endTs: at(11), active: false },
+            { startTs: at(10, 30), endTs: at(12), active: false },
+        ];
+        expect(getPauseIntervalsForDate(D, NOW)).toEqual([{ start: at(10), end: at(12) }]);
+    });
+
+    test('laufende Pause endet bei jetzt', () => {
+        state.pauses = [{ startTs: at(10), endTs: null, active: true }];
+        expect(getPauseIntervalsForDate(D, at(10, 20))).toEqual([{ start: at(10), end: at(10, 20) }]);
+    });
+
+    test('wird auf den Tag beschnitten', () => {
+        state.pauses = [{
+            startTs: new Date(`${D}T23:30:00`).getTime(),
+            endTs: new Date('2026-05-08T00:30:00').getTime(),
+            active: false
+        }];
+        const dayEnd = new Date(`${D}T00:00:00`).getTime() + 86400000;
+        expect(getPauseIntervalsForDate(D, NOW)).toEqual([{ start: new Date(`${D}T23:30:00`).getTime(), end: dayEnd }]);
+    });
+
+    test('deckt sich mit dem Pausenabzug der Tagessumme', () => {
+        state.pauses = [{ startTs: at(10), endTs: at(10, 30), active: false }];
+        const project = { logs: [{ start: at(9), end: at(12) }] };
+        const segments = subtractIntervals(at(9), at(12), getPauseIntervalsForDate(D, NOW));
+        const sum = segments.reduce((t, s) => t + (s.end - s.start), 0);
+        expect(sum).toBe(calculateNetDurationForDate(project, D));
     });
 });
