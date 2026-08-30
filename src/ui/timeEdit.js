@@ -2,7 +2,7 @@ import { state, uiState } from '../state.js';
 import { formatMs } from '../utils.js';
 import { persistState, notifyStateChanged } from '../stateManager.js';
 import { showAlert } from './dialogs.js';
-import { adjustAdjacentLogs } from './timesheet.js';
+import { applyBoundaryChange } from './timesheet.js';
 
 // =============================================================================
 // ui/timeEdit.js – Zeiteinträge eines Projekts bearbeiten (Modal)
@@ -62,7 +62,7 @@ export function renderTimeEditLogs(project) {
     }).join('');
 }
 
-export function updateLogTime(projectId, logIndex, type, value) {
+export async function updateLogTime(projectId, logIndex, type, value) {
     const p = state.projects.find(x => x.id === projectId);
     if (!p || !p.logs[logIndex]) return;
     const log = p.logs[logIndex];
@@ -82,14 +82,12 @@ export function updateLogTime(projectId, logIndex, type, value) {
         return;
     }
 
-    if (type === 'start') {
-        const oldStart = log.start;
-        log.start = newTs;
-        adjustAdjacentLogs(oldStart, newTs, 'end');
-    } else {
-        const oldEnd = log.end;
-        log.end = newTs;
-        adjustAdjacentLogs(oldEnd, newTs, 'start');
+    // Gleiche Tageskette wie im Stundenzettel: Nachbarn ziehen nach bzw.
+    // weichen dem gewachsenen Eintrag.
+    const { applied } = await applyBoundaryChange(log, type, newTs, log[type]);
+    if (!applied) {
+        renderTimeEditLogs(p);
+        return;
     }
     persistState();
     renderTimeEditLogs(p);

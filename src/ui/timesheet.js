@@ -4,6 +4,8 @@ import { getRoundedMs, calculateNetDurationForDate } from '../calculations.js';
 import { commitState, persistState, notifyStateChanged } from '../stateManager.js';
 import { showAlert, showConfirm } from './dialogs.js';
 import { deletePause, deleteAutoPauseFromTimesheet } from '../pauses.js';
+import { planBoundaryChange, planInsert, applyTimelinePlan, describeRemovals } from '../timeline.js';
+import { pushUndo, showUndoToast } from '../undoStack.js';
 
 // =============================================================================
 // ui/timesheet.js – Stundenzettel (tägliche Zeiteinträge)
@@ -40,30 +42,112 @@ export function setTimesheetDate(dateStr) {
     notifyStateChanged();
 }
 
-// Passt benachbarte Log-Einträge anderer Projekte an, wenn eine Zeitgrenze verschoben wird
-export function adjustAdjacentLogs(oldTs, newTs, fieldToAdjust) {
-    if (!oldTs || oldTs === newTs) return;
-    const tolerance = 60000; // 1 Minute Toleranz
-    state.projects.forEach(proj => {
-        (proj.logs || []).forEach(log => {
-            if (fieldToAdjust === 'start') {
-                if (log.start && Math.abs(log.start - oldTs) <= tolerance) {
-                    if (!log.end || newTs < log.end) {
-                        log.start = newTs;
-                    }
-                }
-            } else if (fieldToAdjust === 'end') {
-                if (log.end && Math.abs(log.end - oldTs) <= tolerance) {
-                    if (newTs > log.start) {
-                        log.end = newTs;
-                    }
-                }
-            }
-        });
+// =============================================================================
+// Tageskette – Änderungen sauber in den Tag einfügen
+// =============================================================================
+// Die Regeln stehen in ../timeline.js (pur, ohne UI). Hier kommt nur dazu, was
+// die Oberfläche braucht: Rückfrage vor Löschungen, Undo-Snapshot, Fokus.
+
+function fmtTime(ts) {
+    return new Date(ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
+
+/**
+ * Kompletten Projektstand sichern, bevor die Tageskette mehrere Einträge
+ * anfasst – rückgängig machen soll den ganzen Schritt treffen, nicht nur den
+ * bearbeiteten Eintrag.
+ */
+function snapshotForUndo(label) {
+    pushUndo({
+        type: 'timesheet',
+        data: JSON.parse(JSON.stringify(state.projects)),
+        timestamp: Date.now(),
+        label
     });
+    showUndoToast(label);
+}
+
+/**
+ * Rückfrage, falls der Plan Einträge vollständig überschreiben würde.
+ * Kürzen und Teilen passiert ohne Nachfrage – nur echtes Verschwinden wird
+ * bestätigt.
+ * @returns {Promise<boolean>} false = abgebrochen
+ */
+async function confirmOverwrites(plan, intro) {
+    const removals = describeRemovals(plan, fmtTime);
+    if (removals.length === 0) return true;
+    return showConfirm(
+        intro + '\n\nDiese Einträge werden dabei vollständig überschrieben und gelöscht:\n'
+            + removals.map(r => '\u2022 ' + r).join('\n'),
+        { title: 'Einträge überschreiben', icon: 'warning', okText: 'Fortfahren', danger: true }
+    );
+}
+
+/**
+ * Verschobene Zeitgrenze übernehmen – inklusive Tageskette.
+ *
+ * Wächst der Eintrag, schneidet er sich sein Fenster frei: überlappende
+ * Nachbarn werden gekürzt, umschlossene geteilt, vollständig überdeckte nach
+ * Rückfrage entfernt. Schrumpft er, zieht ein vorher lückenlos anschließender
+ * Nachbar nach, damit keine unbeabsichtigte Lücke entsteht.
+ *
+ * `log[field]` darf beim Aufruf noch auf `oldTs` stehen oder bereits auf
+ * `newTs` (Live-Eingabe) – geplant wird immer gegen `oldTs`.
+ *
+ * @param {object} log – der bearbeitete Eintrag
+ * @param {'start'|'end'} field
+ * @param {number} newTs
+ * @param {number} oldTs – Grenze vor der Bearbeitung
+ * @returns {Promise<{applied: boolean, structural: boolean}>}
+ *          applied=false → abgebrochen, Ausgangszustand wiederhergestellt.
+ *          structural=true → andere Einträge wurden verändert (Re-Render nötig).
+ */
+export async function applyBoundaryChange(log, field, newTs, oldTs) {
+    const plan = planBoundaryChange(state.projects, log, field, newTs, oldTs);
+    const label = field === 'start' ? 'Startzeit' : 'Endzeit';
+    const ok = await confirmOverwrites(plan, 'Neue ' + label + ': ' + fmtTime(newTs) + '.');
+    if (!ok) {
+        log[field] = oldTs;
+        return { applied: false, structural: false };
+    }
+    if (!plan.isEmpty) snapshotForUndo('Zeitanpassung rückgängig');
+    log[field] = newTs;
+    applyTimelinePlan(plan);
+    return { applied: true, structural: !plan.isEmpty };
+}
+
+// --- Fokus über ein Re-Render hinweg halten -----------------------------------
+// Baut die Tageskette Einträge um, muss die Karte komplett neu gerendert werden.
+// Damit der Cursor dabei nicht verloren geht, wird das fokussierte Zeitfeld über
+// Projekt + Log-Objekt gemerkt (der Index kann sich durch Teilen/Löschen
+// verschieben, die Objektidentität nicht).
+
+function captureTimesheetFocus() {
+    if (typeof document === 'undefined') return null;
+    const el = document.activeElement;
+    if (!el || !el.dataset || !el.dataset.tsField) return null;
+    const row = el.closest('.ts-entry[data-ts-pid]');
+    if (!row) return null;
+    const project = state.projects.find(x => x.id === row.dataset.tsPid);
+    const log = project && Array.isArray(project.logs) ? project.logs[Number(row.dataset.tsLog)] : null;
+    if (!log) return null;
+    return { projectId: project.id, log, field: el.dataset.tsField };
+}
+
+function restoreTimesheetFocus(token) {
+    if (!token || typeof document === 'undefined') return;
+    const project = state.projects.find(x => x.id === token.projectId);
+    if (!project) return;
+    const idx = (project.logs || []).indexOf(token.log);
+    if (idx === -1) return;
+    const input = document.querySelector(
+        '.ts-entry[data-ts-pid="' + token.projectId + '"][data-ts-log="' + idx + '"] [data-ts-field="' + token.field + '"]'
+    );
+    if (input) input.focus();
 }
 
 export function renderTimesheetCard() {
+    if (typeof document === 'undefined') return;
     const container = document.getElementById('timesheetContainer');
     if (!container) return;
 
@@ -165,6 +249,7 @@ export function renderTimesheetCard() {
         <input type="text" class="ts-manual-note" id="tsManualNote" placeholder="Notiz (optional)">
         <button type="button" class="ts-manual-cancel" onclick="toggleManualEntryForm()">Abbrechen</button>
         <button type="button" class="ts-manual-save" onclick="submitManualEntry()">Speichern</button>
+        <div class="ts-manual-hint">Der Eintrag wird in den Tag eingegliedert: überlappende Einträge werden gekürzt oder geteilt.</div>
     </div>
 </div>`;
 
@@ -243,14 +328,14 @@ export function renderTimesheetCard() {
                     <span class="ts-entry-duration">${durationStr}</span>
                 </div>
                 <div class="ts-entry-times">
-                    <input type="time" class="ts-time-input" value="${startTime}" step="60"
+                    <input type="time" class="ts-time-input" value="${startTime}" step="60" data-ts-field="start"
                         onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'start', this.value, '${viewDate}', true)"
                         onblur="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'start', this.value, '${viewDate}', false)"
                         title="Startzeit bearbeiten">
                     <span class="ts-entry-arrow">\u2192</span>
                     ${entry.isActive
                         ? '<span class="ts-entry-running">l\u00e4uft...</span>'
-                        : `<input type="time" class="ts-time-input" value="${endTime}" step="60"
+                        : `<input type="time" class="ts-time-input" value="${endTime}" step="60" data-ts-field="end"
                             onchange="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'end', this.value, '${viewDate}', true)"
                             onblur="updateTimesheetLogTime('${p.id}', ${entry.logIdx}, 'end', this.value, '${viewDate}', false)"
                             title="Endzeit bearbeiten">`
@@ -282,64 +367,100 @@ export function renderTimesheetCard() {
  * Start-/Endzeit eines Zeiteintrags setzen.
  *
  * Ein <input type="time"> feuert `change` bereits, sobald ein Segment
- * vollst\u00e4ndig ist \u2013 beim Tippen also schon nach der Stunde. Ein Re-Render an
- * dieser Stelle w\u00fcrde das Feld unter dem Cursor neu aufbauen und die Eingabe
+ * vollständig ist – beim Tippen also schon nach der Stunde. Ein Re-Render an
+ * dieser Stelle würde das Feld unter dem Cursor neu aufbauen und die Eingabe
  * abbrechen. Deshalb zwei Modi:
  *
- *   live = true  (onchange, Eingabe l\u00e4uft noch): still \u00fcbernehmen und nur
- *                persistieren \u2013 kein Re-Render, der Fokus bleibt erhalten.
- *                Ung\u00fcltige Zwischenst\u00e4nde werden kommentarlos ignoriert.
- *   live = false (onblur, Eingabe beendet): \u00fcbernehmen, Meldung bei
- *                ung\u00fcltiger Zeit, danach neu rendern.
+ *   live = true  (onchange, Eingabe läuft noch): still übernehmen und nur
+ *                persistieren – kein Re-Render, der Fokus bleibt erhalten.
+ *                Ungültige Zwischenstände werden kommentarlos ignoriert.
+ *                Die Tageskette bleibt hier bewusst außen vor: sie kann
+ *                nachfragen und andere Einträge umbauen, das gehört ans Ende
+ *                der Eingabe.
+ *   live = false (onblur, Eingabe beendet): übernehmen, Nachbarn nachziehen
+ *                bzw. freischneiden, Meldung bei ungültiger Zeit, danach neu
+ *                rendern.
  *
- * @param {boolean} live \u2013 true solange das Feld noch bearbeitet wird
+ * `pendingEdit` merkt sich dabei den Stand vor der Eingabe: beim Tippen wurde
+ * `log[type]` schon live überschrieben, die Tageskette muss aber gegen den
+ * ursprünglichen Wert planen (nur so ist erkennbar, wer vorher lückenlos
+ * anschloss).
+ *
+ * @param {boolean} live – true solange das Feld noch bearbeitet wird
  */
-export function updateTimesheetLogTime(projectId, logIndex, type, value, dateStr, live = false) {
+let pendingEdit = null;   // { log, field, originalTs }
+
+export async function updateTimesheetLogTime(projectId, logIndex, type, value, dateStr, live = false) {
     const p = state.projects.find(x => x.id === projectId);
     if (!p || !p.logs[logIndex]) return;
     const log = p.logs[logIndex];
     const newTs = new Date(dateStr + 'T' + value + ':00').getTime();
-    if (isNaN(newTs)) {
-        // Leeres/unvollst\u00e4ndiges Feld: beim Verlassen den gespeicherten Wert
-        // wieder anzeigen, w\u00e4hrend der Eingabe nichts tun.
-        if (!live) scheduleTimesheetRefresh();
-        return;
-    }
 
-    if (newTs === (type === 'start' ? log.start : log.end)) {
-        // Unver\u00e4ndert \u2013 typischerweise das blur nach einer bereits live
-        // \u00fcbernommenen Eingabe. Dann steht das aufgeschobene Re-Render aus
-        // (Dauer, Sortierung, Summen), sonst ist nichts zu tun.
-        if (!live) scheduleTimesheetRefresh();
+    const isPending = pendingEdit && pendingEdit.log === log && pendingEdit.field === type;
+    const originalTs = isPending ? pendingEdit.originalTs : log[type];
+
+    if (isNaN(newTs)) {
+        // Leeres/unvollständiges Feld: beim Verlassen den gespeicherten Wert
+        // wieder anzeigen, während der Eingabe nichts tun.
+        if (!live) {
+            log[type] = originalTs;
+            pendingEdit = null;
+            scheduleTimesheetRefresh();
+        }
         return;
     }
 
     if (type === 'start' && log.end && newTs >= log.end) {
         if (live) return;
-        showAlert('Startzeit muss vor der Endzeit liegen.', { title: 'Ung\u00fcltige Zeit', icon: 'error' });
+        log.start = originalTs;
+        pendingEdit = null;
+        showAlert('Startzeit muss vor der Endzeit liegen.', { title: 'Ungültige Zeit', icon: 'error' });
         renderTimesheetCard();
         return;
     }
     if (type === 'end' && newTs <= log.start) {
         if (live) return;
-        showAlert('Endzeit muss nach der Startzeit liegen.', { title: 'Ung\u00fcltige Zeit', icon: 'error' });
+        log.end = originalTs;
+        pendingEdit = null;
+        showAlert('Endzeit muss nach der Startzeit liegen.', { title: 'Ungültige Zeit', icon: 'error' });
         renderTimesheetCard();
         return;
     }
 
-    if (type === 'start') {
-        const oldStart = log.start;
-        log.start = newTs;
-        adjustAdjacentLogs(oldStart, newTs, 'end');
-    } else {
-        const oldEnd = log.end;
-        log.end = newTs;
-        adjustAdjacentLogs(oldEnd, newTs, 'start');
+    if (live) {
+        if (!isPending) pendingEdit = { log, field: type, originalTs: log[type] };
+        log[type] = newTs;
+        persistState();
+        refreshTimesheetDerived();
+        return;
     }
 
-    persistState();
-    if (live) refreshTimesheetDerived();
-    else scheduleTimesheetRefresh();
+    pendingEdit = null;
+    if (newTs === originalTs) {
+        // Unverändert – typischerweise das blur nach einer bereits live
+        // übernommenen und danach zurückgesetzten Eingabe. Dann steht das
+        // aufgeschobene Re-Render aus (Dauer, Sortierung, Summen).
+        log[type] = originalTs;
+        scheduleTimesheetRefresh();
+        return;
+    }
+
+    const focusToken = captureTimesheetFocus();
+    log[type] = originalTs;                       // Ausgangslage für die Planung
+    const { structural } = await applyBoundaryChange(log, type, newTs, originalTs);
+
+    if (!structural) {
+        // Nichts umgebaut (oder abgebrochen): das schonende Refresh reicht und
+        // lässt den Fokus beim Tabben ins Nachbarfeld in Ruhe.
+        persistState();
+        scheduleTimesheetRefresh();
+        return;
+    }
+
+    // Andere Einträge wurden gekürzt, geteilt oder entfernt → die Karte muss
+    // komplett neu gebaut werden; der Fokus wird danach wiederhergestellt.
+    commitState();
+    restoreTimesheetFocus(focusToken);
 }
 
 /**
@@ -492,7 +613,7 @@ function parseHHMM(value) {
     return { h, min };
 }
 
-export function addManualLog(projectId, dateStr, startHHMM, endHHMM, note) {
+export async function addManualLog(projectId, dateStr, startHHMM, endHHMM, note) {
     const project = state.projects.find(p => p.id === projectId);
     if (!project) {
         showAlert('Bitte ein Projekt wählen.', { title: 'Kein Projekt', icon: 'error' });
@@ -514,6 +635,18 @@ export function addManualLog(projectId, dateStr, startHHMM, endHHMM, note) {
         showAlert('Endzeit muss nach der Startzeit liegen.', { title: 'Ungültige Zeit', icon: 'error' });
         return false;
     }
+    // Platz schaffen: was in [startTs, endTs) liegt, wird gekürzt, geteilt
+    // oder – nach Rückfrage – entfernt. So gliedert sich der neue Eintrag in
+    // die Tageskette ein, statt sich mit ihr zu überlappen.
+    const plan = planInsert(state.projects, startTs, endTs);
+    const ok = await confirmOverwrites(
+        plan,
+        'Neuer Eintrag ' + fmtTime(startTs) + '\u2013' + fmtTime(endTs) + ' für \u201e' + project.name + '\u201c.'
+    );
+    if (!ok) return false;
+    if (!plan.isEmpty) snapshotForUndo('Eintrag einfügen rückgängig');
+    applyTimelinePlan(plan);
+
     if (!Array.isArray(project.logs)) project.logs = [];
     project.logs.push({ start: startTs, end: endTs, note: (note || '').trim() });
     commitState();
@@ -668,7 +801,7 @@ function onManualFormKeydown(ev) {
     }
 }
 
-export function submitManualEntry() {
+export async function submitManualEntry() {
     const projectId = document.getElementById('tsManualProject')?.value;
     const startVal = document.getElementById('tsManualStart')?.value || '';
     const endVal = document.getElementById('tsManualEnd')?.value || '';
@@ -677,7 +810,7 @@ export function submitManualEntry() {
     // Listener vorab abmelden: addManualLog → commitState → re-render entfernt das Form,
     // dadurch würde das Cleanup in toggleManualEntryForm nicht mehr greifen.
     document.removeEventListener('keydown', onManualFormKeydown);
-    const ok = addManualLog(projectId, dateStr, startVal, endVal, noteVal);
+    const ok = await addManualLog(projectId, dateStr, startVal, endVal, noteVal);
     if (!ok) {
         // Form bleibt offen → Listener wieder anhängen.
         document.addEventListener('keydown', onManualFormKeydown);

@@ -19,6 +19,7 @@ vi.mock('../src/ui/dialogs.js', () => ({
     showAlert: vi.fn(),
     showConfirm: vi.fn(),
 }));
+import { showConfirm } from '../src/ui/dialogs.js';
 // pauses-Modul (nur für Re-Export auf window) – stubben.
 vi.mock('../src/pauses.js', () => ({
     deletePause: vi.fn(),
@@ -34,8 +35,8 @@ beforeEach(() => {
 });
 
 describe('addManualLog – Happy Path', () => {
-    test('legt Log mit korrekten Timestamps und Notiz an', () => {
-        const ok = addManualLog('p1', '2026-05-07', '09:30', '11:15', 'Meeting');
+    test('legt Log mit korrekten Timestamps und Notiz an', async () => {
+        const ok = await addManualLog('p1', '2026-05-07', '09:30', '11:15', 'Meeting');
         expect(ok).toBe(true);
         expect(state.projects[0].logs).toHaveLength(1);
         const log = state.projects[0].logs[0];
@@ -48,44 +49,44 @@ describe('addManualLog – Happy Path', () => {
 });
 
 describe('addManualLog – Validierung', () => {
-    test('unbekannte Projekt-ID → false, kein Log angelegt', () => {
-        const ok = addManualLog('unknown', '2026-05-07', '09:00', '10:00', '');
+    test('unbekannte Projekt-ID → false, kein Log angelegt', async () => {
+        const ok = await addManualLog('unknown', '2026-05-07', '09:00', '10:00', '');
         expect(ok).toBe(false);
         expect(state.projects[0].logs).toHaveLength(0);
         expect(state.projects[1].logs).toHaveLength(0);
     });
 
-    test('ungültiges Zeitformat (Start) → false', () => {
-        const ok = addManualLog('p1', '2026-05-07', '9 Uhr', '10:00', '');
+    test('ungültiges Zeitformat (Start) → false', async () => {
+        const ok = await addManualLog('p1', '2026-05-07', '9 Uhr', '10:00', '');
         expect(ok).toBe(false);
         expect(state.projects[0].logs).toHaveLength(0);
     });
 
-    test('ungültiges Zeitformat (Ende) → false', () => {
-        const ok = addManualLog('p1', '2026-05-07', '09:00', '25:99', '');
+    test('ungültiges Zeitformat (Ende) → false', async () => {
+        const ok = await addManualLog('p1', '2026-05-07', '09:00', '25:99', '');
         expect(ok).toBe(false);
         expect(state.projects[0].logs).toHaveLength(0);
     });
 
-    test('Start gleich Ende → false', () => {
-        const ok = addManualLog('p1', '2026-05-07', '10:00', '10:00', '');
+    test('Start gleich Ende → false', async () => {
+        const ok = await addManualLog('p1', '2026-05-07', '10:00', '10:00', '');
         expect(ok).toBe(false);
         expect(state.projects[0].logs).toHaveLength(0);
     });
 
-    test('Start nach Ende → false', () => {
-        const ok = addManualLog('p1', '2026-05-07', '12:00', '11:00', '');
+    test('Start nach Ende → false', async () => {
+        const ok = await addManualLog('p1', '2026-05-07', '12:00', '11:00', '');
         expect(ok).toBe(false);
         expect(state.projects[0].logs).toHaveLength(0);
     });
 
-    test('Notiz leer/undefined → log.note ist leerer String', () => {
-        addManualLog('p1', '2026-05-07', '09:00', '10:00', undefined);
+    test('Notiz leer/undefined → log.note ist leerer String', async () => {
+        await addManualLog('p1', '2026-05-07', '09:00', '10:00', undefined);
         expect(state.projects[0].logs[0].note).toBe('');
     });
 
-    test('Notiz wird getrimmt', () => {
-        addManualLog('p1', '2026-05-07', '09:00', '10:00', '   Hallo   ');
+    test('Notiz wird getrimmt', async () => {
+        await addManualLog('p1', '2026-05-07', '09:00', '10:00', '   Hallo   ');
         expect(state.projects[0].logs[0].note).toBe('Hallo');
     });
 });
@@ -217,7 +218,7 @@ describe('updateTimesheetLogTime – Tippen darf nicht unterbrochen werden', () 
     });
 
     test('blur: uebernimmt den Wert und rendert neu', async () => {
-        updateTimesheetLogTime('p1', 0, 'end', '12:30', D, false);
+        await updateTimesheetLogTime('p1', 0, 'end', '12:30', D, false);
         expect(state.projects[0].logs[0].end).toBe(at('12', '30'));
         expect(persistState).toHaveBeenCalledTimes(1);
         await flush();
@@ -225,24 +226,163 @@ describe('updateTimesheetLogTime – Tippen darf nicht unterbrochen werden', () 
     });
 
     test('blur nach Live-Eingabe: holt das Re-Render nach', async () => {
-        updateTimesheetLogTime('p1', 0, 'start', '10:45', D, true);
+        await updateTimesheetLogTime('p1', 0, 'start', '10:45', D, true);
         await flush();
         expect(notifyStateChanged).not.toHaveBeenCalled();
         // blur meldet denselben Wert – Dauer/Sortierung muessen trotzdem neu
-        updateTimesheetLogTime('p1', 0, 'start', '10:45', D, false);
+        await updateTimesheetLogTime('p1', 0, 'start', '10:45', D, false);
+        expect(state.projects[0].logs[0].start).toBe(at('10', '45'));
         await flush();
         expect(notifyStateChanged).toHaveBeenCalledTimes(1);
-        expect(persistState).toHaveBeenCalledTimes(1);
     });
 
     test('Segment-Tippen: mehrere change-Events fuehren zur Zielzeit', async () => {
         // Chrome feuert pro fertigem Segment: erst "10:00", dann "10:45"
-        updateTimesheetLogTime('p1', 0, 'start', '10:00', D, true);
-        updateTimesheetLogTime('p1', 0, 'start', '10:45', D, true);
-        updateTimesheetLogTime('p1', 0, 'start', '10:45', D, false);   // blur
+        await updateTimesheetLogTime('p1', 0, 'start', '10:00', D, true);
+        await updateTimesheetLogTime('p1', 0, 'start', '10:45', D, true);
+        await updateTimesheetLogTime('p1', 0, 'start', '10:45', D, false);   // blur
         expect(state.projects[0].logs[0].start).toBe(at('10', '45'));
-        expect(persistState).toHaveBeenCalledTimes(2);
         await flush();
         expect(notifyStateChanged).toHaveBeenCalledTimes(1);
+    });
+
+    test('blur mit ungueltiger Zeit: Ausgangswert wird wiederhergestellt', async () => {
+        await updateTimesheetLogTime('p1', 0, 'start', '10:00', D, true);
+        // 12:00 liegt hinter dem Ende (11:00) → abgelehnt, zurueck auf 09:00
+        await updateTimesheetLogTime('p1', 0, 'start', '12:00', D, false);
+        expect(state.projects[0].logs[0].start).toBe(at('09', '00'));
+    });
+});
+
+// =============================================================================
+// Tageskette (Integration: timesheet.js + timeline.js)
+// =============================================================================
+describe('Tageskette – Zeitgrenze verschieben', () => {
+    const D = '2026-05-07';
+    const at = (h, m) => new Date(D + 'T' + h + ':' + m + ':00').getTime();
+    const flush = () => new Promise(r => setTimeout(r, 0));
+
+    beforeEach(() => {
+        // A 09:00–10:00 · B 10:00–11:00 (lueckenlos)
+        state.projects[0].logs = [{ start: at('09', '00'), end: at('10', '00') }];
+        state.projects[1].logs = [{ start: at('10', '00'), end: at('11', '00') }];
+        showConfirm.mockReset();
+        commitState.mockClear();
+    });
+
+    test('A wird kuerzer → B zieht nach, Tagesende bleibt', async () => {
+        await updateTimesheetLogTime('p1', 0, 'end', '09:30', D, false);
+        await flush();
+        expect(state.projects[0].logs[0].end).toBe(at('09', '30'));
+        expect(state.projects[1].logs[0].start).toBe(at('09', '30'));
+        expect(state.projects[1].logs[0].end).toBe(at('11', '00'));
+    });
+
+    test('A wird laenger → B wird vorne gekuerzt', async () => {
+        await updateTimesheetLogTime('p1', 0, 'end', '10:30', D, false);
+        await flush();
+        expect(state.projects[0].logs[0].end).toBe(at('10', '30'));
+        expect(state.projects[1].logs[0].start).toBe(at('10', '30'));
+    });
+
+    test('B beginnt spaeter → A zieht nach', async () => {
+        await updateTimesheetLogTime('p2', 0, 'start', '10:15', D, false);
+        await flush();
+        expect(state.projects[0].logs[0].end).toBe(at('10', '15'));
+        expect(state.projects[1].logs[0].start).toBe(at('10', '15'));
+    });
+
+    test('echte Luecke bleibt erhalten', async () => {
+        // B faengt erst 10:30 an (bewusst gestoppter Tag)
+        state.projects[1].logs[0].start = at('10', '30');
+        await updateTimesheetLogTime('p1', 0, 'end', '09:30', D, false);
+        await flush();
+        expect(state.projects[1].logs[0].start).toBe(at('10', '30'));
+    });
+
+    test('A verschluckt B → Rueckfrage, bei Zustimmung wird B entfernt', async () => {
+        showConfirm.mockResolvedValue(true);
+        await updateTimesheetLogTime('p1', 0, 'end', '11:30', D, false);
+        await flush();
+        expect(showConfirm).toHaveBeenCalledTimes(1);
+        expect(state.projects[0].logs[0].end).toBe(at('11', '30'));
+        expect(state.projects[1].logs).toHaveLength(0);
+    });
+
+    test('Rueckfrage abgelehnt → nichts aendert sich', async () => {
+        showConfirm.mockResolvedValue(false);
+        await updateTimesheetLogTime('p1', 0, 'end', '11:30', D, false);
+        await flush();
+        expect(state.projects[0].logs[0].end).toBe(at('10', '00'));
+        expect(state.projects[1].logs[0].start).toBe(at('10', '00'));
+    });
+});
+
+describe('Tageskette – Eintrag einfuegen', () => {
+    const D = '2026-05-07';
+    const at = (h, m) => new Date(D + 'T' + h + ':' + m + ':00').getTime();
+
+    beforeEach(() => {
+        showConfirm.mockReset();
+    });
+
+    test('mitten in einen durchlaufenden Eintrag → dieser wird geteilt', async () => {
+        state.projects[0].logs = [{ start: at('09', '00'), end: at('12', '00'), note: 'A' }];
+        const ok = await addManualLog('p2', D, '10:00', '11:00', 'B');
+        expect(ok).toBe(true);
+        expect(showConfirm).not.toHaveBeenCalled();
+        expect(state.projects[0].logs).toEqual([
+            { start: at('09', '00'), end: at('10', '00'), note: 'A' },
+            { start: at('11', '00'), end: at('12', '00'), note: 'A' },
+        ]);
+        expect(state.projects[1].logs).toEqual([
+            { start: at('10', '00'), end: at('11', '00'), note: 'B' },
+        ]);
+    });
+
+    test('in eine Luecke → nichts anderes wird angefasst', async () => {
+        state.projects[0].logs = [
+            { start: at('09', '00'), end: at('10', '00') },
+            { start: at('11', '00'), end: at('12', '00') },
+        ];
+        const ok = await addManualLog('p2', D, '10:00', '11:00', '');
+        expect(ok).toBe(true);
+        expect(state.projects[0].logs).toHaveLength(2);
+        expect(state.projects[0].logs[0].end).toBe(at('10', '00'));
+        expect(state.projects[0].logs[1].start).toBe(at('11', '00'));
+    });
+
+    test('ueberdeckt einen kompletten Eintrag → Rueckfrage', async () => {
+        showConfirm.mockResolvedValue(true);
+        state.projects[0].logs = [{ start: at('10', '00'), end: at('10', '30') }];
+        const ok = await addManualLog('p2', D, '09:00', '12:00', '');
+        expect(ok).toBe(true);
+        expect(showConfirm).toHaveBeenCalledTimes(1);
+        expect(state.projects[0].logs).toHaveLength(0);
+        expect(state.projects[1].logs).toHaveLength(1);
+    });
+
+    test('Rueckfrage abgelehnt → kein Eintrag, nichts geloescht', async () => {
+        showConfirm.mockResolvedValue(false);
+        state.projects[0].logs = [{ start: at('10', '00'), end: at('10', '30') }];
+        const ok = await addManualLog('p2', D, '09:00', '12:00', '');
+        expect(ok).toBe(false);
+        expect(state.projects[0].logs).toHaveLength(1);
+        expect(state.projects[1].logs).toHaveLength(0);
+    });
+
+    test('teilt den laufenden Eintrag: erster Teil endet, Rest laeuft weiter', async () => {
+        state.projects[0].logs = [{ start: at('09', '00'), end: null }];
+        state.projects[0].status = 'running';
+        // Referenzzeit fuer laufende Eintraege: "jetzt" liegt hinter 11:00
+        vi.setSystemTime(at('13', '00'));
+        const ok = await addManualLog('p2', D, '10:00', '11:00', '');
+        vi.useRealTimers();
+        expect(ok).toBe(true);
+        expect(state.projects[0].logs).toEqual([
+            { start: at('09', '00'), end: at('10', '00') },
+            { start: at('11', '00'), end: null },
+        ]);
+        expect(state.projects[0].status).toBe('running');
     });
 });

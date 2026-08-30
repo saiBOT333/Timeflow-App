@@ -4,6 +4,30 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 
 ---
 
+## [3.7.0] – 2026-08-30
+
+### Neu
+- **Tageskette** (`src/timeline.js`): Der Stundenzettel behandelt einen Tag jetzt als durchgehende Kette. Zwei Regeln, beide als pure Funktionen ohne UI-Abhängigkeit:
+  - **Freischneiden**: Beansprucht ein Eintrag ein Zeitfenster, weichen die anderen – angeschnittene werden gekürzt, umschließende geteilt, vollständig überdeckte entfernt
+  - **Nachziehen**: Wird ein Eintrag kürzer, zieht ein vorher lückenlos anschließender Nachbar nach. Tagesende und Tagessumme bleiben dadurch stabil
+- **Eintrag nachtragen gliedert sich ein**: `addManualLog()` schneidet sein Fenster frei, statt sich zu überlappen. Ein durchgelaufenes Projekt wird dabei in zwei Einträge geteilt (Notiz bleibt an beiden Teilen)
+- **Rückfrage vor Löschungen**: Würde eine Änderung Einträge vollständig überschreiben, nennt ein Dialog Projektname und Uhrzeit jedes betroffenen Eintrags. Kürzen und Teilen läuft ohne Nachfrage durch
+- **Undo für Stundenzettel-Änderungen**: Neuer Undo-Typ `timesheet` sichert den kompletten Projektstand, bevor die Kette mehrere Einträge anfasst – rückgängig machen trifft den ganzen Schritt
+
+### Verbessert
+- **`adjustAdjacentLogs()` ersetzt**: Die alte Funktion zog nur den direkten Nachbarn mit, und nur wenn dessen Grenze auf ±60 s an der alten lag. War die Verschiebung größer als der Nachbar lang, blockierte der Guard `newTs < log.end` und es passierte **gar nichts** – zurück blieb eine stille Lücke oder Überlappung, die nur die Warnzeile meldete. `applyBoundaryChange()` deckt jetzt beide Richtungen ab und wird auch vom Zeit-Modal (`ui/timeEdit.js`) genutzt
+- **Bewusste Unterbrechungen bleiben unangetastet**: Lag zwischen zwei Einträgen schon vorher eine echte Lücke, zieht nichts nach. Pausen sind Ankerpunkte – sie werden nie verschoben oder ausgeschnitten und unterbrechen damit automatisch die Kette
+- **Laufender Eintrag wird nie gelöscht**: Fällt er in ein freigeschnittenes Fenster, läuft er dahinter weiter (bzw. wird geteilt), statt den Timer still zu stoppen. Verliert ein Projekt seinen letzten offenen Eintrag, fällt der Status sauber auf `stopped`
+- **Fokus überlebt den Umbau**: Baut die Kette Einträge um, muss die Karte komplett neu gerendert werden. Das fokussierte Zeitfeld wird über Projekt + Log-Objekt gemerkt (der Index verschiebt sich beim Teilen/Löschen, die Objektidentität nicht) und danach wiederhergestellt
+- **Tippen bleibt ununterbrochen**: Die Kette greift erst beim Verlassen des Feldes (`onblur`) – sie kann nachfragen und andere Einträge umbauen, das gehört ans Ende der Eingabe. `pendingEdit` merkt sich dabei den Stand vor der Eingabe, damit gegen den ursprünglichen Wert geplant wird
+
+### Intern
+- **`src/undoStack.js`** neu: Stack und Toast ohne Importe. `undo.js` importiert `render.js`, wodurch jedes Modul, das nur einen Snapshot ablegen will, einen Import-Zyklus erzeugt hätte. `undo.js` re-exportiert alles, bestehende Importe bleiben gültig
+- **`renderTimesheetCard()`** steigt in Umgebungen ohne DOM früh aus – damit ist der Stundenzettel auch in Node-Tests aufrufbar
+- **37 neue Tests** (`tests/timeline.test.js` für die pure Logik, Integrationstests in `tests/timesheet.test.js`)
+
+---
+
 ## [3.6.0] – 2026-08-27
 
 ### Neu

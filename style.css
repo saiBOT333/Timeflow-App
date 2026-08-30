@@ -2378,6 +2378,12 @@ textarea.input-field {
     color: var(--md-sys-color-on-surface);
     font-size: 13px;
 }
+.ts-manual-hint {
+    flex: 1 1 100%;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--md-sys-color-on-surface-variant);
+}
 .ts-manual-cancel,
 .ts-manual-save {
     padding: 4px 12px;
