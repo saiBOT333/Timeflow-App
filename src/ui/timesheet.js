@@ -763,9 +763,21 @@ function getActiveProjectsForPicker() {
         .map(p => {
             const parent = p.parentId ? state.projects.find(pp => pp.id === p.parentId) : null;
             const label = parent ? parent.name + ' → ' + p.name : p.name;
-            return { id: p.id, label, color: p.color || '#757575', sortKey: (parent ? parent.name : p.name) + ' ' + p.name };
+            return { id: p.id, label, color: p.color || '#757575', isFavorite: !!p.isFavorite, sortKey: (parent ? parent.name : p.name) + ' ' + p.name };
         })
         .sort((a, b) => a.sortKey.localeCompare(b.sortKey, 'de'));
+}
+
+/**
+ * Projektauswahl für den Picker: standardmäßig nur Favoriten, dazu immer
+ * „Allgemein" und das aktuelle Projekt des Eintrags. Gibt es keine Favoriten,
+ * wird die volle Liste gezeigt. `hiddenCount` = ausgeblendete Projekte.
+ */
+export function getPickerProjects(currentProjectId, showAll = false) {
+    const all = getActiveProjectsForPicker();
+    if (showAll || !all.some(p => p.isFavorite)) return { list: all, hiddenCount: 0 };
+    const list = all.filter(p => p.isFavorite || p.id === 'general' || p.id === currentProjectId);
+    return { list, hiddenCount: all.length - list.length };
 }
 
 function closeProjectPicker() {
@@ -795,17 +807,9 @@ export function toggleProjectPicker(projectId, logIdx, anchorBtn) {
         closeProjectPicker();
         if (wasSameAnchor) return;
     }
-    const list = getActiveProjectsForPicker();
-    if (list.length === 0) return;
     const picker = document.createElement('div');
     picker.className = 'ts-project-picker';
-    picker.innerHTML = list.map(p =>
-        `<button type="button" class="ts-project-picker-item${p.id === projectId ? ' is-current' : ''}"
-            onclick="pickProjectForLog('${projectId}', ${logIdx}, '${p.id}')">
-            <span class="ts-project-picker-dot" style="background:${p.color};"></span>
-            <span class="ts-project-picker-label">${escapeHtml(p.label)}</span>
-        </button>`
-    ).join('');
+    if (!renderPickerItems(picker, projectId, logIdx, false)) return;
 
     const entryContent = anchorBtn.closest('.ts-entry-content');
     if (!entryContent) return;
@@ -816,6 +820,28 @@ export function toggleProjectPicker(projectId, logIdx, anchorBtn) {
         document.addEventListener('click', onPickerOutsideClick, true);
         document.addEventListener('keydown', onPickerKeydown, true);
     }, 0);
+}
+
+function renderPickerItems(picker, projectId, logIdx, showAll) {
+    const { list, hiddenCount } = getPickerProjects(projectId, showAll);
+    if (list.length === 0) return false;
+    picker.innerHTML = list.map(p =>
+        `<button type="button" class="ts-project-picker-item${p.id === projectId ? ' is-current' : ''}"
+            onclick="pickProjectForLog('${projectId}', ${logIdx}, '${p.id}')">
+            <span class="ts-project-picker-dot" style="background:${p.color};"></span>
+            <span class="ts-project-picker-label">${escapeHtml(p.label)}</span>
+        </button>`
+    ).join('') + (hiddenCount > 0
+        ? `<button type="button" class="ts-project-picker-item ts-project-picker-more">
+            <span class="material-symbols-rounded fs-16">expand_more</span>
+            <span class="ts-project-picker-label">Alle Projekte anzeigen (+${hiddenCount})</span>
+        </button>`
+        : '');
+    const moreBtn = picker.querySelector('.ts-project-picker-more');
+    if (moreBtn) {
+        moreBtn.addEventListener('click', () => renderPickerItems(picker, projectId, logIdx, true));
+    }
+    return true;
 }
 
 export function pickProjectForLog(oldProjectId, logIdx, newProjectId) {
