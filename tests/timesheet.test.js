@@ -25,7 +25,7 @@ vi.mock('../src/pauses.js', () => ({
     deletePause: vi.fn(),
     deleteAutoPauseFromTimesheet: vi.fn(),
 }));
-import { addManualLog, changeLogProject, updateTimesheetLogTime } from '../src/ui/timesheet.js';
+import { addManualLog, changeLogProject, updateTimesheetLogTime, getPickerProjects, onManualProjectChange } from '../src/ui/timesheet.js';
 
 beforeEach(() => {
     state.projects = [
@@ -384,5 +384,65 @@ describe('Tageskette – Eintrag einfuegen', () => {
             { start: at('11', '00'), end: null },
         ]);
         expect(state.projects[0].status).toBe('running');
+    });
+});
+
+describe('getPickerProjects – Favoriten-Filter', () => {
+    beforeEach(() => {
+        state.projects = [
+            { id: 'general', name: 'Allgemein', logs: [], isFavorite: false },
+            { id: 'p1', name: 'Fav A', logs: [], isFavorite: true },
+            { id: 'p2', name: 'Andere B', logs: [], isFavorite: false },
+            { id: 'p3', name: 'Andere C', logs: [], isFavorite: false },
+        ];
+    });
+
+    test('zeigt nur Favoriten + Allgemein, zählt ausgeblendete', () => {
+        const { list, hiddenCount } = getPickerProjects('p1');
+        expect(list.map(p => p.id).sort()).toEqual(['general', 'p1']);
+        expect(hiddenCount).toBe(2);
+    });
+
+    test('aktuelles Projekt bleibt sichtbar, auch wenn kein Favorit', () => {
+        const { list, hiddenCount } = getPickerProjects('p2');
+        expect(list.map(p => p.id).sort()).toEqual(['general', 'p1', 'p2']);
+        expect(hiddenCount).toBe(1);
+    });
+
+    test('showAll → alle Projekte', () => {
+        const { list, hiddenCount } = getPickerProjects('p1', true);
+        expect(list).toHaveLength(4);
+        expect(hiddenCount).toBe(0);
+    });
+
+    test('ohne Favoriten → Fallback auf alle Projekte', () => {
+        state.projects.forEach(p => { p.isFavorite = false; });
+        const { list, hiddenCount } = getPickerProjects('p2');
+        expect(list).toHaveLength(4);
+        expect(hiddenCount).toBe(0);
+    });
+});
+
+describe('onManualProjectChange – „Alle Projekte anzeigen" im Formular', () => {
+    beforeEach(() => {
+        state.projects = [
+            { id: 'general', name: 'Allgemein', logs: [], isFavorite: false },
+            { id: 'p1', name: 'Fav A', logs: [], isFavorite: true },
+            { id: 'p2', name: 'Andere B', logs: [], isFavorite: false },
+        ];
+    });
+
+    test('Sentinel gewählt → Select enthält alle Projekte, kein Sentinel mehr', () => {
+        const select = { value: '__all__', innerHTML: '', selectedIndex: -1 };
+        onManualProjectChange(select);
+        expect(select.innerHTML).toContain('value="p2"');
+        expect(select.innerHTML).not.toContain('__all__');
+        expect(select.selectedIndex).toBe(0);
+    });
+
+    test('normales Projekt gewählt → Select bleibt unverändert', () => {
+        const select = { value: 'p1', innerHTML: 'unverändert', selectedIndex: 1 };
+        onManualProjectChange(select);
+        expect(select.innerHTML).toBe('unverändert');
     });
 });

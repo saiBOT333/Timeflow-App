@@ -259,10 +259,8 @@ export function renderTimesheetCard() {
         Eintrag hinzufügen
     </button>
     <div class="ts-manual-form is-hidden" id="tsManualForm">
-        <select class="ts-manual-project" id="tsManualProject">
-            ${getActiveProjectsForPicker().map(p =>
-                `<option value="${p.id}">${escapeHtml(p.label)}</option>`
-            ).join('')}
+        <select class="ts-manual-project" id="tsManualProject" onchange="onManualProjectChange(this)">
+            ${buildManualProjectOptions(false)}
         </select>
         <input type="time" class="ts-time-input" id="tsManualStart" step="60">
         <span class="ts-entry-arrow">→</span>
@@ -763,9 +761,21 @@ function getActiveProjectsForPicker() {
         .map(p => {
             const parent = p.parentId ? state.projects.find(pp => pp.id === p.parentId) : null;
             const label = parent ? parent.name + ' → ' + p.name : p.name;
-            return { id: p.id, label, color: p.color || '#757575', sortKey: (parent ? parent.name : p.name) + ' ' + p.name };
+            return { id: p.id, label, color: p.color || '#757575', isFavorite: !!p.isFavorite, sortKey: (parent ? parent.name : p.name) + ' ' + p.name };
         })
         .sort((a, b) => a.sortKey.localeCompare(b.sortKey, 'de'));
+}
+
+/**
+ * Projektauswahl für den Picker: standardmäßig nur Favoriten, dazu immer
+ * „Allgemein" und das aktuelle Projekt des Eintrags. Gibt es keine Favoriten,
+ * wird die volle Liste gezeigt. `hiddenCount` = ausgeblendete Projekte.
+ */
+export function getPickerProjects(currentProjectId, showAll = false) {
+    const all = getActiveProjectsForPicker();
+    if (showAll || !all.some(p => p.isFavorite)) return { list: all, hiddenCount: 0 };
+    const list = all.filter(p => p.isFavorite || p.id === 'general' || p.id === currentProjectId);
+    return { list, hiddenCount: all.length - list.length };
 }
 
 function closeProjectPicker() {
@@ -795,17 +805,9 @@ export function toggleProjectPicker(projectId, logIdx, anchorBtn) {
         closeProjectPicker();
         if (wasSameAnchor) return;
     }
-    const list = getActiveProjectsForPicker();
-    if (list.length === 0) return;
     const picker = document.createElement('div');
     picker.className = 'ts-project-picker';
-    picker.innerHTML = list.map(p =>
-        `<button type="button" class="ts-project-picker-item${p.id === projectId ? ' is-current' : ''}"
-            onclick="pickProjectForLog('${projectId}', ${logIdx}, '${p.id}')">
-            <span class="ts-project-picker-dot" style="background:${p.color};"></span>
-            <span class="ts-project-picker-label">${escapeHtml(p.label)}</span>
-        </button>`
-    ).join('');
+    if (!renderPickerItems(picker, projectId, logIdx, false)) return;
 
     const entryContent = anchorBtn.closest('.ts-entry-content');
     if (!entryContent) return;
@@ -818,6 +820,28 @@ export function toggleProjectPicker(projectId, logIdx, anchorBtn) {
     }, 0);
 }
 
+function renderPickerItems(picker, projectId, logIdx, showAll) {
+    const { list, hiddenCount } = getPickerProjects(projectId, showAll);
+    if (list.length === 0) return false;
+    picker.innerHTML = list.map(p =>
+        `<button type="button" class="ts-project-picker-item${p.id === projectId ? ' is-current' : ''}"
+            onclick="pickProjectForLog('${projectId}', ${logIdx}, '${p.id}')">
+            <span class="ts-project-picker-dot" style="background:${p.color};"></span>
+            <span class="ts-project-picker-label">${escapeHtml(p.label)}</span>
+        </button>`
+    ).join('') + (hiddenCount > 0
+        ? `<button type="button" class="ts-project-picker-item ts-project-picker-more">
+            <span class="material-symbols-rounded fs-16">expand_more</span>
+            <span class="ts-project-picker-label">Alle Projekte anzeigen (+${hiddenCount})</span>
+        </button>`
+        : '');
+    const moreBtn = picker.querySelector('.ts-project-picker-more');
+    if (moreBtn) {
+        moreBtn.addEventListener('click', () => renderPickerItems(picker, projectId, logIdx, true));
+    }
+    return true;
+}
+
 export function pickProjectForLog(oldProjectId, logIdx, newProjectId) {
     closeProjectPicker();
     changeLogProject(oldProjectId, logIdx, newProjectId);
@@ -826,6 +850,27 @@ export function pickProjectForLog(oldProjectId, logIdx, newProjectId) {
 // =============================================================================
 // Manueller Eintrag – Inline-Formular
 // =============================================================================
+const SHOW_ALL_OPTION = '__all__';
+
+function buildManualProjectOptions(showAll) {
+    const { list, hiddenCount } = getPickerProjects(null, showAll);
+    return list.map(p =>
+        `<option value="${p.id}">${escapeHtml(p.label)}</option>`
+    ).join('') + (hiddenCount > 0
+        ? `<option value="${SHOW_ALL_OPTION}">Alle Projekte anzeigen (+${hiddenCount})</option>`
+        : '');
+}
+
+/** „Alle Projekte anzeigen" im Select gewählt → volle Liste laden und aufklappen. */
+export function onManualProjectChange(select) {
+    if (select.value !== SHOW_ALL_OPTION) return;
+    select.innerHTML = buildManualProjectOptions(true);
+    select.selectedIndex = 0;
+    if (typeof select.showPicker === 'function') {
+        try { select.showPicker(); } catch { /* nicht überall erlaubt */ }
+    }
+}
+
 export function toggleManualEntryForm() {
     const form = document.getElementById('tsManualForm');
     if (!form) return;
@@ -878,6 +923,7 @@ if (typeof window !== 'undefined') {
     window.deletePause = deletePause;
     window.toggleProjectPicker = toggleProjectPicker;
     window.pickProjectForLog = pickProjectForLog;
+    window.onManualProjectChange = onManualProjectChange;
     window.toggleManualEntryForm = toggleManualEntryForm;
     window.submitManualEntry = submitManualEntry;
 }
