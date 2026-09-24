@@ -8,9 +8,10 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 
 ### Geändert
 - **Timesheet – Projekt ändern**: Die Auswahl beim Klick auf den Projektnamen zeigt nur noch Favoriten (plus „Allgemein" und das aktuelle Projekt des Eintrags). Über „Alle Projekte anzeigen (+N)" am Listenende lässt sich bei Bedarf die volle Liste aufklappen. Ohne Favoriten wird wie bisher alles angezeigt
+- **Timesheet – Eintrag hinzufügen**: Die Projektauswahl im Formular ist genauso auf Favoriten und „Allgemein" beschränkt; der letzte Eintrag „Alle Projekte anzeigen (+N)" lädt die volle Liste nach
 
 ### Intern
-- **`getPickerProjects()`** (`src/ui/timesheet.js`) liefert die gefilterte Liste samt Anzahl ausgeblendeter Projekte; **4 neue Tests** in `tests/timesheet.test.js`
+- **`getPickerProjects()`** (`src/ui/timesheet.js`) liefert die gefilterte Liste samt Anzahl ausgeblendeter Projekte; **6 neue Tests** in `tests/timesheet.test.js` (inkl. `onManualProjectChange()`)
 
 ---
 

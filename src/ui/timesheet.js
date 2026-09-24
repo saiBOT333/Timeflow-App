@@ -259,10 +259,8 @@ export function renderTimesheetCard() {
         Eintrag hinzufügen
     </button>
     <div class="ts-manual-form is-hidden" id="tsManualForm">
-        <select class="ts-manual-project" id="tsManualProject">
-            ${getActiveProjectsForPicker().map(p =>
-                `<option value="${p.id}">${escapeHtml(p.label)}</option>`
-            ).join('')}
+        <select class="ts-manual-project" id="tsManualProject" onchange="onManualProjectChange(this)">
+            ${buildManualProjectOptions(false)}
         </select>
         <input type="time" class="ts-time-input" id="tsManualStart" step="60">
         <span class="ts-entry-arrow">→</span>
@@ -852,6 +850,27 @@ export function pickProjectForLog(oldProjectId, logIdx, newProjectId) {
 // =============================================================================
 // Manueller Eintrag – Inline-Formular
 // =============================================================================
+const SHOW_ALL_OPTION = '__all__';
+
+function buildManualProjectOptions(showAll) {
+    const { list, hiddenCount } = getPickerProjects(null, showAll);
+    return list.map(p =>
+        `<option value="${p.id}">${escapeHtml(p.label)}</option>`
+    ).join('') + (hiddenCount > 0
+        ? `<option value="${SHOW_ALL_OPTION}">Alle Projekte anzeigen (+${hiddenCount})</option>`
+        : '');
+}
+
+/** „Alle Projekte anzeigen" im Select gewählt → volle Liste laden und aufklappen. */
+export function onManualProjectChange(select) {
+    if (select.value !== SHOW_ALL_OPTION) return;
+    select.innerHTML = buildManualProjectOptions(true);
+    select.selectedIndex = 0;
+    if (typeof select.showPicker === 'function') {
+        try { select.showPicker(); } catch { /* nicht überall erlaubt */ }
+    }
+}
+
 export function toggleManualEntryForm() {
     const form = document.getElementById('tsManualForm');
     if (!form) return;
@@ -904,6 +923,7 @@ if (typeof window !== 'undefined') {
     window.deletePause = deletePause;
     window.toggleProjectPicker = toggleProjectPicker;
     window.pickProjectForLog = pickProjectForLog;
+    window.onManualProjectChange = onManualProjectChange;
     window.toggleManualEntryForm = toggleManualEntryForm;
     window.submitManualEntry = submitManualEntry;
 }
